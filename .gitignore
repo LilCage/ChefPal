@@ -1,0 +1,44 @@
+# ===== 本地/环境 =====
+.env
+.env.*
+!.env.example
+*.local
+
+# ===== Claude Code 本地设置 =====
+.claude/settings.local.json
+
+# ===== Python (apps/server) =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# ===== Node / Taro (apps/miniapp) =====
+node_modules/
+.pnpm-store/
+.cache/
+*.tsbuildinfo
+
+# ===== 日志 =====
+*.log
+logs/
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 编辑器/IDE =====
+.idea/
+*.swp
+*.swo
+.project
+.classpath

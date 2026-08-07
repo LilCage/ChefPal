@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefPal 原型 04 · 膳食规划与智能输入</title>
+<style>
+/* ============================================================
+   ChefPal · 漫画插画风设计系统（《美食的俘虏》热血意境 · 明亮暖色）
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#E8482A;--red-dark:#C7361F;--gold:#F0A73E;--gold-dark:#D18A2C;
+  --green:#2FA37E;--green-dark:#1F7F60;--cream:#FFF7EC;--white:#fff;
+  --ink:#241A12;--brown:#4A2E1D;--soft:#F6E3C3;--gray:#8A6F5C;
+  --line:2.5px solid var(--ink);--shadow:4px 4px 0 var(--ink);
+}
+body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+.pop{font-family:'ZCOOL KuaiLe','Comic Sans MS',cursive}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.filled{fill:currentColor;stroke:currentColor}
+
+/* ---- 文档页头 ---- */
+.doc-header{max-width:1280px;margin:0 auto;padding:34px 22px 10px}
+.doc-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.doc-nav a{text-decoration:none;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 14px;box-shadow:2px 2px 0 var(--ink)}
+.doc-nav a.on{background:var(--red);color:#fff}
+.doc-header h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+.doc-header h1 .pop{color:var(--red);font-size:34px;margin-right:6px}
+.doc-sub{color:var(--brown);font-size:14px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:12px 14px}
+.lg-title{font-weight:900;font-size:13px;border-right:2px dashed var(--soft);padding-right:12px;margin-right:4px}
+.swatch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.swatch i{width:18px;height:18px;border-radius:6px;border:2px solid var(--ink);background:var(--c)}
+.swatch b{color:var(--gray);font-weight:500;font-size:11px}
+.lg-demo{display:inline-flex;align-items:center;gap:8px}
+
+/* ---- 网格 ---- */
+.page{max-width:1280px;margin:0 auto;padding:20px 22px 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(372px,1fr));gap:44px 30px;justify-items:center}
+.screen-card{width:100%;display:flex;flex-direction:column;align-items:center}
+.screen-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:14px}
+.screen-label .num{background:var(--red);color:#fff;width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:2px 2px 0 var(--ink)}
+.screen-label em{font-style:normal;color:var(--gray);font-weight:500;font-size:12px}
+
+/* ---- 手机框 ---- */
+.phone{width:375px;height:812px;border-radius:42px;padding:12px;background:#151009;box-shadow:8px 14px 0 rgba(36,26,18,.18),0 40px 70px rgba(0,0,0,.28);position:relative;flex:none}
+.phone .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:22px;background:#151009;border-radius:0 0 14px 14px;z-index:60}
+.screen{width:100%;height:100%;border-radius:32px;background:var(--cream);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.statusbar{height:30px;flex:none;background:#fff;position:relative;z-index:5}
+.statusbar.ghost{background:transparent}
+.content{flex:1;overflow-y:auto;scrollbar-width:none;position:relative}
+.content::-webkit-scrollbar{display:none}
+.tabbar{flex:none;display:flex;background:#fff;border-top:2.5px solid var(--ink);padding:8px 4px 10px;position:relative;z-index:5}
+.tabitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--gray);cursor:pointer}
+.tabitem svg{width:24px;height:24px}
+.tabitem.on{color:var(--red)}
+
+/* ---- 顶部导航 ---- */
+.nav{display:flex;align-items:center;gap:8px;padding:8px 14px 10px;background:#fff;border-bottom:2.5px solid var(--ink);flex:none;z-index:5;position:relative;min-height:52px}
+.nav .nbtn{width:34px;height:34px;border-radius:10px;border:2px solid var(--ink);background:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:2px 2px 0 var(--ink);color:var(--ink)}
+.nav h2{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.nav h2 ~ .nbtn{margin-left:auto}
+.nav h2 ~ .txtbtn{margin-left:auto}
+.nav .txtbtn{font-size:13px;font-weight:800;color:var(--gray);cursor:pointer}
+
+/* ---- 按钮 ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2.5px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);font-weight:900;font-size:15px;padding:13px 22px;cursor:pointer;transition:transform .12s,box-shadow .12s;text-decoration:none}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn-red{background:var(--red);color:#fff}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-green{background:var(--green);color:#fff}
+.btn-white{background:#fff;color:var(--ink)}
+.btn-block{display:flex;width:100%}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:11px;box-shadow:3px 3px 0 var(--ink)}
+
+/* ---- 标签 / 输入 ---- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.chip.hot{background:var(--gold);color:var(--ink);font-weight:800}
+.chip.on{background:var(--red);color:#fff}
+.chip .x{font-weight:900;color:var(--gray)}
+.field{background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);padding:12px}
+.field-label{font-size:12px;font-weight:800;color:var(--gray);margin-bottom:8px}
+
+/* ---- 区块 ---- */
+.sec{padding:14px 14px 4px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:10px}
+.sec-title::before{content:"";width:8px;height:18px;border-radius:4px;background:var(--red);border:2px solid var(--ink)}
+.sec-title .more{margin-left:auto;font-size:12px;font-weight:700;color:var(--gray)}
+.note{font-size:11px;color:var(--gray);font-weight:600}
+.mini-chip{display:inline-flex;align-items:center;gap:3px;background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10.5px;font-weight:800;padding:1px 6px}
+.mini-chip.red{background:#FFD9D0;color:var(--red-dark)}
+.mini-chip.green{background:#DDF0E8;color:var(--green-dark)}
+
+/* ---- 相机 ---- */
+.cam-view{position:relative;height:230px;background:#201712;margin:14px 14px 0;border-radius:18px;border:2.5px solid var(--ink);overflow:hidden;box-shadow:3px 3px 0 var(--ink)}
+.cam-view .cam-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:24px 24px}
+.cam-view .corners::before,.cam-view .corners::after{content:"";position:absolute;width:44px;height:44px;border:3px solid var(--gold);z-index:2}
+.cam-view .corners::before{top:16px;left:16px;border-right:none;border-bottom:none;border-radius:8px 0 0 0}
+.cam-view .corners::after{bottom:16px;right:16px;border-left:none;border-top:none;border-radius:0 0 8px 0}
+.cam-view .ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;opacity:.35}
+.cam-view .hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#FFE9D9;font-size:12px;font-weight:700;z-index:3;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.shutter-zone{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px}
+.shutter{width:70px;height:70px;border-radius:50%;background:#fff;border:4px solid var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.shutter i{width:52px;height:52px;border-radius:50%;background:var(--red);border:3px solid var(--ink)}
+
+/* ---- 语音 ---- */
+.voice-zone{display:flex;flex-direction:column;align-items:center;padding:44px 20px 20px;gap:18px}
+.mic-big{width:120px;height:120px;border-radius:50%;background:var(--red);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;animation:pulse 1.6s infinite;cursor:pointer}
+.mic-big svg{width:52px;height:52px}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.wave{display:flex;align-items:center;gap:5px;height:44px}
+.wave i{width:5px;border-radius:3px;background:var(--gold);border:1px solid var(--ink);height:12px}
+.wave i:nth-child(1){height:20px}.wave i:nth-child(2){height:34px}.wave i:nth-child(3){height:44px}.wave i:nth-child(4){height:28px}.wave i:nth-child(5){height:40px}.wave i:nth-child(6){height:16px}.wave i:nth-child(7){height:32px}
+
+/* ---- 膳食规划 ---- */
+.plan-tabs{display:flex;gap:8px;margin:14px 14px 12px}
+.plan-tabs .pt{flex:1;text-align:center;background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:9px 4px;font-weight:800;font-size:13px;box-shadow:2px 2px 0 var(--ink);color:var(--gray);cursor:pointer}
+.plan-tabs .pt.on{background:var(--red);color:#fff}
+.meal-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 12px;overflow:hidden}
+.meal-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:2px dashed var(--soft);font-weight:900;font-size:13.5px}
+.meal-head .m-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--ink)}
+.meal-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:2px dashed var(--soft)}
+.meal-row:last-child{border-bottom:none}
+.meal-row .dish{flex:1;font-size:13.5px;font-weight:800}
+.meal-row .kcal{font-size:11px;color:var(--gray);font-weight:700}
+.meal-row .done{width:22px;height:22px;border-radius:7px;border:2.5px solid var(--ink);background:#fff;flex:none}
+.meal-row .done.on{background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+.meal-row .done svg{width:13px;height:13px}
+.plan-summary{display:flex;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 14px;overflow:hidden}
+.plan-summary .ps{flex:1;text-align:center;padding:12px 2px;border-right:2px dashed var(--soft)}
+.plan-summary .ps:last-child{border-right:none}
+.plan-summary b{display:block;font-size:16px;font-weight:900;color:var(--red)}
+.plan-summary span{font-size:10.5px;color:var(--gray);font-weight:700}
+
+/* ---- 周计划 + 营养 ---- */
+.week-strip{display:flex;gap:6px;padding:14px 14px 4px}
+.week-strip .wday{flex:1;text-align:center;background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:8px 2px;font-size:11px;font-weight:800;box-shadow:2px 2px 0 var(--ink);color:var(--gray);cursor:pointer}
+.week-strip .wday.on{background:var(--red);color:#fff}
+.week-strip .wday b{display:block;font-size:13px}
+.nutri-block{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:12px 14px;padding:12px 14px}
+.nutri-title{font-weight:900;font-size:13.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.nutri-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;font-weight:700}
+.nutri-row .nlabel{width:56px;flex:none;color:var(--gray)}
+.nutri-row .track{flex:1;height:13px;border:2px solid var(--ink);border-radius:8px;background:var(--soft);overflow:hidden}
+.nutri-row .track i{display:block;height:100%;border-radius:6px}
+.nutri-row .nval{width:52px;text-align:right;flex:none;font-weight:900;font-size:11px}
+.today-plan{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 12px;overflow:hidden}
+
+/* ---- 购物清单 ---- */
+.cart-cat{margin:0 14px 16px}
+.cart-cat .cc-t{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cart-cat .cc-t em{font-style:normal;color:var(--gray);font-size:11px;font-weight:600}
+.check-item{display:flex;align-items:center;gap:10px;background:#fff;border:2.5px solid var(--ink);border-radius:12px;box-shadow:2px 2px 0 var(--ink);padding:11px 12px;margin-bottom:10px}
+.check-box{width:22px;height:22px;border:2.5px solid var(--ink);border-radius:7px;background:#fff;flex:none;display:flex;align-items:center;justify-content:center}
+.check-box.on{background:var(--green);color:#fff}
+.check-box svg{width:13px;height:13px}
+.check-item b{flex:1;font-size:13.5px}
+.check-item .num{font-size:12px;color:var(--gray);font-weight:700}
+.check-item.done b{text-decoration:line-through;color:var(--gray)}
+.cart-total{display:flex;align-items:center;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 14px;padding:12px 14px}
+.cart-total b{font-size:14px;flex:1}
+.cart-total .price{font-size:16px;font-weight:900;color:var(--red)}
+.cart-total .price small{font-size:11px;color:var(--gray);font-weight:700}
+
+/* ---- 过期预警 ---- */
+.exp-banner{display:flex;align-items:center;gap:12px;background:#FFE9D9;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:14px;padding:12px 14px}
+.exp-banner .eb-ic{width:42px;height:42px;border-radius:12px;background:var(--red);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.exp-banner b{font-size:14px;display:block}
+.exp-banner span{font-size:11.5px;color:var(--brown);font-weight:600}
+.fridge-item{display:flex;align-items:center;gap:12px;background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:2px 2px 0 var(--ink);padding:12px 14px;margin:0 14px 10px}
+.fridge-item .fi-ic{width:40px;height:40px;border-radius:10px;background:var(--soft);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.fridge-item b{font-size:14px;display:block}
+.fridge-item .fi-note{font-size:11px;color:var(--gray);font-weight:600}
+.fridge-item .fi-cta{margin-left:auto;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:10px;font-size:11px;font-weight:900;padding:6px 12px;box-shadow:2px 2px 0 var(--ink);flex:none}
+.exp-tag{font-size:10.5px;font-weight:900;border:2px solid var(--ink);border-radius:8px;padding:1px 8px;flex:none}
+.exp-tag.now{background:var(--red);color:#fff}
+.exp-tag.warn{background:var(--gold);color:var(--ink)}
+.exp-tag.ok{background:#DDF0E8;color:var(--green-dark)}
+
+/* ---- 响应式 ---- */
+@media (max-width:900px){.grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:40px 16px}}
+@media (max-width:640px){.page{padding:14px 10px 50px}.doc-header{padding:22px 14px 6px}.doc-header h1{font-size:22px}.doc-header h1 .pop{font-size:25px}.legend{display:none}}
+</style>
+</head>
+<body>
+
+<!-- SVG 图标集 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-kitchen" viewBox="0 0 24 24"><path d="M4 11h16a1 1 0 0 1 1 1v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-5a1 1 0 0 1 1-1z"/><path d="M8 11V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><path d="M9.5 5.5 8.5 3M14.5 5.5l1-2.5"/></symbol>
+  <symbol id="i-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6 .9-4.3 4.2 1 6L12 17l-5.4 2.6 1-6L3.3 9.4l6-.9z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21S4 15 4 9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15 12 21 12 21z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h2l2-3h8l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8h16v-8"/><path d="m12 4 5 5h-3v7h-4V9H7z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 7V4h4v3"/><path d="M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h5M13 17h7"/><circle cx="15" cy="7" r="2"/><circle cx="11" cy="17" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1.2 3-4 5-4 9a4 4 0 0 0 8 0c0-2-.8-3-.8-3s1.4 1 2.3 2.6A5.5 5.5 0 0 1 12 21c-4.4 0-7.5-3-7.5-7 0-5.5 7.5-11 7.5-11z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11.5A1.5 1.5 0 0 0 8.8 17H17a1.5 1.5 0 0 0 1.5-1.2L20 7H6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-11"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5 20 7 8 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 8 21l4-2.5 4 2.5-1-6.5"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 4z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4l1.6 4.9L18.5 10 13.6 11.6 12 16.5l-1.6-4.9L5.5 10l4.9-1.1z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#E8482A" stroke="#241A12" stroke-width="3.5"/><path d="M19 34h26v8a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8z" fill="#fff" stroke="#241A12" stroke-width="3"/><path d="M25 34v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M15 40c-2.2-2.2-2.2-4.4 0-6.6M49 40c2.2-2.2 2.2-4.4 0-6.6" stroke="#F0A73E" stroke-width="3" stroke-linecap="round"/><path d="M45 24l1.7 3.2 3.3 1-3.3 1.2-1.7 3.1-1.6-3.1-3.4-1.2 3.4-1z" fill="#F0A73E" stroke="#241A12" stroke-width="1.4"/></symbol>
+</svg>
+
+<header class="doc-header">
+  <nav class="doc-nav">
+    <a href="01-核心业务闭环.html">01 核心闭环</a>
+    <a href="02-我的收藏与设置.html">02 收藏设置</a>
+    <a href="03-社区互动.html">03 社区互动</a>
+    <a class="on" href="04-膳食规划与智能输入.html">04 规划与输入</a>
+    <a href="05-趣味探索功能.html">05 趣味探索</a>
+  </nav>
+  <h1><span class="pop">ChefPal</span> 原型 04 · 膳食规划与智能输入</h1>
+  <p class="doc-sub">拍照识食材 · 语音输入 · 3 天 / 7 天膳食规划 · 营养分析 · 购物清单 · 过期预警</p>
+  <div class="legend">
+    <span class="lg-title">设计系统</span>
+    <span class="swatch" style="--c:#E8482A"><i></i>焰火红<b>#E8482A</b></span>
+    <span class="swatch" style="--c:#F0A73E"><i></i>熟金黄<b>#F0A73E</b></span>
+    <span class="swatch" style="--c:#2FA37E"><i></i>食材绿<b>#2FA37E</b></span>
+    <span class="swatch" style="--c:#FFF7EC"><i></i>奶油暖白<b>#FFF7EC</b></span>
+    <span class="swatch" style="--c:#241A12"><i></i>墨褐描边<b>#241A12</b></span>
+    <span class="lg-demo"><button class="btn btn-red btn-sm">主按钮</button><span class="chip hot">🍅 食材</span><span class="check-box on" style="display:inline-flex"><svg><use href="#i-check"/></svg></span></span>
+  </div>
+</header>
+
+<main class="page">
+<div class="grid">
+
+  <!-- ══════════ 屏幕1 · 拍照识食材 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">1</span>拍照识食材 <em>P1 升级体验</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>拍照识食材</h2><span class="txtbtn">相册</span></div>
+        <div class="content">
+          <div class="cam-view">
+            <div class="cam-grid"></div>
+            <span class="corners"></span>
+            <div class="ghost">🍅🥚🥬</div>
+            <div class="hint">对准冰箱里的食材 · 自动识别</div>
+          </div>
+          <div class="shutter-zone"><div class="shutter"><i></i></div><span class="note">轻触拍照</span></div>
+          <div class="sec">
+            <div class="sec-title">🔎 识别结果 <span class="more">手动修正</span></div>
+            <div class="field">
+              <div class="chips">
+                <span class="chip on">西红柿<span class="x">×</span></span>
+                <span class="chip on">鸡蛋 ×2<span class="x">×</span></span>
+                <span class="chip on">生菜<span class="x">×</span></span>
+                <span class="chip">＋ 手动添加</span>
+              </div>
+              <p class="note" style="margin-top:8px">识别准确率 98% · 点标签可删除，点添加可补充</p>
+            </div>
+          </div>
+          <div class="sec"><button class="btn btn-red btn-block">用这些食材去生成菜谱 →</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕2 · 语音输入 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">2</span>语音输入 <em>做饭时解放双手</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>语音描述食材</h2></div>
+        <div class="content">
+          <div class="voice-zone">
+            <div class="mic-big"><svg class="ic"><use href="#i-mic"/></svg></div>
+            <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p style="font-weight:900;font-size:14px">正在识别… 松开结束</p>
+            <div class="bubble" style="width:100%;margin-top:8px">
+              <span class="star-burst" style="padding:2px 8px;font-size:11px">识别结果</span>
+              <p style="font-size:14px;font-weight:800;margin-top:10px">"冰箱里有西红柿、鸡蛋、还有一把挂面"</p>
+            </div>
+            <div class="chips" style="width:100%">
+              <span class="chip on">西红柿<span class="x">×</span></span>
+              <span class="chip on">鸡蛋<span class="x">×</span></span>
+              <span class="chip on">挂面<span class="x">×</span></span>
+              <span class="chip">＋ 添加</span>
+            </div>
+            <button class="btn btn-red" style="width:100%">用这些食材去生成菜谱 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕3 · 3天膳食规划 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">3</span>3 天膳食规划 <em>P1 简化版周计划</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>3 天膳食计划</h2><span class="txtbtn">重新生成</span></div>
+        <div class="content">
+          <div class="plan-tabs"><span class="pt on">今天<br><small>周五</small></span><span class="pt">明天<br><small>周六</small></span><span class="pt">后天<br><small>周日</small></span></div>
+          <div class="meal-card">
+            <div class="meal-head"><span class="m-ic" style="background:var(--gold)">🌅</span>早餐 <span style="margin-left:auto;color:var(--gray);font-weight:600;font-size:11px">约 380 千卡</span></div>
+            <div class="meal-row"><span class="done on"><svg><use href="#i-check"/></svg></span><span class="dish">牛奶燕麦粥 + 水煮蛋</span><span class="kcal">✓ 已吃</span></div>
+          </div>
+          <div class="meal-card">
+            <div class="meal-head"><span class="m-ic" style="background:var(--soft)">☀</span>午餐 <span style="margin-left:auto;color:var(--gray);font-weight:600;font-size:11px">约 560 千卡</span></div>
+            <div class="meal-row"><span class="done on"><svg><use href="#i-check"/></svg></span><span class="dish">番茄鸡蛋面 + 凉拌黄瓜</span><span class="kcal">✓ 已吃</span></div>
+          </div>
+          <div class="meal-card">
+            <div class="meal-head"><span class="m-ic" style="background:var(--soft)">🌙</span>晚餐 <span style="margin-left:auto;color:var(--gray);font-weight:600;font-size:11px">约 420 千卡</span></div>
+            <div class="meal-row"><span class="done"></span><span class="dish">清蒸鲈鱼 + 蒜蓉西兰花</span><span class="kcal">待做</span></div>
+            <div class="meal-row"><span class="done"></span><span class="dish">糙米饭 1 碗</span><span class="kcal">待做</span></div>
+          </div>
+          <div class="plan-summary">
+            <div class="ps"><b>1360</b><span>今日千卡</span></div>
+            <div class="ps"><b>55g</b><span>蛋白质</span></div>
+            <div class="ps"><b>3 菜</b><span>少油方案</span></div>
+          </div>
+          <div class="sec"><button class="btn btn-gold btn-block">一键生成购物清单</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕4 · 7天膳食规划 + 营养分析 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">4</span>7 天规划 + 营养分析 <em>P2 深度需求</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>7 天膳食计划</h2></div>
+        <div class="content">
+          <div class="week-strip">
+            <span class="wday"><b>一</b></span><span class="wday on"><b>二</b></span><span class="wday"><b>三</b></span><span class="wday"><b>四</b></span><span class="wday"><b>五</b></span><span class="wday"><b>六</b></span><span class="wday"><b>日</b></span>
+          </div>
+          <div class="today-plan">
+            <div class="meal-head">📅 周二 · 减脂日 <span style="margin-left:auto;color:var(--gray);font-weight:600;font-size:11px">目标 1400 千卡</span></div>
+            <div class="meal-row"><span class="done on"><svg><use href="#i-check"/></svg></span><span class="dish">早餐 · 蛋白蔬菜卷</span><span class="kcal">320</span></div>
+            <div class="meal-row"><span class="done"></span><span class="dish">午餐 · 鸡胸藜麦碗</span><span class="kcal">520</span></div>
+            <div class="meal-row"><span class="done"></span><span class="dish">晚餐 · 番茄炖牛腩(去油)</span><span class="kcal">460</span></div>
+          </div>
+          <div class="nutri-block">
+            <div class="nutri-title">🍎 营养分析 · 全天合计</div>
+            <div class="nutri-row"><span class="nlabel">热量</span><span class="track"><i style="width:86%;background:linear-gradient(90deg,var(--gold),var(--red))"></i></span><span class="nval">1200/1400</span></div>
+            <div class="nutri-row"><span class="nlabel">蛋白质</span><span class="track"><i style="width:74%;background:var(--red)"></i></span><span class="nval">62/85g</span></div>
+            <div class="nutri-row"><span class="nlabel">脂肪</span><span class="track"><i style="width:52%;background:var(--gold)"></i></span><span class="nval">28/50g</span></div>
+            <div class="nutri-row"><span class="nlabel">碳水</span><span class="track"><i style="width:64%;background:var(--green)"></i></span><span class="nval">98/160g</span></div>
+          </div>
+          <div class="sec"><button class="btn btn-red btn-block">生成本周购物清单</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕5 · 购物清单 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">5</span>购物清单 <em>全链路闭环</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>购物清单</h2><span class="txtbtn">去采购</span></div>
+        <div class="content">
+          <div class="cart-cat" style="margin-top:14px">
+            <div class="cc-t">🥬 蔬菜水果</div>
+            <div class="check-item done"><span class="check-box on"><svg><use href="#i-check"/></svg></span><b>西红柿</b><span class="num">2 个</span></div>
+            <div class="check-item"><span class="check-box"></span><b>西兰花</b><span class="num">1 颗</span></div>
+            <div class="check-item done"><span class="check-box on"><svg><use href="#i-check"/></svg></span><b>黄瓜</b><span class="num">1 根</span></div>
+          </div>
+          <div class="cart-cat">
+            <div class="cc-t">🥚 蛋奶肉禽</div>
+            <div class="check-item"><span class="check-box"></span><b>鸡蛋</b><span class="num">6 枚</span></div>
+            <div class="check-item"><span class="check-box"></span><b>鸡胸肉</b><span class="num">300g</span></div>
+            <div class="check-item done"><span class="check-box on"><svg><use href="#i-check"/></svg></span><b>鲈鱼</b><span class="num">1 条</span></div>
+          </div>
+          <div class="cart-cat">
+            <div class="cc-t">🧂 调料辅料</div>
+            <div class="check-item"><span class="check-box"></span><b>小葱</b><span class="num">1 把</span></div>
+            <div class="check-item"><span class="check-box"></span><b>生抽</b><span class="num">1 瓶</span></div>
+          </div>
+          <div class="cart-total"><b>已选 <span style="color:var(--green)">5</span> / 8 项</b><span class="price">≈ <small>¥</small>32<small>.5</small></span></div>
+          <div class="sec"><button class="btn btn-red btn-block"><svg class="ic" style="width:20px;height:20px"><use href="#i-cart"/></svg>复制清单 / 生成本周菜单</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕6 · 食材过期预警 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">6</span>食材过期预警 <em>P3 减少浪费</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>冰箱管家</h2><span class="nbtn"><svg class="ic"><use href="#i-plus"/></svg></span></div>
+        <div class="content">
+          <div class="exp-banner">
+            <span class="eb-ic"><svg class="ic"><use href="#i-bell"/></svg></span>
+            <div><b>3 项食材快过期啦</b><span>建议今天做掉，避免浪费 🍅🥚</span></div>
+          </div>
+          <div class="sec">
+            <div class="sec-title">⏳ 即将过期</div>
+          </div>
+          <div class="fridge-item"><span class="fi-ic">🍅</span><div><b>西红柿</b><span class="fi-note">已放 5 天 · 最佳窗口 1 天</span></div><span class="exp-tag now">今日清空</span><span class="fi-cta">做掉</span></div>
+          <div class="fridge-item"><span class="fi-ic">🥚</span><div><b>鸡蛋</b><span class="fi-note">已放 12 天</span></div><span class="exp-tag warn">还 2 天</span><span class="fi-cta">做掉</span></div>
+          <div class="sec">
+            <div class="sec-title">💡 AI 建议</div>
+          </div>
+          <div class="bubble" style="margin:0 14px 14px">
+            <span class="star-burst" style="padding:2px 8px;font-size:11px">组合推荐</span>
+            <p style="font-size:13.5px;font-weight:800;margin-top:10px">🍅 西红柿 + 🥚 鸡蛋 → <span style="color:var(--red)">番茄炒蛋</span>（20 分钟 · 匹配 92%）</p>
+            <p class="note" style="margin-top:8px">还有 1 份挂面 · 可加做「番茄鸡蛋面」双保险</p>
+          </div>
+          <div class="fridge-item"><span class="fi-ic">🥬</span><div><b>生菜</b><span class="fi-note">已放 3 天 · 状态良好</span></div><span class="exp-tag ok">还 3 天</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

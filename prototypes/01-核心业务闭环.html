@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefPal 原型 01 · 核心业务闭环</title>
+<style>
+/* ============================================================
+   ChefPal · 漫画插画风设计系统（《美食的俘虏》热血意境 · 明亮暖色）
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#E8482A;--red-dark:#C7361F;--gold:#F0A73E;--gold-dark:#D18A2C;
+  --green:#2FA37E;--green-dark:#1F7F60;--cream:#FFF7EC;--white:#fff;
+  --ink:#241A12;--brown:#4A2E1D;--soft:#F6E3C3;--gray:#8A6F5C;
+  --line:2.5px solid var(--ink);--shadow:4px 4px 0 var(--ink);
+}
+body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+.pop{font-family:'ZCOOL KuaiLe','Comic Sans MS',cursive}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.filled{fill:currentColor;stroke:currentColor}
+
+/* ---- 文档页头 + 设计系统图例 ---- */
+.doc-header{max-width:1280px;margin:0 auto;padding:34px 22px 10px}
+.doc-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.doc-nav a{text-decoration:none;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 14px;box-shadow:2px 2px 0 var(--ink)}
+.doc-nav a.on{background:var(--red);color:#fff}
+.doc-header h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+.doc-header h1 .pop{color:var(--red);font-size:34px;margin-right:6px}
+.doc-sub{color:var(--brown);font-size:14px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:12px 14px}
+.lg-title{font-weight:900;font-size:13px;border-right:2px dashed var(--soft);padding-right:12px;margin-right:4px}
+.swatch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.swatch i{width:18px;height:18px;border-radius:6px;border:2px solid var(--ink);background:var(--c)}
+.swatch b{color:var(--gray);font-weight:500;font-size:11px}
+.lg-demo{display:inline-flex;align-items:center;gap:8px}
+
+/* ---- 网格布局 ---- */
+.page{max-width:1280px;margin:0 auto;padding:20px 22px 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(372px,1fr));gap:44px 30px;justify-items:center}
+.screen-card{width:100%;display:flex;flex-direction:column;align-items:center}
+.screen-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:14px}
+.screen-label .num{background:var(--red);color:#fff;width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:2px 2px 0 var(--ink)}
+.screen-label em{font-style:normal;color:var(--gray);font-weight:500;font-size:12px}
+
+/* ---- 手机框 ---- */
+.phone{width:375px;height:812px;border-radius:42px;padding:12px;background:#151009;box-shadow:8px 14px 0 rgba(36,26,18,.18),0 40px 70px rgba(0,0,0,.28);position:relative;flex:none}
+.phone .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:22px;background:#151009;border-radius:0 0 14px 14px;z-index:60}
+.screen{width:100%;height:100%;border-radius:32px;background:var(--cream);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.statusbar{height:30px;flex:none;background:#fff;position:relative;z-index:5}
+.statusbar.ghost{background:transparent}
+.content{flex:1;overflow-y:auto;scrollbar-width:none;position:relative}
+.content::-webkit-scrollbar{display:none}
+.tabbar{flex:none;display:flex;background:#fff;border-top:2.5px solid var(--ink);padding:8px 4px 10px;position:relative;z-index:5}
+.tabitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--gray);cursor:pointer}
+.tabitem svg{width:24px;height:24px}
+.tabitem.on{color:var(--red)}
+
+/* ---- 顶部导航 ---- */
+.nav{display:flex;align-items:center;gap:8px;padding:8px 14px 10px;background:#fff;border-bottom:2.5px solid var(--ink);flex:none;z-index:5;position:relative;min-height:52px}
+.nav .nbtn{width:34px;height:34px;border-radius:10px;border:2px solid var(--ink);background:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:2px 2px 0 var(--ink);color:var(--ink)}
+.nav h2{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.nav h2 ~ .nbtn{margin-left:auto}
+.nav h2 ~ .txtbtn{margin-left:auto}
+.nav .nbtn.on{background:var(--red);color:#fff}
+
+/* ---- 按钮 ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2.5px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);font-weight:900;font-size:15px;padding:13px 22px;cursor:pointer;transition:transform .12s,box-shadow .12s;text-decoration:none}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn-red{background:var(--red);color:#fff}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-green{background:var(--green);color:#fff}
+.btn-white{background:#fff;color:var(--ink)}
+.btn-block{display:flex;width:100%}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:11px;box-shadow:3px 3px 0 var(--ink)}
+.btn-ic{padding:8px;border-radius:12px}
+.fab{position:absolute;right:16px;bottom:92px;width:58px;height:58px;border-radius:50%;background:var(--red);border:3px solid var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:4px 4px 0 var(--ink);z-index:20;cursor:pointer}
+.fab svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.5}
+
+/* ---- 标签 / 输入 ---- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.chip.hot{background:var(--gold);color:var(--ink);font-weight:800}
+.chip.on{background:var(--red);color:#fff}
+.chip .x{font-weight:900;color:var(--gray)}
+.chip .x:hover{color:var(--red)}
+.searchbar{display:flex;align-items:center;gap:8px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:10px 12px;margin:14px 14px 4px}
+.searchbar input{flex:1;border:none;outline:none;font-size:14px;font-weight:600;font-family:inherit;background:none;color:var(--ink)}
+.searchbar input::placeholder{color:var(--gray)}
+.searchbar .sbtn{background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:11px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--ink);cursor:pointer}
+.searchbar .sbtn svg{width:18px;height:18px}
+.field{background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);padding:12px}
+.field-label{font-size:12px;font-weight:800;color:var(--gray);margin-bottom:8px}
+
+/* ---- 区块标题 ---- */
+.sec{padding:14px 14px 4px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:10px}
+.sec-title::before{content:"";width:8px;height:18px;border-radius:4px;background:var(--red);border:2px solid var(--ink)}
+.sec-title .more{margin-left:auto;font-size:12px;font-weight:700;color:var(--gray)}
+
+/* ---- 卡片 ---- */
+.card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:14px;margin:0 14px 12px}
+.qa-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:14px;margin:0 14px 12px}
+.qa-q{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900}
+.qa-q .q-badge{background:var(--gold);border:2px solid var(--ink);border-radius:8px;font-size:11px;padding:1px 7px;flex:none}
+.qa-q time{margin-left:auto;font-size:11px;color:var(--gray);font-weight:600}
+.qa-a{font-size:12.5px;color:var(--brown);line-height:1.6;margin-top:8px}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 14px 14px}
+.r-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);overflow:hidden;cursor:pointer;transition:transform .12s}
+.r-card:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.r-img{height:92px;display:flex;align-items:center;justify-content:center;font-size:44px;border-bottom:2.5px solid var(--ink);position:relative;overflow:hidden}
+.r-img .deg{position:absolute;top:6px;right:6px;background:#fff;border:2px solid var(--ink);border-radius:8px;font-size:10.5px;font-weight:900;padding:1px 6px;color:var(--red)}
+.r-name{font-size:14.5px;font-weight:900;padding:9px 10px 3px}
+.r-meta{display:flex;flex-wrap:wrap;gap:6px;padding:2px 10px 10px;align-items:center}
+.mini-chip{display:inline-flex;align-items:center;gap:3px;background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10.5px;font-weight:800;padding:1px 6px}
+.mini-chip.red{background:#FFD9D0;color:var(--red-dark)}
+.energy{height:11px;border:2px solid var(--ink);border-radius:8px;background:var(--soft);overflow:hidden}
+.energy i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--red))}
+.energy.matched{margin:0 10px 8px}
+.energy.matched i{width:70%}
+
+/* ---- 对话框 ---- */
+.bubble{position:relative;background:#fff;border:2.5px solid var(--ink);border-radius:14px;padding:12px 14px;box-shadow:3px 3px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;left:22px;bottom:-11px;width:14px;height:14px;background:#fff;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:rotate(45deg)}
+.bubble.mini{box-shadow:2px 2px 0 var(--ink);padding:5px 10px;border-radius:10px;font-size:12px;font-weight:800}
+.bubble.mini::after{display:none}
+
+/* ---- 徽章 / 统计 ---- */
+.lv-badge{display:inline-flex;align-items:center;gap:4px;background:var(--gold);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:900;box-shadow:2px 2px 0 var(--ink)}
+.stats{display:flex;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 14px;overflow:hidden}
+.stat{flex:1;text-align:center;padding:14px 4px;border-right:2px dashed var(--soft)}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-size:20px;font-weight:900;color:var(--red)}
+.stat span{font-size:11px;font-weight:700;color:var(--gray)}
+
+/* ---- 菜单列表 ---- */
+.menu{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 14px;overflow:hidden}
+.menu-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:2px dashed var(--soft);cursor:pointer}
+.menu-item:last-child{border-bottom:none}
+.menu-item .mi-ic{width:34px;height:34px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;border:2px solid var(--ink);color:var(--ink);flex:none}
+.menu-item b{flex:1;font-size:14px}
+.menu-item .mi-sub{font-size:11px;color:var(--gray);font-weight:600}
+.menu-item .arrow{color:var(--gray)}
+
+/* ---- 分段选择 ---- */
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff;box-shadow:2px 2px 0 var(--ink);margin:0 14px 12px}
+.seg span{flex:1;text-align:center;padding:9px 4px;font-weight:800;font-size:13px;color:var(--gray);cursor:pointer}
+.seg span.on{background:var(--red);color:#fff}
+
+/* ---- 步骤 / 清单 / 避坑 ---- */
+.step-list{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 12px;padding:6px 0}
+.step{display:flex;gap:12px;padding:12px 14px;border-bottom:2px dashed var(--soft)}
+.step:last-child{border-bottom:none}
+.step .sno{width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex:none}
+.step .sno.gold{background:var(--gold);color:var(--ink)}
+.step b{display:block;font-size:13.5px}
+.step p{font-size:12px;color:var(--brown);line-height:1.55;margin-top:2px}
+.step .stime{margin-left:auto;flex:none;font-size:11px;font-weight:800;color:var(--green-dark)}
+.ing-list{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 12px;padding:8px 14px}
+.ing-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:2px dashed var(--soft);font-size:13.5px}
+.ing-item:last-child{border-bottom:none}
+.ing-item .ic{width:18px;height:18px}
+.ing-item .ok{color:var(--green)}
+.ing-item .warn{color:var(--red-dark)}
+.ing-item .alt{margin-left:auto;font-size:11px;color:var(--gray);font-weight:600}
+.pit-list{margin:0 14px 12px}
+.pit{background:#FFE9D9;border:2.5px solid var(--ink);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:12.5px;font-weight:600;line-height:1.55}
+.pit b{color:var(--red-dark)}
+
+/* ---- 底栏操作 ---- */
+.actbar{flex:none;display:flex;gap:10px;background:#fff;border-top:2.5px solid var(--ink);padding:12px 14px;position:relative;z-index:5}
+.actbar .btn{flex:1}
+.actbar .btn-sm{padding:12px}
+
+/* ---- 装饰 ---- */
+.halftone{background-image:radial-gradient(rgba(36,26,18,.10) 1.3px,transparent 1.3px);background-size:9px 9px}
+.speedlines{background:repeating-linear-gradient(108deg,rgba(255,255,255,.12) 0 16px,transparent 16px 34px)}
+.star-burst{display:inline-flex;align-items:center;gap:6px;background:var(--gold);border:2.5px solid var(--ink);color:var(--ink);font-weight:900;padding:6px 12px;border-radius:10px;box-shadow:3px 3px 0 var(--ink);font-size:13px}
+.note{font-size:11px;color:var(--gray);font-weight:600}
+
+/* ---- 瀑布流 ---- */
+.wf{column-count:2;column-gap:10px;padding:4px 14px 76px}
+.p-card{break-inside:avoid;background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);overflow:hidden;margin-bottom:12px;cursor:pointer}
+.p-img{display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:2.5px solid var(--ink)}
+.p-body{padding:8px 10px}
+.p-name{font-size:12.5px;font-weight:900}
+.p-foot{display:flex;align-items:center;gap:6px;margin-top:6px}
+.p-av{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);background:var(--soft);display:flex;align-items:center;justify-content:center}
+.p-av svg{width:12px;height:12px}
+.p-av small{font-size:9px;font-weight:900}
+.p-who{font-size:10.5px;color:var(--gray);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-like{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;color:var(--red)}
+.p-like svg{width:14px;height:14px;fill:var(--red);stroke:var(--red)}
+
+/* ---- 个人信息头 ---- */
+.profile{display:flex;align-items:center;gap:14px;margin:16px 14px;background:#fff;border:2.5px solid var(--ink);border-radius:18px;box-shadow:4px 4px 0 var(--ink);padding:16px}
+.profile .avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--red));border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.profile .avatar svg{width:34px;height:34px}
+.profile .pname{font-size:17px;font-weight:900;display:flex;align-items:center;gap:8px}
+.profile .ptag{font-size:11.5px;color:var(--brown);font-weight:600;margin-top:6px}
+.profile .edit{margin-left:auto}
+
+/* ---- 登录页 ---- */
+.login-bg{background:linear-gradient(160deg,#F7B26B 0%,var(--red) 46%,var(--red-dark) 100%);position:relative}
+.login-content{flex:1;display:flex;flex-direction:column;align-items:center;padding:46px 30px 0;position:relative;z-index:2}
+.logo-badge{width:104px;height:104px;border-radius:28px;background:var(--gold);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.logo-badge svg{width:78px;height:78px}
+.login-title{font-size:34px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:3px 3px 0 rgba(36,26,18,.4)}
+.login-sub{font-size:14px;color:#FFE9D9;font-weight:600;margin-top:8px}
+.feat-list{margin-top:26px;width:100%;display:flex;flex-direction:column;gap:12px}
+.feat{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.55);border-radius:14px;padding:12px 14px;color:#fff;backdrop-filter:blur(2px)}
+.feat .f-ic{width:34px;height:34px;border-radius:10px;background:var(--gold);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--ink);flex:none}
+.feat b{font-size:14px;display:block}
+.feat span{font-size:11.5px;color:#FFE9D9;font-weight:600}
+.login-footer{position:absolute;left:0;right:0;bottom:0;padding:20px 22px;z-index:3;background:linear-gradient(transparent,rgba(36,26,18,.28))}
+.login-footer .btn{width:100%}
+.agree{text-align:center;color:#FFE9D9;font-size:10.5px;margin-top:10px}
+.agree u{text-decoration:none;font-weight:800}
+
+/* ---- 响应式 ---- */
+@media (max-width:900px){.grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:40px 16px}}
+@media (max-width:640px){.page{padding:14px 10px 50px}.doc-header{padding:22px 14px 6px}.doc-header h1{font-size:22px}.doc-header h1 .pop{font-size:25px}.legend{display:none}}
+</style>
+</head>
+<body>
+
+<!-- SVG 图标集 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-kitchen" viewBox="0 0 24 24"><path d="M4 11h16a1 1 0 0 1 1 1v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-5a1 1 0 0 1 1-1z"/><path d="M8 11V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><path d="M9.5 5.5 8.5 3M14.5 5.5l1-2.5"/></symbol>
+  <symbol id="i-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6 .9-4.3 4.2 1 6L12 17l-5.4 2.6 1-6L3.3 9.4l6-.9z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21S4 15 4 9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15 12 21 12 21z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h2l2-3h8l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8h16v-8"/><path d="m12 4 5 5h-3v7h-4V9H7z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 7V4h4v3"/><path d="M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h5M13 17h7"/><circle cx="15" cy="7" r="2"/><circle cx="11" cy="17" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1.2 3-4 5-4 9a4 4 0 0 0 8 0c0-2-.8-3-.8-3s1.4 1 2.3 2.6A5.5 5.5 0 0 1 12 21c-4.4 0-7.5-3-7.5-7 0-5.5 7.5-11 7.5-11z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11.5A1.5 1.5 0 0 0 8.8 17H17a1.5 1.5 0 0 0 1.5-1.2L20 7H6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-11"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5 20 7 8 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 8 21l4-2.5 4 2.5-1-6.5"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 4z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4l1.6 4.9L18.5 10 13.6 11.6 12 16.5l-1.6-4.9L5.5 10l4.9-1.1z"/></symbol>
+  <symbol id="i-wechat" viewBox="0 0 24 24"><path d="M8 5h8a4.5 4.5 0 0 1 4.5 4.5v1a4.5 4.5 0 0 1-4.5 4.5h-5L7 18v-3.1A4.5 4.5 0 0 1 3.5 10.5v-1A4.5 4.5 0 0 1 8 5z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#E8482A" stroke="#241A12" stroke-width="3.5"/><path d="M19 34h26v8a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8z" fill="#fff" stroke="#241A12" stroke-width="3"/><path d="M25 34v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M15 40c-2.2-2.2-2.2-4.4 0-6.6M49 40c2.2-2.2 2.2-4.4 0-6.6" stroke="#F0A73E" stroke-width="3" stroke-linecap="round"/><path d="M45 24l1.7 3.2 3.3 1-3.3 1.2-1.7 3.1-1.6-3.1-3.4-1.2 3.4-1z" fill="#F0A73E" stroke="#241A12" stroke-width="1.4"/></symbol>
+</svg>
+
+<header class="doc-header">
+  <nav class="doc-nav">
+    <a class="on" href="01-核心业务闭环.html">01 核心闭环</a>
+    <a href="02-我的收藏与设置.html">02 收藏设置</a>
+    <a href="03-社区互动.html">03 社区互动</a>
+    <a href="04-膳食规划与智能输入.html">04 规划与输入</a>
+    <a href="05-趣味探索功能.html">05 趣味探索</a>
+  </nav>
+  <h1><span class="pop">ChefPal</span> 原型 01 · 核心业务闭环</h1>
+  <p class="doc-sub">《美食的俘虏》热血漫画插画风 · 明亮暖色 · 微信小程序 375×812 · 一行三列自适应 · 建议全屏预览</p>
+  <div class="legend">
+    <span class="lg-title">设计系统</span>
+    <span class="swatch" style="--c:#E8482A"><i></i>焰火红<small></small><b>#E8482A</b></span>
+    <span class="swatch" style="--c:#F0A73E"><i></i>熟金黄<small></small><b>#F0A73E</b></span>
+    <span class="swatch" style="--c:#2FA37E"><i></i>食材绿<small></small><b>#2FA37E</b></span>
+    <span class="swatch" style="--c:#FFF7EC"><i></i>奶油暖白<small></small><b>#FFF7EC</b></span>
+    <span class="swatch" style="--c:#241A12"><i></i>墨褐描边<small></small><b>#241A12</b></span>
+    <span class="lg-demo">
+      <button class="btn btn-red btn-sm">主按钮</button>
+      <span class="chip hot">🔥 热标签</span>
+      <span class="bubble mini">对话框</span>
+      <span class="energy" style="width:110px"><i style="width:72%"></i></span>
+    </span>
+  </div>
+</header>
+
+<main class="page">
+<div class="grid">
+
+  <!-- ══════════ 屏幕1 · 微信一键登录 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">1</span>微信一键登录 <em>进入 App</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen login-bg halftone">
+          <div class="statusbar ghost"></div>
+        <div class="login-content speedlines">
+          <div class="logo-badge"><svg class="ic" style="width:76px;height:76px"><use href="#i-logo"/></svg></div>
+          <div class="login-title">ChefPal</div>
+          <div class="login-sub">你的口袋 AI 厨师 · 从食材到餐桌</div>
+          <div class="feat-list">
+            <div class="feat"><span class="f-ic"><svg class="ic"><use href="#i-kitchen"/></svg></span><div><b>冰箱有什么，就做什么</b><span>AI 根据你的食材实时生成专属菜谱</span></div></div>
+            <div class="feat"><span class="f-ic"><svg class="ic"><use href="#i-spark"/></svg></span><div><b>怕翻车？AI 手把手教</b><span>核心秘诀 · 分步火候 · 避坑指南</span></div></div>
+            <div class="feat"><span class="f-ic"><svg class="ic"><use href="#i-award"/></svg></span><div><b>越用越懂你的口味</b><span>忌口 / 辣度 / 咸淡 一键设置</span></div></div>
+          </div>
+        </div>
+        <div class="login-footer">
+          <button class="btn btn-gold"><svg class="ic" style="width:20px;height:20px"><use href="#i-wechat"/></svg>微信一键登录</button>
+          <div class="agree">登录即代表同意 <u>《用户协议》</u> 与 <u>《隐私政策》</u></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕2 · 首页 AI烹饪百科 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">2</span>首页 · AI 烹饪百科 <em>AI 问答学厨艺</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav">
+          <h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2>
+          <span class="nbtn"><svg class="ic"><use href="#i-bell"/></svg></span>
+        </div>
+        <div class="content">
+          <div class="searchbar">
+            <svg class="ic" style="color:var(--gray)"><use href="#i-search"/></svg>
+            <input type="text" placeholder="问 AI：红烧肉怎么做不腻？">
+            <button class="sbtn"><svg class="ic"><use href="#i-search"/></svg></button>
+          </div>
+          <div class="sec" style="padding-top:12px">
+            <div class="sec-title">⚡ 猜你想问</div>
+            <div class="chips">
+              <span class="chip hot">红烧肉不腻</span>
+              <span class="chip">蒸蛋怎么才嫩</span>
+              <span class="chip">炖肉去腥</span>
+              <span class="chip">剩菜大变身</span>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="sec-title">🔥 今日 AI 秘技 <span class="more">重新生成</span></div>
+          </div>
+          <div class="bubble" style="margin:0 14px 14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <b style="font-size:15px">红烧肉怎么做不腻？</b>
+              <span class="star-burst" style="padding:2px 8px;font-size:11px">核心秘诀</span>
+            </div>
+            <p style="font-size:13px;font-weight:700;margin-top:10px">🥩 五花肉冷水下锅焯透，捞出冲净，先煸出猪油再上糖色，是"肥而不腻"的关键。</p>
+            <p style="font-size:12.5px;color:var(--brown);margin-top:8px;line-height:1.6">① 冰糖小火炒至琥珀色下肉 ② 加热水没过肉面 ③ 焖 40 分钟后大火收汁</p>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-sm btn-white"><svg class="ic filled" style="width:15px;height:15px;color:var(--gold)"><use href="#i-star"/></svg>收藏</button>
+              <button class="btn btn-sm btn-red">看完整步骤</button>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="sec-title">📚 我的问答历史</div>
+          </div>
+          <div class="qa-card">
+            <div class="qa-q"><span class="q-badge">Q</span>红烧肉怎么做不腻<span>★</span><time>3 分钟前</time></div>
+            <p class="qa-a">核心秘诀：先焯透、先煸油、后上色…已收藏 · 3 步 · 附避坑 2 条</p>
+          </div>
+          <div class="qa-card">
+            <div class="qa-q"><span class="q-badge">Q</span>蒸蛋怎么才能嫩<time>昨天</time></div>
+            <p class="qa-a">水蛋比 2:1、盖保鲜膜、小火蒸 8 分钟…</p>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕3 · 厨房 食材魔方 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">3</span>厨房 · 食材魔方 <em>核心差异化</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav">
+          <h2><span class="pop">食材魔方</span></h2>
+          <span class="nbtn"><svg class="ic"><use href="#i-clock"/></svg></span>
+        </div>
+        <div class="content">
+          <div class="sec">
+            <div class="sec-title">✨ 告诉我冰箱里有什么</div>
+            <div class="field">
+              <div class="chips">
+                <span class="chip on">西红柿<span class="x">×</span></span>
+                <span class="chip on">鸡蛋<span class="x">×</span></span>
+                <span class="chip on">面条<span class="x">×</span></span>
+                <span class="chip">＋ 添加食材</span>
+              </div>
+              <p class="note" style="margin-top:8px">已读取你的口味偏好 · 微辣 / 不忌口</p>
+            </div>
+          </div>
+          <div class="sec" style="text-align:center;padding-top:16px">
+            <button class="btn btn-red" style="padding:16px 40px;font-size:17px">
+              <svg class="ic" style="width:22px;height:22px"><use href="#i-spark"/></svg>生成魔法菜谱
+            </button>
+            <p class="note" style="margin-top:10px">基于 3 种食材 · AI 实时生成 TOP3</p>
+          </div>
+          <div class="sec">
+            <div class="sec-title">今日推荐 · 匹配度 TOP3 <span class="more">换一批</span></div>
+          </div>
+          <div class="r-grid">
+            <div class="r-card">
+              <div class="r-img" style="background:linear-gradient(135deg,#FFD9B0,#FF9D6B)">🍜<span class="deg">98%</span></div>
+              <div class="r-name">番茄鸡蛋面</div>
+              <div class="r-meta"><span class="mini-chip"><svg class="ic" style="width:11px;height:11px"><use href="#i-clock"/></svg>15分钟</span><span class="mini-chip">简单</span><span class="mini-chip red">缺:葱末</span></div>
+              <div class="energy matched"><i style="width:98%"></i></div>
+            </div>
+            <div class="r-card">
+              <div class="r-img" style="background:linear-gradient(135deg,#FFE3B8,#F0C56B)">🥚<span class="deg">92%</span></div>
+              <div class="r-name">番茄炒蛋</div>
+              <div class="r-meta"><span class="mini-chip"><svg class="ic" style="width:11px;height:11px"><use href="#i-clock"/></svg>20分钟</span><span class="mini-chip">简单</span><span class="mini-chip red">缺:糖</span></div>
+              <div class="energy matched"><i style="width:92%"></i></div>
+            </div>
+            <div class="r-card" style="grid-column:1/-1">
+              <div class="r-img" style="height:110px;background:linear-gradient(135deg,#FFE7C2,#E8B66B)">🍝<span class="deg">85%</span></div>
+              <div class="r-name">葱油拌面 <span class="mini-chip" style="font-size:10px">缺料可替代</span></div>
+              <div class="r-meta"><span class="mini-chip"><svg class="ic" style="width:11px;height:11px"><use href="#i-clock"/></svg>10分钟</span><span class="mini-chip">简单</span><span class="mini-chip red">缺:小葱</span></div>
+              <div class="energy matched"><i style="width:85%"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem on"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕4 · 菜谱详情 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">4</span>菜谱详情 <em>步骤 / 食材 / 避坑</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav">
+          <span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span>
+          <h2>番茄鸡蛋面</h2>
+          <span class="nbtn"><svg class="ic"><use href="#i-share"/></svg></span>
+        </div>
+        <div class="content">
+          <div class="r-img" style="height:150px;border-bottom:2.5px solid var(--ink);font-size:72px;background:linear-gradient(135deg,#FFD9B0,#FF9D6B)">🍜</div>
+          <div class="sec" style="padding-top:14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <h2 style="font-size:20px;font-weight:900">番茄鸡蛋面</h2>
+              <span class="star-burst" style="padding:3px 10px;font-size:12px">匹配 98%</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <span class="mini-chip"><svg class="ic" style="width:12px;height:12px"><use href="#i-clock"/></svg>15分钟</span>
+              <span class="mini-chip">难度 · 简单</span>
+              <span class="mini-chip red">🔥 约 220 千卡</span>
+            </div>
+            <div class="bubble" style="margin-top:14px">
+              <span class="star-burst" style="padding:2px 8px;font-size:11px">核心秘诀</span>
+              <p style="font-size:13px;font-weight:700;margin-top:8px">西红柿加盐炒出沙再加水，汤底才浓郁。</p>
+            </div>
+          </div>
+          <div class="seg">
+            <span class="on">烹饪步骤</span>
+            <span>食材清单</span>
+            <span>避坑指南</span>
+          </div>
+          <div class="step-list">
+            <div class="step"><span class="sno">1</span><div><b>西红柿处理</b><p>切滚刀块，油热加盐煸炒至软烂出沙（约3分钟）</p></div><span class="stime">3分钟</span></div>
+            <div class="step"><span class="sno gold">2</span><div><b>煮面</b><p>水开下面，中火煮 5 分钟，捞出过凉水更劲道</p></div><span class="stime">5分钟</span></div>
+            <div class="step"><span class="sno gold">3</span><div><b>合体</b><p>倒入打散的蛋液，小火推熟，浇在面上即可</p></div><span class="stime">3分钟</span></div>
+          </div>
+          <div class="ing-list">
+            <div class="ing-item"><svg class="ic ok"><use href="#i-check"/></svg>西红柿 2 个<span class="alt">已备齐</span></div>
+            <div class="ing-item"><svg class="ic ok"><use href="#i-check"/></svg>鸡蛋 2 枚<span class="alt">已备齐</span></div>
+            <div class="ing-item"><svg class="ic ok"><use href="#i-check"/></svg>面条 1 份<span class="alt">已备齐</span></div>
+            <div class="ing-item"><svg class="ic warn"><use href="#i-trash"/></svg>葱末<span class="alt" style="color:var(--red-dark);font-weight:800">缺 · 可用韭菜替代</span></div>
+          </div>
+        </div>
+        <div class="actbar">
+          <button class="btn btn-white btn-sm"><svg class="ic" style="width:18px;height:18px"><use href="#i-share"/></svg>分享</button>
+          <button class="btn btn-white btn-sm"><svg class="ic filled" style="width:18px;height:18px;color:var(--gold)"><use href="#i-star"/></svg>收藏</button>
+          <button class="btn btn-red btn-sm"><svg class="ic" style="width:18px;height:18px"><use href="#i-flame"/></svg>开始做饭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕5 · 发现 社区广场 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">5</span>发现 · 社区广场 <em>作品瀑布流</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop">发现</span> · 大家的厨房</h2></div>
+        <div class="content">
+          <div class="sec"><div class="chips">
+            <span class="chip hot">推荐</span><span class="chip">最新</span><span class="chip">#减脂餐</span><span class="chip">#今日晚餐</span><span class="chip">#一人食</span>
+          </div></div>
+          <div class="wf">
+            <div class="p-card">
+              <div class="p-img" style="height:150px;background:linear-gradient(135deg,#FFD9B0,#E8A24B)">🍗</div>
+              <div class="p-body"><div class="p-name">蜜汁鸡翅 · 跟做成功！</div>
+                <div class="p-foot"><span class="p-av"><small>安</small></span><span class="p-who">美食猎人阿安</span><span class="p-like"><svg><use href="#i-heart"/></svg>128</span></div>
+              </div>
+            </div>
+            <div class="p-card">
+              <div class="p-img" style="height:110px;background:linear-gradient(135deg,#FFE3B8,#F0C56B)">🍅</div>
+              <div class="p-body"><div class="p-name">第一次做番茄鸡蛋面</div>
+                <div class="p-foot"><span class="p-av"><small>莉</small></span><span class="p-who">厨房小白Lily</span><span class="p-like"><svg><use href="#i-heart"/></svg>56</span></div>
+              </div>
+            </div>
+            <div class="p-card">
+              <div class="p-img" style="height:180px;background:linear-gradient(135deg,#C8E8C2,#7FBF6B)">🥗</div>
+              <div class="p-body"><div class="p-name">减脂餐打卡 D3</div>
+                <div class="p-foot"><span class="p-av"><small>猫</small></span><span class="p-who">元气减脂猫</span><span class="p-like"><svg><use href="#i-heart"/></svg>89</span></div>
+              </div>
+            </div>
+            <div class="p-card">
+              <div class="p-img" style="height:125px;background:linear-gradient(135deg,#FFE7C2,#E8B66B)">🍝</div>
+              <div class="p-body"><div class="p-name">深夜葱油拌面 yyds</div>
+                <div class="p-foot"><span class="p-av"><small>深</small></span><span class="p-who">深夜食堂君</span><span class="p-like"><svg><use href="#i-heart"/></svg>214</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fab"><svg><use href="#i-plus"/></svg></div>
+        <div class="tabbar">
+          <div class="tabitem"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem on"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕6 · 我的 个人中心 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">6</span>我的 · 个人中心 <em>档案 / 收藏 / 设置</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop">我的厨房</span></h2><span class="nbtn"><svg class="ic"><use href="#i-sliders"/></svg></span></div>
+        <div class="content">
+          <div class="profile">
+            <div class="avatar"><svg class="ic"><use href="#i-mine"/></svg></div>
+            <div>
+              <div class="pname">美食猎人阿安 <span class="lv-badge">🏆 Lv.3</span></div>
+              <div class="ptag">已连续下厨 12 天 · 微辣派 · 咸淡适中</div>
+            </div>
+            <span class="btn btn-white btn-sm edit"><svg class="ic" style="width:15px;height:15px"><use href="#i-edit"/></svg></span>
+          </div>
+          <div class="stats">
+            <div class="stat"><b>12</b><span>收藏问答</span></div>
+            <div class="stat"><b>8</b><span>收藏菜谱</span></div>
+            <div class="stat"><b>6</b><span>我的作品</span></div>
+          </div>
+          <div class="menu">
+            <div class="menu-item"><span class="mi-ic"><svg class="ic"><use href="#i-sliders"/></svg></span><b>口味设置</b><span class="mi-sub">忌口 · 辣度 · 咸淡 · 技能</span><svg class="ic arrow" style="width:18px;height:18px"><use href="#i-chev-r"/></svg></div>
+            <div class="menu-item"><span class="mi-ic"><svg class="ic"><use href="#i-comment"/></svg></span><b>我的问答历史</b><span class="mi-sub">最近 20 条</span><svg class="ic arrow" style="width:18px;height:18px"><use href="#i-chev-r"/></svg></div>
+            <div class="menu-item"><span class="mi-ic"><svg class="ic"><use href="#i-share"/></svg></span><b>我的分享卡片</b><span class="mi-sub">生成精美卡片</span><svg class="ic arrow" style="width:18px;height:18px"><use href="#i-chev-r"/></svg></div>
+            <div class="menu-item"><span class="mi-ic"><svg class="ic"><use href="#i-info"/></svg></span><b>免责声明与帮助</b><span class="mi-sub">AI 结果仅供参考</span><svg class="ic arrow" style="width:18px;height:18px"><use href="#i-chev-r"/></svg></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem on"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

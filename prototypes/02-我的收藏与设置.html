@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefPal 原型 02 · 我的收藏与设置</title>
+<style>
+/* ============================================================
+   ChefPal · 漫画插画风设计系统（《美食的俘虏》热血意境 · 明亮暖色）
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#E8482A;--red-dark:#C7361F;--gold:#F0A73E;--gold-dark:#D18A2C;
+  --green:#2FA37E;--green-dark:#1F7F60;--cream:#FFF7EC;--white:#fff;
+  --ink:#241A12;--brown:#4A2E1D;--soft:#F6E3C3;--gray:#8A6F5C;
+  --line:2.5px solid var(--ink);--shadow:4px 4px 0 var(--ink);
+}
+body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+.pop{font-family:'ZCOOL KuaiLe','Comic Sans MS',cursive}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.filled{fill:currentColor;stroke:currentColor}
+
+/* ---- 文档页头 + 设计系统图例 ---- */
+.doc-header{max-width:1280px;margin:0 auto;padding:34px 22px 10px}
+.doc-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.doc-nav a{text-decoration:none;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 14px;box-shadow:2px 2px 0 var(--ink)}
+.doc-nav a.on{background:var(--red);color:#fff}
+.doc-header h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+.doc-header h1 .pop{color:var(--red);font-size:34px;margin-right:6px}
+.doc-sub{color:var(--brown);font-size:14px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:12px 14px}
+.lg-title{font-weight:900;font-size:13px;border-right:2px dashed var(--soft);padding-right:12px;margin-right:4px}
+.swatch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.swatch i{width:18px;height:18px;border-radius:6px;border:2px solid var(--ink);background:var(--c)}
+.swatch b{color:var(--gray);font-weight:500;font-size:11px}
+.lg-demo{display:inline-flex;align-items:center;gap:8px}
+
+/* ---- 网格布局 ---- */
+.page{max-width:1280px;margin:0 auto;padding:20px 22px 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(372px,1fr));gap:44px 30px;justify-items:center}
+.screen-card{width:100%;display:flex;flex-direction:column;align-items:center}
+.screen-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:14px}
+.screen-label .num{background:var(--red);color:#fff;width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:2px 2px 0 var(--ink)}
+.screen-label em{font-style:normal;color:var(--gray);font-weight:500;font-size:12px}
+
+/* ---- 手机框 ---- */
+.phone{width:375px;height:812px;border-radius:42px;padding:12px;background:#151009;box-shadow:8px 14px 0 rgba(36,26,18,.18),0 40px 70px rgba(0,0,0,.28);position:relative;flex:none}
+.phone .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:22px;background:#151009;border-radius:0 0 14px 14px;z-index:60}
+.screen{width:100%;height:100%;border-radius:32px;background:var(--cream);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.statusbar{height:30px;flex:none;background:#fff;position:relative;z-index:5}
+.statusbar.ghost{background:transparent}
+.content{flex:1;overflow-y:auto;scrollbar-width:none;position:relative}
+.content::-webkit-scrollbar{display:none}
+.tabbar{flex:none;display:flex;background:#fff;border-top:2.5px solid var(--ink);padding:8px 4px 10px;position:relative;z-index:5}
+.tabitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--gray);cursor:pointer}
+.tabitem svg{width:24px;height:24px}
+.tabitem.on{color:var(--red)}
+
+/* ---- 顶部导航 ---- */
+.nav{display:flex;align-items:center;gap:8px;padding:8px 14px 10px;background:#fff;border-bottom:2.5px solid var(--ink);flex:none;z-index:5;position:relative;min-height:52px}
+.nav .nbtn{width:34px;height:34px;border-radius:10px;border:2px solid var(--ink);background:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:2px 2px 0 var(--ink);color:var(--ink)}
+.nav h2{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.nav h2 ~ .nbtn{margin-left:auto}
+.nav h2 ~ .txtbtn{margin-left:auto}
+.nav .nbtn.on{background:var(--red);color:#fff}
+.nav .txtbtn{font-size:13px;font-weight:800;color:var(--gray);cursor:pointer}
+
+/* ---- 按钮 ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2.5px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);font-weight:900;font-size:15px;padding:13px 22px;cursor:pointer;transition:transform .12s,box-shadow .12s;text-decoration:none}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn-red{background:var(--red);color:#fff}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-green{background:var(--green);color:#fff}
+.btn-white{background:#fff;color:var(--ink)}
+.btn-block{display:flex;width:100%}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:11px;box-shadow:3px 3px 0 var(--ink)}
+
+/* ---- 标签 / 输入 ---- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.chip.hot{background:var(--gold);color:var(--ink);font-weight:800}
+.chip.on{background:var(--red);color:#fff}
+.field{background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);padding:12px}
+.field-label{font-size:12px;font-weight:800;color:var(--gray);margin-bottom:8px}
+
+/* ---- 区块标题 ---- */
+.sec{padding:14px 14px 4px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:10px}
+.sec-title::before{content:"";width:8px;height:18px;border-radius:4px;background:var(--red);border:2px solid var(--ink)}
+.sec-title .more{margin-left:auto;font-size:12px;font-weight:700;color:var(--gray)}
+
+/* ---- 卡片 ---- */
+.qa-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:14px;margin:0 14px 12px}
+.qa-q{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900}
+.qa-q .q-badge{background:var(--gold);border:2px solid var(--ink);border-radius:8px;font-size:11px;padding:1px 7px;flex:none}
+.qa-q time{margin-left:auto;font-size:11px;color:var(--gray);font-weight:600}
+.qa-a{font-size:12.5px;color:var(--brown);line-height:1.6;margin-top:8px}
+.r-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);overflow:hidden;cursor:pointer;margin:0 14px 12px}
+.r-img{height:96px;display:flex;align-items:center;justify-content:center;font-size:44px;border-bottom:2.5px solid var(--ink);position:relative;overflow:hidden}
+.r-img .deg{position:absolute;top:6px;right:6px;background:#fff;border:2px solid var(--ink);border-radius:8px;font-size:10.5px;font-weight:900;padding:1px 6px;color:var(--red)}
+.r-name{font-size:15px;font-weight:900;padding:9px 10px 3px}
+.r-meta{display:flex;flex-wrap:wrap;gap:6px;padding:2px 10px 10px;align-items:center}
+.mini-chip{display:inline-flex;align-items:center;gap:3px;background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10.5px;font-weight:800;padding:1px 6px}
+.mini-chip.red{background:#FFD9D0;color:var(--red-dark)}
+.energy{height:11px;border:2px solid var(--ink);border-radius:8px;background:var(--soft);overflow:hidden}
+.energy i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--red))}
+
+/* ---- 对话框 ---- */
+.bubble{position:relative;background:#fff;border:2.5px solid var(--ink);border-radius:14px;padding:12px 14px;box-shadow:3px 3px 0 var(--ink)}
+.bubble.mini{box-shadow:2px 2px 0 var(--ink);padding:5px 10px;border-radius:10px;font-size:12px;font-weight:800}
+.bubble.mini::after{display:none}
+
+/* ---- 分段选择 ---- */
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff;box-shadow:2px 2px 0 var(--ink);margin:14px 14px 12px}
+.seg span{flex:1;text-align:center;padding:9px 4px;font-weight:800;font-size:13px;color:var(--gray);cursor:pointer}
+.seg span.on{background:var(--red);color:#fff}
+.seg span em{font-style:normal;font-size:11px;opacity:.8}
+
+/* ---- 菜单列表 ---- */
+.menu{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 14px;overflow:hidden}
+.menu-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:2px dashed var(--soft);cursor:pointer}
+.menu-item:last-child{border-bottom:none}
+.menu-item .mi-ic{width:34px;height:34px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;border:2px solid var(--ink);color:var(--ink);flex:none}
+.menu-item b{flex:1;font-size:14px}
+.menu-item .mi-sub{font-size:11px;color:var(--gray);font-weight:600}
+.menu-item .arrow{color:var(--gray)}
+
+/* ---- 装饰 ---- */
+.halftone{background-image:radial-gradient(rgba(36,26,18,.10) 1.3px,transparent 1.3px);background-size:9px 9px}
+.star-burst{display:inline-flex;align-items:center;gap:6px;background:var(--gold);border:2.5px solid var(--ink);color:var(--ink);font-weight:900;padding:6px 12px;border-radius:10px;box-shadow:3px 3px 0 var(--ink);font-size:13px}
+.note{font-size:11px;color:var(--gray);font-weight:600}
+
+/* ---- 设置专属：滑块 / 单选组 / 删除行 ---- */
+.set-group{margin:0 14px 16px}
+.set-group .set-t{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.set-group .set-t em{font-style:normal;color:var(--gray);font-size:11px;font-weight:600}
+.slider{position:relative;height:30px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:2px 2px 0 var(--ink);margin-bottom:10px}
+.slider .fill{position:absolute;top:0;left:0;bottom:0;width:38%;background:linear-gradient(90deg,var(--gold),var(--red));border-radius:999px;border-right:2px solid var(--ink)}
+.slider .thumb{position:absolute;top:50%;left:38%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--gold);border:3px solid var(--ink);z-index:2}
+.slider .ticks{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10.5px;font-weight:800;color:var(--ink);z-index:3;pointer-events:none}
+.opt-row{display:flex;gap:8px;flex-wrap:wrap}
+.opt{flex:1;min-width:90px;text-align:center;background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:10px 4px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink);color:var(--gray)}
+.opt.on{background:var(--red);color:#fff;box-shadow:2px 2px 0 var(--ink)}
+.his-item{display:flex;align-items:center;gap:10px;background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:2px 2px 0 var(--ink);padding:11px 12px;margin:0 14px 10px}
+.his-item .q-badge{background:var(--gold);border:2px solid var(--ink);border-radius:8px;font-size:11px;padding:1px 7px;font-weight:900;flex:none}
+.his-item .htext{flex:1;min-width:0}
+.his-item b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.his-item time{font-size:10.5px;color:var(--gray);font-weight:600}
+.his-item .del{color:var(--gray);cursor:pointer;flex:none}
+
+/* ---- 分享卡片 ---- */
+.share-card{width:310px;margin:16px auto 14px;background:#fff;border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:6px 6px 0 var(--ink);transform:rotate(-1deg)}
+.share-card .sc-img{height:150px;display:flex;align-items:center;justify-content:center;font-size:72px;border-bottom:3px solid var(--ink);background:linear-gradient(135deg,#FFD9B0,#FF9D6B);position:relative}
+.share-card .sc-img .brand{position:absolute;top:10px;left:10px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:8px;font-size:11px;font-weight:900;padding:2px 8px}
+.share-card .sc-body{padding:14px}
+.share-card .sc-body h3{font-size:18px;font-weight:900}
+.share-card .sc-meta{display:flex;gap:6px;margin:8px 0}
+.share-card .sc-tips{font-size:12px;color:var(--brown);line-height:1.7;background:var(--soft);border:2px solid var(--ink);border-radius:10px;padding:8px 10px;margin-top:8px}
+.share-card .sc-foot{display:flex;align-items:center;gap:10px;margin-top:12px;border-top:2px dashed var(--soft);padding-top:10px}
+.sc-logo{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:900;flex:1}
+.sc-logo .logo-mini{width:26px;height:26px;border-radius:8px;background:var(--red);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.qr{width:78px;height:78px;background:#fff;border:2px solid var(--ink);display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);gap:1px;padding:2px;flex:none}
+.qr i{background:var(--ink)}
+
+/* ---- 空状态 ---- */
+.empty{padding:54px 24px 30px;text-align:center}
+.empty .empty-art{width:120px;height:120px;margin:0 auto 18px;border:3px dashed var(--gray);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--soft);color:var(--gray);position:relative}
+.empty .empty-art svg{width:56px;height:56px}
+.empty h3{font-size:17px;font-weight:900}
+.empty p{font-size:13px;color:var(--brown);margin-top:8px;line-height:1.6}
+.empty .btn{margin-top:20px}
+
+/* ---- 引导页 ---- */
+.onboard-bg{background:linear-gradient(160deg,#F7B26B 0%,var(--red) 55%,var(--red-dark) 100%);position:relative}
+.onboard-content{flex:1;display:flex;flex-direction:column;align-items:center;padding:50px 26px 30px;text-align:center;position:relative;z-index:2}
+.onboard-content .logo-badge{width:92px;height:92px;border-radius:24px;background:var(--gold);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.onboard-content .logo-badge svg{width:70px;height:70px}
+.onboard-content h2{font-size:24px;font-weight:900;color:#fff;text-shadow:3px 3px 0 rgba(36,26,18,.35)}
+.onboard-content .osub{font-size:13.5px;color:#FFE9D9;font-weight:600;margin-top:6px}
+.ob-cards{margin-top:28px;width:100%;display:flex;flex-direction:column;gap:12px}
+.ob-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.55);border-radius:16px;padding:14px;text-align:left;color:#fff}
+.ob-card .ob-ic{width:40px;height:40px;border-radius:12px;background:var(--gold);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--ink);flex:none}
+.ob-card b{font-size:14.5px;display:block}
+.ob-card span{font-size:11.5px;color:#FFE9D9;font-weight:600}
+.ob-dots{display:flex;gap:8px;margin-top:24px}
+.ob-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5)}
+.ob-dots i.on{background:#fff;width:22px;border-radius:999px}
+.onboard-footer{position:absolute;left:0;right:0;bottom:0;padding:20px 24px;z-index:3;background:linear-gradient(transparent,rgba(36,26,18,.3))}
+
+/* ---- 响应式 ---- */
+@media (max-width:900px){.grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:40px 16px}}
+@media (max-width:640px){.page{padding:14px 10px 50px}.doc-header{padding:22px 14px 6px}.doc-header h1{font-size:22px}.doc-header h1 .pop{font-size:25px}.legend{display:none}}
+</style>
+</head>
+<body>
+
+<!-- SVG 图标集 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-kitchen" viewBox="0 0 24 24"><path d="M4 11h16a1 1 0 0 1 1 1v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-5a1 1 0 0 1 1-1z"/><path d="M8 11V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><path d="M9.5 5.5 8.5 3M14.5 5.5l1-2.5"/></symbol>
+  <symbol id="i-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6 .9-4.3 4.2 1 6L12 17l-5.4 2.6 1-6L3.3 9.4l6-.9z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21S4 15 4 9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15 12 21 12 21z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h2l2-3h8l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8h16v-8"/><path d="m12 4 5 5h-3v7h-4V9H7z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 7V4h4v3"/><path d="M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h5M13 17h7"/><circle cx="15" cy="7" r="2"/><circle cx="11" cy="17" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1.2 3-4 5-4 9a4 4 0 0 0 8 0c0-2-.8-3-.8-3s1.4 1 2.3 2.6A5.5 5.5 0 0 1 12 21c-4.4 0-7.5-3-7.5-7 0-5.5 7.5-11 7.5-11z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11.5A1.5 1.5 0 0 0 8.8 17H17a1.5 1.5 0 0 0 1.5-1.2L20 7H6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-11"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5 20 7 8 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 8 21l4-2.5 4 2.5-1-6.5"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 4z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4l1.6 4.9L18.5 10 13.6 11.6 12 16.5l-1.6-4.9L5.5 10l4.9-1.1z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#E8482A" stroke="#241A12" stroke-width="3.5"/><path d="M19 34h26v8a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8z" fill="#fff" stroke="#241A12" stroke-width="3"/><path d="M25 34v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M15 40c-2.2-2.2-2.2-4.4 0-6.6M49 40c2.2-2.2 2.2-4.4 0-6.6" stroke="#F0A73E" stroke-width="3" stroke-linecap="round"/><path d="M45 24l1.7 3.2 3.3 1-3.3 1.2-1.7 3.1-1.6-3.1-3.4-1.2 3.4-1z" fill="#F0A73E" stroke="#241A12" stroke-width="1.4"/></symbol>
+</svg>
+
+<header class="doc-header">
+  <nav class="doc-nav">
+    <a href="01-核心业务闭环.html">01 核心闭环</a>
+    <a class="on" href="02-我的收藏与设置.html">02 收藏设置</a>
+    <a href="03-社区互动.html">03 社区互动</a>
+    <a href="04-膳食规划与智能输入.html">04 规划与输入</a>
+    <a href="05-趣味探索功能.html">05 趣味探索</a>
+  </nav>
+  <h1><span class="pop">ChefPal</span> 原型 02 · 我的收藏与设置</h1>
+  <p class="doc-sub">收藏体系 · 口味偏好 · 问答历史 · 分享卡片 · 空状态 · 新用户引导</p>
+  <div class="legend">
+    <span class="lg-title">设计系统</span>
+    <span class="swatch" style="--c:#E8482A"><i></i>焰火红<b>#E8482A</b></span>
+    <span class="swatch" style="--c:#F0A73E"><i></i>熟金黄<b>#F0A73E</b></span>
+    <span class="swatch" style="--c:#2FA37E"><i></i>食材绿<b>#2FA37E</b></span>
+    <span class="swatch" style="--c:#FFF7EC"><i></i>奶油暖白<b>#FFF7EC</b></span>
+    <span class="swatch" style="--c:#241A12"><i></i>墨褐描边<b>#241A12</b></span>
+    <span class="lg-demo"><button class="btn btn-red btn-sm">主按钮</button><span class="chip hot">🔥 热标签</span><span class="bubble mini">对话框</span></span>
+  </div>
+</header>
+
+<main class="page">
+<div class="grid">
+
+  <!-- ══════════ 屏幕1 · 我的收藏（双Tab） ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">1</span>我的收藏 <em>问答 / 菜谱 双分类</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>我的收藏</h2><span class="nbtn"><svg class="ic"><use href="#i-trash"/></svg></span></div>
+        <div class="content">
+          <div class="seg">
+            <span class="on">问答收藏 <em>12</em></span>
+            <span>菜谱收藏 <em>8</em></span>
+          </div>
+          <div class="qa-card">
+            <div class="qa-q"><span class="q-badge">Q</span>红烧肉怎么做不腻<span><svg class="ic filled" style="width:16px;height:16px;color:var(--gold)"><use href="#i-star"/></svg></span><time>3 分钟前</time></div>
+            <p class="qa-a">核心秘诀：先焯透、先煸油、后上色…<br><b style="color:var(--red-dark)">❄ 避坑：</b>冷水下锅焯肉，肉不柴。</p>
+          </div>
+          <div class="qa-card">
+            <div class="qa-q"><span class="q-badge">Q</span>蒸蛋怎么才能嫩<span><svg class="ic filled" style="width:16px;height:16px;color:var(--gold)"><use href="#i-star"/></svg></span><time>昨天</time></div>
+            <p class="qa-a">水蛋比 2:1、盖保鲜膜、小火蒸 8 分钟，焖 2 分钟更嫩。</p>
+          </div>
+          <div class="qa-card">
+            <div class="qa-q"><span class="q-badge">Q</span>炖肉怎么去腥<span><svg class="ic filled" style="width:16px;height:16px;color:var(--gold)"><use href="#i-star"/></svg></span><time>周一</time></div>
+            <p class="qa-a">冷水焯 + 料酒 + 姜片，浮沫撇净是关键。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕2 · 口味设置 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">2</span>口味设置 <em>注入 AI 推荐偏好</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>口味设置</h2></div>
+        <div class="content">
+          <div class="set-group">
+            <div class="set-t">⚠ 忌口 <em>过敏 / 宗教 · 可多选</em></div>
+            <div class="chips"><span class="chip on">花生</span><span class="chip">海鲜</span><span class="chip">乳制品</span><span class="chip">香菜</span><span class="chip">无忌口</span></div>
+          </div>
+          <div class="set-group">
+            <div class="set-t">🌶 辣度偏好</div>
+            <div class="slider"><span class="fill"></span><span class="thumb"></span><span class="ticks"><span>不吃辣</span><span>微辣</span><span>中辣</span><span>特辣</span></span></div>
+          </div>
+          <div class="set-group">
+            <div class="set-t">🧂 咸淡口味</div>
+            <div class="opt-row"><span class="opt">偏淡</span><span class="opt on">适中</span><span class="opt">偏咸</span></div>
+          </div>
+          <div class="set-group">
+            <div class="set-t">👨‍🍳 技能水平</div>
+            <div class="opt-row"><span class="opt on">厨房小白</span><span class="opt">进阶达人</span><span class="opt">实力大厨</span></div>
+            <p class="note" style="margin-top:10px">技能越高，步骤讲解越精简、术语越多。</p>
+          </div>
+          <div class="sec"><button class="btn btn-red btn-block">保存偏好设置</button></div>
+          <p class="note" style="text-align:center;padding:10px 0 20px">保存后，AI 生成菜谱将自动注入你的口味偏好</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕3 · 问答历史 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">3</span>问答历史 <em>最近 20 条 · 可删除</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>问答历史</h2><span class="txtbtn">清空</span></div>
+        <div class="content">
+          <div style="padding:14px 0 0">
+            <div class="his-item"><span class="q-badge">Q</span><div class="htext"><b>红烧肉怎么做不腻？</b><time>今天 09:12 · 已收藏</time></div><svg class="ic del" style="width:19px;height:19px"><use href="#i-trash"/></svg></div>
+            <div class="his-item"><span class="q-badge">Q</span><div class="htext"><b>蒸蛋怎么才能嫩？</b><time>昨天 21:40</time></div><svg class="ic del" style="width:19px;height:19px"><use href="#i-trash"/></svg></div>
+            <div class="his-item"><span class="q-badge">Q</span><div class="htext"><b>冰箱只剩鸡蛋和西红柿怎么办？</b><time>周一 19:05</time></div><svg class="ic del" style="width:19px;height:19px"><use href="#i-trash"/></svg></div>
+            <div class="his-item"><span class="q-badge">Q</span><div class="htext"><b>炖肉怎么去腥？</b><time>上周日 12:30</time></div><svg class="ic del" style="width:19px;height:19px"><use href="#i-trash"/></svg></div>
+            <div class="his-item"><span class="q-badge">Q</span><div class="htext"><b>蛋炒饭先炒蛋还是先炒饭？</b><time>上周五 08:15</time></div><svg class="ic del" style="width:19px;height:19px"><use href="#i-trash"/></svg></div>
+          </div>
+          <div class="sec"><button class="btn btn-white btn-block">清空全部历史</button></div>
+          <p class="note" style="text-align:center;padding:4px 0 24px">最多保留最近 20 条问答记录</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕4 · 分享卡片生成 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">4</span>分享卡片 <em>长按保存 · 带小程序码</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>生成分享卡片</h2></div>
+        <div class="content">
+          <div class="share-card">
+            <div class="sc-img">🍜<span class="brand">ChefPal 生成</span></div>
+            <div class="sc-body">
+              <h3>番茄鸡蛋面</h3>
+              <div class="sc-meta"><span class="mini-chip">匹配 98%</span><span class="mini-chip">15分钟</span><span class="mini-chip">简单</span></div>
+              <div class="sc-tips">✨ 核心秘诀：西红柿加盐炒出沙，汤底才浓郁。<br>🍳 3 步 11 分钟搞定，新手零翻车。</div>
+              <div class="sc-foot">
+                <span class="sc-logo"><span class="logo-mini"><svg class="ic" style="width:18px;height:18px"><use href="#i-kitchen"/></svg></span>ChefPal · 口袋AI厨师</span>
+                <span class="qr"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              </div>
+            </div>
+          </div>
+          <p class="note" style="text-align:center;margin:8px 0 12px">🎴 长按卡片保存，分享给好友或朋友圈</p>
+          <div class="actbar" style="border-top:none">
+            <button class="btn btn-white btn-sm" style="flex:1">保存到相册</button>
+            <button class="btn btn-red btn-sm" style="flex:1"><svg class="ic" style="width:17px;height:17px"><use href="#i-share"/></svg>分享给好友</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕5 · 空状态 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">5</span>空状态 <em>还没有收藏</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>我的收藏</h2></div>
+        <div class="content">
+          <div class="seg"><span class="on">问答收藏 <em>0</em></span><span>菜谱收藏 <em>0</em></span></div>
+          <div class="empty">
+            <div class="empty-art"><svg class="ic"><use href="#i-comment"/></svg></div>
+            <h3>还没有收藏的问答</h3>
+            <p>问 AI 一个问题，把「核心秘诀」收藏起来<br>下次下厨随时翻看，再也不怕翻车</p>
+            <button class="btn btn-red">去 AI 百科逛逛</button>
+            <p class="note" style="margin-top:16px">菜谱收藏为空时，同样显示此状态</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕6 · 新用户引导 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">6</span>新用户引导 <em>学 · 做 · 晒</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen onboard-bg halftone">
+          <div class="statusbar ghost"></div>
+        <div class="onboard-content">
+          <div class="logo-badge"><svg class="ic" style="width:68px;height:68px"><use href="#i-logo"/></svg></div>
+          <h2>欢迎来到美食猎人的世界</h2>
+          <p class="osub">把冰箱变成你的食材猎场 🗺</p>
+          <div class="ob-cards">
+            <div class="ob-card"><span class="ob-ic"><svg class="ic"><use href="#i-search"/></svg></span><div><b>学 · 问 AI 学厨艺</b><span>核心秘诀 + 避坑指南，结构化讲解</span></div></div>
+            <div class="ob-card"><span class="ob-ic"><svg class="ic"><use href="#i-kitchen"/></svg></span><div><b>做 · 食材魔方变好菜</b><span>冰箱有什么就做什么，AI 实时生成</span></div></div>
+            <div class="ob-card"><span class="ob-ic"><svg class="ic"><use href="#i-discover"/></svg></span><div><b>晒 · 社区分享作品</b><span>跟做打卡，收获点赞与鼓励</span></div></div>
+          </div>
+          <div class="ob-dots"><i class="on"></i><i></i><i></i></div>
+        </div>
+        <div class="onboard-footer">
+          <button class="btn btn-gold btn-block">开始我的美食之旅</button>
+          <div class="agree" style="text-align:center;color:#FFE9D9;font-size:10.5px;margin-top:10px">跳过</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

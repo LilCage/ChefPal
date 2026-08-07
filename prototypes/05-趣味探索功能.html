@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefPal 原型 05 · 趣味探索功能</title>
+<style>
+/* ============================================================
+   ChefPal · 漫画插画风设计系统（《美食的俘虏》热血意境 · 明亮暖色）
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#E8482A;--red-dark:#C7361F;--gold:#F0A73E;--gold-dark:#D18A2C;
+  --green:#2FA37E;--green-dark:#1F7F60;--cream:#FFF7EC;--white:#fff;
+  --ink:#241A12;--brown:#4A2E1D;--soft:#F6E3C3;--gray:#8A6F5C;
+  --line:2.5px solid var(--ink);--shadow:4px 4px 0 var(--ink);
+}
+body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+.pop{font-family:'ZCOOL KuaiLe','Comic Sans MS',cursive}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.filled{fill:currentColor;stroke:currentColor}
+
+/* ---- 文档页头 ---- */
+.doc-header{max-width:1280px;margin:0 auto;padding:34px 22px 10px}
+.doc-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.doc-nav a{text-decoration:none;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 14px;box-shadow:2px 2px 0 var(--ink)}
+.doc-nav a.on{background:var(--red);color:#fff}
+.doc-header h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+.doc-header h1 .pop{color:var(--red);font-size:34px;margin-right:6px}
+.doc-sub{color:var(--brown);font-size:14px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:12px 14px}
+.lg-title{font-weight:900;font-size:13px;border-right:2px dashed var(--soft);padding-right:12px;margin-right:4px}
+.swatch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.swatch i{width:18px;height:18px;border-radius:6px;border:2px solid var(--ink);background:var(--c)}
+.swatch b{color:var(--gray);font-weight:500;font-size:11px}
+.lg-demo{display:inline-flex;align-items:center;gap:8px}
+
+/* ---- 网格 ---- */
+.page{max-width:1280px;margin:0 auto;padding:20px 22px 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(372px,1fr));gap:44px 30px;justify-items:center}
+.screen-card{width:100%;display:flex;flex-direction:column;align-items:center}
+.screen-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:14px}
+.screen-label .num{background:var(--red);color:#fff;width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:2px 2px 0 var(--ink)}
+.screen-label em{font-style:normal;color:var(--gray);font-weight:500;font-size:12px}
+
+/* ---- 手机框 ---- */
+.phone{width:375px;height:812px;border-radius:42px;padding:12px;background:#151009;box-shadow:8px 14px 0 rgba(36,26,18,.18),0 40px 70px rgba(0,0,0,.28);position:relative;flex:none}
+.phone .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:22px;background:#151009;border-radius:0 0 14px 14px;z-index:60}
+.screen{width:100%;height:100%;border-radius:32px;background:var(--cream);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.statusbar{height:30px;flex:none;background:#fff;position:relative;z-index:5}
+.content{flex:1;overflow-y:auto;scrollbar-width:none;position:relative}
+.content::-webkit-scrollbar{display:none}
+.tabbar{flex:none;display:flex;background:#fff;border-top:2.5px solid var(--ink);padding:8px 4px 10px;position:relative;z-index:5}
+.tabitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--gray);cursor:pointer}
+.tabitem svg{width:24px;height:24px}
+.tabitem.on{color:var(--red)}
+
+/* ---- 顶部导航 ---- */
+.nav{display:flex;align-items:center;gap:8px;padding:8px 14px 10px;background:#fff;border-bottom:2.5px solid var(--ink);flex:none;z-index:5;position:relative;min-height:52px}
+.nav .nbtn{width:34px;height:34px;border-radius:10px;border:2px solid var(--ink);background:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:2px 2px 0 var(--ink);color:var(--ink)}
+.nav h2{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.nav h2 ~ .nbtn{margin-left:auto}
+.nav h2 ~ .txtbtn{margin-left:auto}
+.nav .txtbtn{font-size:13px;font-weight:800;color:var(--gray);cursor:pointer}
+
+/* ---- 按钮 ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2.5px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);font-weight:900;font-size:15px;padding:13px 22px;cursor:pointer;transition:transform .12s,box-shadow .12s;text-decoration:none}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn-red{background:var(--red);color:#fff}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-green{background:var(--green);color:#fff}
+.btn-white{background:#fff;color:var(--ink)}
+.btn-block{display:flex;width:100%}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:11px;box-shadow:3px 3px 0 var(--ink)}
+
+/* ---- 区块 ---- */
+.sec{padding:14px 14px 4px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:10px}
+.sec-title::before{content:"";width:8px;height:18px;border-radius:4px;background:var(--red);border:2px solid var(--ink)}
+.sec-title .more{margin-left:auto;font-size:12px;font-weight:700;color:var(--gray)}
+.note{font-size:11px;color:var(--gray);font-weight:600}
+.mini-chip{display:inline-flex;align-items:center;gap:3px;background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10.5px;font-weight:800;padding:1px 6px}
+.mini-chip.red{background:#FFD9D0;color:var(--red-dark)}
+.mini-chip.green{background:#DDF0E8;color:var(--green-dark)}
+.bubble{position:relative;background:#fff;border:2.5px solid var(--ink);border-radius:14px;padding:12px 14px;box-shadow:3px 3px 0 var(--ink)}
+.star-burst{display:inline-flex;align-items:center;gap:6px;background:var(--gold);border:2.5px solid var(--ink);color:var(--ink);font-weight:900;padding:6px 12px;border-radius:10px;box-shadow:3px 3px 0 var(--ink);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.chip.hot{background:var(--gold);color:var(--ink);font-weight:800}
+.chip.on{background:var(--red);color:#fff}
+
+/* ---- 黑暗料理 ---- */
+.fail-img{height:180px;background:linear-gradient(135deg,#8A6F5C,#4A2E1D);border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:14px 14px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#FFE9D9;position:relative;overflow:hidden}
+.fail-img .emoji{font-size:56px;opacity:.9}
+.fail-img .add{background:var(--gold);color:var(--ink);border:2px solid var(--ink);border-radius:10px;font-size:13px;font-weight:900;padding:6px 16px;box-shadow:2px 2px 0 var(--ink)}
+.diag-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:14px;padding:12px 14px}
+.diag-row{display:flex;gap:10px;padding:10px 0;border-bottom:2px dashed var(--soft);font-size:13px}
+.diag-row:last-child{border-bottom:none}
+.diag-row .d-ic{width:28px;height:28px;border-radius:9px;background:#FFD9D0;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.diag-row b{display:block;font-size:13.5px}
+.diag-row p{font-size:12px;color:var(--brown);line-height:1.55;margin-top:2px}
+.diag-row .fix{color:var(--green-dark);font-weight:800}
+
+/* ---- 家庭投票 ---- */
+.vote-q{text-align:center;padding:18px 16px 8px}
+.vote-q h3{font-size:19px;font-weight:900}
+.vote-q p{font-size:12px;color:var(--gray);font-weight:600;margin-top:6px}
+.vote-opt{display:flex;align-items:center;gap:12px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 12px;padding:14px;position:relative;overflow:hidden;cursor:pointer}
+.vote-opt .v-letter{width:34px;height:34px;border-radius:10px;background:var(--soft);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;flex:none}
+.vote-opt.win .v-letter{background:var(--gold)}
+.vote-opt b{flex:1;font-size:14.5px}
+.vote-opt .v-num{font-size:13px;font-weight:900;color:var(--red)}
+.vote-opt .v-bar{position:absolute;left:0;bottom:0;height:6px;background:linear-gradient(90deg,var(--gold),var(--red))}
+.vote-opt.win{border-color:var(--green)}
+.vote-opt .v-tag{position:absolute;top:8px;right:8px;background:var(--green);color:#fff;border:2px solid var(--ink);border-radius:8px;font-size:10px;font-weight:900;padding:1px 7px}
+
+/* ---- 时令日历 ---- */
+.month-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 4px}
+.month-bar b{font-size:16px;font-weight:900}
+.month-bar .arrow{width:30px;height:30px;border-radius:9px;border:2px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--ink);color:var(--ink)}
+.season-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px 14px}
+.season-item{background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:2px 2px 0 var(--ink);text-align:center;padding:12px 4px;position:relative}
+.season-item .s-emoji{font-size:28px;display:block}
+.season-item b{font-size:12.5px;display:block;margin-top:6px}
+.season-item .s-badge{position:absolute;top:6px;right:6px;font-size:9px;font-weight:900;border:2px solid var(--ink);border-radius:6px;padding:0 4px}
+.season-item .s-badge.best{background:var(--red);color:#fff}
+.season-item .s-badge.ok{background:var(--gold);color:var(--ink)}
+.season-item .s-note{font-size:10px;color:var(--gray);font-weight:600;margin-top:2px;display:block}
+
+/* ---- 挑战 ---- */
+.chal-hero{background:linear-gradient(135deg,#F7B26B,var(--red));border:3px solid var(--ink);border-radius:20px;box-shadow:5px 5px 0 var(--ink);margin:14px;padding:18px;color:#fff;position:relative;overflow:hidden}
+.chal-hero .speedlines{position:absolute;inset:0;background:repeating-linear-gradient(108deg,rgba(255,255,255,.1) 0 16px,transparent 16px 34px)}
+.chal-hero h3{font-size:19px;font-weight:900;position:relative}
+.chal-hero p{font-size:12px;margin-top:6px;position:relative;color:#FFE9D9;font-weight:600}
+.chal-progress{background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.6);border-radius:999px;height:16px;margin-top:14px;overflow:hidden;position:relative}
+.chal-progress i{display:block;height:100%;width:62%;background:var(--gold);border-right:2px solid var(--ink)}
+.chal-meta{display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-top:8px;position:relative}
+.rank-list{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:0 14px 14px;overflow:hidden}
+.rank-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:2px dashed var(--soft)}
+.rank-item:last-child{border-bottom:none}
+.rank-item .r-no{width:26px;height:26px;border-radius:8px;background:var(--soft);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex:none}
+.rank-item:nth-child(1) .r-no{background:var(--gold)}
+.rank-item b{font-size:13.5px;flex:1}
+.rank-item .r-score{font-size:12px;font-weight:900;color:var(--red)}
+.rank-item .r-days{font-size:11px;color:var(--gray);font-weight:700}
+
+/* ---- 多智能体 ---- */
+.agent-tabs{display:flex;gap:8px;padding:14px 14px 0}
+.agent-tabs .ag{flex:1;text-align:center;background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:8px 2px;font-weight:800;font-size:12.5px;box-shadow:2px 2px 0 var(--ink);color:var(--gray);cursor:pointer}
+.agent-tabs .ag.on{background:var(--red);color:#fff}
+.agent-tabs .ag small{display:block;font-size:9.5px;font-weight:600;opacity:.8;margin-top:1px}
+.agent-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);margin:12px 14px;overflow:hidden}
+.agent-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:2px dashed var(--soft)}
+.agent-head .a-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink);flex:none}
+.agent-head b{font-size:14px;display:block}
+.agent-head span{font-size:11px;color:var(--gray);font-weight:600}
+.agent-head .a-lv{margin-left:auto;background:var(--gold);border:2px solid var(--ink);border-radius:999px;font-size:10px;font-weight:900;padding:1px 8px}
+.agent-out{padding:12px 14px;font-size:12.5px;line-height:1.7;color:var(--brown)}
+.agent-out b{color:var(--ink)}
+.agent-out .tag{display:inline-block;background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10.5px;font-weight:800;padding:0 6px;margin-right:6px}
+
+/* ---- 进化树 ---- */
+.evo-tree{padding:18px 14px}
+.evo-node{display:flex;gap:14px;position:relative;padding-bottom:22px}
+.evo-node::before{content:"";position:absolute;left:16px;top:38px;bottom:0;width:3px;background:var(--soft);border-left:2px dashed var(--gray)}
+.evo-node:last-child::before{display:none}
+.evo-node .dot{width:34px;height:34px;border-radius:50%;background:var(--red);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex:none;z-index:2}
+.evo-node:nth-child(2) .dot{background:var(--gold);color:var(--ink)}
+.evo-node:nth-child(3) .dot{background:var(--green)}
+.evo-card{flex:1;background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:2px 2px 0 var(--ink);padding:12px}
+.evo-card b{font-size:13.5px}
+.evo-card .ev-ver{background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10px;font-weight:900;padding:0 6px}
+.evo-card p{font-size:12px;color:var(--brown);margin-top:6px;line-height:1.6}
+.evo-card .ev-tag{font-size:10.5px;font-weight:800;color:var(--green-dark);margin-top:6px;display:inline-block}
+
+/* ---- 响应式 ---- */
+@media (max-width:900px){.grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:40px 16px}}
+@media (max-width:640px){.page{padding:14px 10px 50px}.doc-header{padding:22px 14px 6px}.doc-header h1{font-size:22px}.doc-header h1 .pop{font-size:25px}.legend{display:none}}
+</style>
+</head>
+<body>
+
+<!-- SVG 图标集 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-kitchen" viewBox="0 0 24 24"><path d="M4 11h16a1 1 0 0 1 1 1v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-5a1 1 0 0 1 1-1z"/><path d="M8 11V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><path d="M9.5 5.5 8.5 3M14.5 5.5l1-2.5"/></symbol>
+  <symbol id="i-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6 .9-4.3 4.2 1 6L12 17l-5.4 2.6 1-6L3.3 9.4l6-.9z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21S4 15 4 9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15 12 21 12 21z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h2l2-3h8l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8h16v-8"/><path d="m12 4 5 5h-3v7h-4V9H7z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 7V4h4v3"/><path d="M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h5M13 17h7"/><circle cx="15" cy="7" r="2"/><circle cx="11" cy="17" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1.2 3-4 5-4 9a4 4 0 0 0 8 0c0-2-.8-3-.8-3s1.4 1 2.3 2.6A5.5 5.5 0 0 1 12 21c-4.4 0-7.5-3-7.5-7 0-5.5 7.5-11 7.5-11z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11.5A1.5 1.5 0 0 0 8.8 17H17a1.5 1.5 0 0 0 1.5-1.2L20 7H6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-11"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5 20 7 8 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 8 21l4-2.5 4 2.5-1-6.5"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 4z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4l1.6 4.9L18.5 10 13.6 11.6 12 16.5l-1.6-4.9L5.5 10l4.9-1.1z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#E8482A" stroke="#241A12" stroke-width="3.5"/><path d="M19 34h26v8a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8z" fill="#fff" stroke="#241A12" stroke-width="3"/><path d="M25 34v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M15 40c-2.2-2.2-2.2-4.4 0-6.6M49 40c2.2-2.2 2.2-4.4 0-6.6" stroke="#F0A73E" stroke-width="3" stroke-linecap="round"/><path d="M45 24l1.7 3.2 3.3 1-3.3 1.2-1.7 3.1-1.6-3.1-3.4-1.2 3.4-1z" fill="#F0A73E" stroke="#241A12" stroke-width="1.4"/></symbol>
+</svg>
+
+<header class="doc-header">
+  <nav class="doc-nav">
+    <a href="01-核心业务闭环.html">01 核心闭环</a>
+    <a href="02-我的收藏与设置.html">02 收藏设置</a>
+    <a href="03-社区互动.html">03 社区互动</a>
+    <a href="04-膳食规划与智能输入.html">04 规划与输入</a>
+    <a class="on" href="05-趣味探索功能.html">05 趣味探索</a>
+  </nav>
+  <h1><span class="pop">ChefPal</span> 原型 05 · 趣味探索功能</h1>
+  <p class="doc-sub">黑暗料理拯救 · 家庭口味投票 · 时令食材日历 · 烹饪挑战 · 多智能体协作 · 菜谱进化树</p>
+  <div class="legend">
+    <span class="lg-title">设计系统</span>
+    <span class="swatch" style="--c:#E8482A"><i></i>焰火红<b>#E8482A</b></span>
+    <span class="swatch" style="--c:#F0A73E"><i></i>熟金黄<b>#F0A73E</b></span>
+    <span class="swatch" style="--c:#2FA37E"><i></i>食材绿<b>#2FA37E</b></span>
+    <span class="swatch" style="--c:#FFF7EC"><i></i>奶油暖白<b>#FFF7EC</b></span>
+    <span class="swatch" style="--c:#241A12"><i></i>墨褐描边<b>#241A12</b></span>
+    <span class="lg-demo"><button class="btn btn-red btn-sm">主按钮</button><span class="chip hot">⭐ 投票</span><span class="star-burst" style="padding:4px 10px;font-size:12px">挑战中</span></span>
+  </div>
+</header>
+
+<main class="page">
+<div class="grid">
+
+  <!-- ══════════ 屏幕1 · 黑暗料理拯救 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">1</span>黑暗料理拯救 <em>翻车现场 AI 诊断</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>黑暗料理拯救</h2></div>
+        <div class="content">
+          <div class="fail-img">
+            <span class="emoji">🥣</span>
+            <span class="add">上传翻车现场照片</span>
+          </div>
+          <div class="sec"><button class="btn btn-red btn-block">🔍 一键 AI 诊断</button></div>
+          <div class="sec">
+            <div class="sec-title">💊 诊断结果</div>
+          </div>
+          <div class="diag-card">
+            <div class="diag-row"><span class="d-ic">⚠</span><div><b>蛋液没推熟</b><p>火太大导致蛋白结块、蛋黄还没熟。</p><span class="fix">✅ 补救：关小火 + 翻面焖 30 秒</span></div></div>
+            <div class="diag-row"><span class="d-ic">💧</span><div><b>收汁过头发苦</b><p>糖在高温下焦化了。</p><span class="fix">✅ 补救：加一勺热水和半勺醋中和</span></div></div>
+            <div class="diag-row"><span class="d-ic">🧂</span><div><b>盐放多了</b><p>咸味过重。</p><span class="fix">✅ 补救：下入土豆块或米饭吸盐</span></div></div>
+          </div>
+          <p class="note" style="text-align:center;padding:0 0 18px">AI 补救仅供参考 · 拍照可再次诊断</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕2 · 家庭口味投票 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">2</span>家庭口味投票 <em>全家决定吃什么</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>今晚吃什么？</h2></div>
+        <div class="content">
+          <div class="vote-q"><h3>🍲 3 道菜 · 全家投票</h3><p>AI 已结合冰箱食材生成 · 投票截止 18:00</p></div>
+          <div class="vote-opt win">
+            <span class="v-tag">已胜出</span>
+            <span class="v-letter">A</span>
+            <b>番茄炖牛腩</b>
+            <span class="v-num">58%</span>
+            <span class="v-bar" style="width:58%"></span>
+          </div>
+          <div class="vote-opt">
+            <span class="v-letter">B</span>
+            <b>香煎三文鱼</b>
+            <span class="v-num">31%</span>
+            <span class="v-bar" style="width:31%"></span>
+          </div>
+          <div class="vote-opt">
+            <span class="v-letter">C</span>
+            <b>香菇滑鸡</b>
+            <span class="v-num">11%</span>
+            <span class="v-bar" style="width:11%"></span>
+          </div>
+          <div class="sec">
+            <button class="btn btn-red btn-block"><svg class="ic" style="width:20px;height:20px"><use href="#i-share"/></svg>分享到家庭群投票</button>
+          </div>
+          <p class="note" style="text-align:center;padding:0 0 18px">4 人已投 · 投票结果实时同步家庭群</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕3 · 时令食材日历 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">3</span>时令食材日历 <em>吃当季 · 最新鲜</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop">时令食材</span></h2></div>
+        <div class="content">
+          <div class="month-bar"><span class="arrow"><svg class="ic" style="width:17px;height:17px"><use href="#i-chev-l"/></svg></span><b>8 月 · 盛夏</b><span class="arrow"><svg class="ic" style="width:17px;height:17px"><use href="#i-chev-r"/></svg></span></div>
+          <div class="season-grid">
+            <div class="season-item"><span class="s-emoji">🍅</span><b>番茄</b><span class="s-badge best">应季</span><span class="s-note">酸甜多汁</span></div>
+            <div class="season-item"><span class="s-emoji">🥒</span><b>黄瓜</b><span class="s-badge best">应季</span><span class="s-note">清火解腻</span></div>
+            <div class="season-item"><span class="s-emoji">🍆</span><b>茄子</b><span class="s-badge best">应季</span><span class="s-note">肉厚软糯</span></div>
+            <div class="season-item"><span class="s-emoji">🌽</span><b>玉米</b><span class="s-badge best">应季</span><span class="s-note">鲜甜爆汁</span></div>
+            <div class="season-item"><span class="s-emoji">🦐</span><b>基围虾</b><span class="s-badge best">应季</span><span class="s-note">肉质紧实</span></div>
+            <div class="season-item"><span class="s-emoji">🍑</span><b>水蜜桃</b><span class="s-badge ok">正当时</span><span class="s-note">香气浓郁</span></div>
+          </div>
+          <div class="sec">
+            <div class="sec-title">🍽 当季推荐</div>
+          </div>
+          <div class="bubble" style="margin:0 14px 18px">
+            <span class="star-burst" style="padding:2px 8px;font-size:11px">食材猎人推荐</span>
+            <p style="font-size:14px;font-weight:800;margin-top:10px">🥒 黄瓜 + 🦐 基围虾 → <span style="color:var(--red)">虾仁凉拌黄瓜</span></p>
+            <p class="note" style="margin-top:8px">8 月正当季 · 10 分钟快手 · 清爽开胃</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕4 · 烹饪挑战活动 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">4</span>烹饪挑战 <em>游戏化运营</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop">烹饪挑战</span></h2><span class="txtbtn">创建</span></div>
+        <div class="content">
+          <div class="chal-hero">
+            <span class="speedlines"></span>
+            <h3>🏆 一周只花 50 元</h3>
+            <p>用 50 元预算做完一周三餐 · 还剩 2 天</p>
+            <div class="chal-progress"><i></i></div>
+            <div class="chal-meta"><span>已花 ¥38</span><span>1,286 人参与</span></div>
+          </div>
+          <div class="sec">
+            <div class="sec-title">🥇 挑战排行榜</div>
+          </div>
+          <div class="rank-list">
+            <div class="rank-item"><span class="r-no">1</span><b>省钱女王小美</b><span class="r-days">5 餐 · ¥46</span><span class="r-score">♥ 328</span></div>
+            <div class="rank-item"><span class="r-no">2</span><b>食材猎人阿安</b><span class="r-days">5 餐 · ¥44.5</span><span class="r-score">♥ 256</span></div>
+            <div class="rank-item"><span class="r-no">3</span><b>一人食研究员</b><span class="r-days">4 餐 · ¥38</span><span class="r-score">♥ 189</span></div>
+            <div class="rank-item"><span class="r-no">…</span><b>我</b><span class="r-days">3 餐 · ¥27</span><span class="r-score">第 47 名</span></div>
+          </div>
+          <div class="sec"><button class="btn btn-gold btn-block">我要挑战 →</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕5 · 多智能体协作 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">5</span>多智能体协作 <em>营养师+大厨+采购</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>AI 主厨团</h2></div>
+        <div class="content">
+          <div class="agent-tabs">
+            <span class="ag on">营养师<small>平衡搭配</small></span>
+            <span class="ag">大厨<small>烹饪技法</small></span>
+            <span class="ag">采购<small>省钱清单</small></span>
+          </div>
+          <div class="agent-card">
+            <div class="agent-head"><span class="a-ic" style="background:#DDF0E8;color:var(--green-dark)"><svg class="ic"><use href="#i-spark"/></svg></span><div><b>营养师 Agent</b><span>基于你的减脂目标</span></div><span class="a-lv">协同中</span></div>
+            <div class="agent-out">
+              <p><span class="tag">热量</span>今日建议 <b>1400 千卡</b>，蛋白质 85g 优先</p>
+              <p style="margin-top:8px"><span class="tag">搭配</span>蛋白质 + 蔬菜占比提至 <b>60%</b></p>
+              <p style="margin-top:8px"><span class="tag">忌口</span>已避开 <b>花生、海鲜</b></p>
+            </div>
+          </div>
+          <div class="agent-card" style="border-style:dashed">
+            <div class="agent-head"><span class="a-ic" style="background:var(--soft);color:var(--red-dark)"><svg class="ic"><use href="#i-kitchen"/></svg></span><div><b>大厨 Agent</b><span>推荐：鸡胸藜麦碗</span></div><span class="a-lv" style="background:var(--soft)">等待</span></div>
+            <div class="agent-out"><p>← 切换查看大厨的烹饪技法与摆盘建议</p></div>
+          </div>
+          <div class="sec"><button class="btn btn-red btn-block">🤝 三个 Agent 同时输出</button></div>
+          <p class="note" style="text-align:center;padding:0 0 18px">多智能体并行 · 输出交叉校验 · 更可靠</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕6 · 菜谱DNA进化树 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">6</span>菜谱进化树 <em>记录每道菜的生长</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>番茄炒蛋 · 进化树</h2></div>
+        <div class="content">
+          <div class="evo-tree">
+            <div class="evo-node">
+              <span class="dot">v1</span>
+              <div class="evo-card"><b><span class="ev-ver">v1.0 原版</span> 经典番茄炒蛋</b>
+                <p>第一次 AI 生成 · 酸甜口 · 先炒蛋再炒番茄</p>
+                <span class="ev-tag">✓ 5 人收藏</span></div>
+            </div>
+            <div class="evo-node">
+              <span class="dot">v2</span>
+              <div class="evo-card"><b><span class="ev-ver">v2.0 改进</span> 少油不腻版</b>
+                <p>社区「元气减脂猫」改进：先炒番茄出沙，蛋液分两次倒</p>
+                <span class="ev-tag">🔥 98 次跟做</span></div>
+            </div>
+            <div class="evo-node">
+              <span class="dot">v3</span>
+              <div class="evo-card"><b><span class="ev-ver">v3.0 我的分支</span> 加糖提鲜版</b>
+                <p>我的尝试：起锅前加半勺糖 + 一点番茄酱</p>
+                <span class="ev-tag">✏ 正在编辑 · 未发布</span></div>
+            </div>
+          </div>
+          <div class="sec">
+            <button class="btn btn-red btn-block">💾 保存我的版本 v3.0</button>
+          </div>
+          <p class="note" style="text-align:center;padding:0 0 18px">每道菜记录修改轨迹 · 社区内容自然生长</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>
