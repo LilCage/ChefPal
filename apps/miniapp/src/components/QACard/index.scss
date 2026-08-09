@@ -1,0 +1,47 @@
+@import '../../styles/icons.scss';
+
+.qa-card {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 28px;
+  margin: 0 28px 24px;
+
+  .qa-q {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 30px;
+    font-weight: 900;
+
+    .q-badge {
+      background: var(--gold);
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      font-size: 22px;
+      padding: 2px 14px;
+      flex: none;
+    }
+
+    .qa-question {
+      flex: 1;
+    }
+
+    .qa-time {
+      margin-left: auto;
+      font-size: 22px;
+      color: var(--gray);
+      font-weight: 600;
+      flex: none;
+    }
+  }
+
+  .qa-a {
+    font-size: 25px;
+    color: var(--brown);
+    line-height: 1.6;
+    margin-top: 16px;
+    display: block;
+  }
+}

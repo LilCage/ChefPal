@@ -1,0 +1,36 @@
+.empty {
+  padding: 108px 48px 60px;
+  text-align: center;
+
+  .empty-art {
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 36px;
+    border: 3px dashed var(--gray);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--soft);
+    color: var(--gray);
+    font-size: 80px;
+  }
+
+  .empty-title {
+    font-size: 34px;
+    font-weight: 900;
+    display: block;
+  }
+
+  .empty-desc {
+    font-size: 26px;
+    color: var(--brown);
+    margin-top: 16px;
+    line-height: 1.6;
+    display: block;
+  }
+
+  .btn {
+    margin-top: 40px;
+  }
+}

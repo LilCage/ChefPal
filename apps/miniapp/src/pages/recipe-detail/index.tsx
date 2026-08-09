@@ -1,0 +1,122 @@
+/**
+ * 屏4 · 菜谱详情（原型 01）
+ * 步骤 / 食材清单 / 避坑指南 三个分段 + 收藏/分享/开始做饭
+ */
+import { Text, View } from '@tarojs/components'
+import Taro, { useLoad } from '@tarojs/taro'
+import { useState } from 'react'
+import NavBar from '../../components/NavBar'
+import { addFavorite, fetchRecipe, type Recipe } from '../../services/api'
+import './index.scss'
+
+const SEGS = ['烹饪步骤', '食材清单', '避坑指南']
+
+export default function RecipeDetail() {
+  const [recipe, setRecipe] = useState<Recipe | null>(null)
+  const [seg, setSeg] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useLoad((params) => {
+    const id = (params as any).id as string
+    fetchRecipe(id)
+      .then(setRecipe)
+      .catch((e: any) => Taro.showToast({ title: e.message || '加载失败', icon: 'none' }))
+      .finally(() => setLoading(false))
+  })
+
+  const saveFavorite = async () => {
+    if (!recipe) return
+    try {
+      await addFavorite('recipe', recipe.id)
+      Taro.showToast({ title: '已收藏', icon: 'none' })
+    } catch (e: any) {
+      Taro.showToast({ title: e.message, icon: 'none' })
+    }
+  }
+
+  const share = () => {
+    if (!recipe) return
+    Taro.navigateTo({ url: `/pages/share-card/index?id=${recipe.id}` })
+  }
+
+  if (loading) return <View className='page-content'><View className='note center-load'>加载中…</View></View>
+  if (!recipe) return <View className='page-content'><View className='note center-load'>菜谱不存在</View></View>
+
+  return (
+    <View className='page-content detail'>
+      <NavBar title={recipe.title} showBack />
+
+      <View className='hero'>
+        <Text className='hero-emoji'>🍜</Text>
+      </View>
+
+      <View className='head'>
+        <View className='head-title'>
+          <Text className='head-name'>{recipe.title}</Text>
+          <View className='star-burst star-burst--mini'>匹配 {recipe.match_score}%</View>
+        </View>
+        <View className='head-meta'>
+          <View className='mini-chip'><Text>⏱ {recipe.time_minutes}分钟</Text></View>
+          <View className='mini-chip'><Text>难度 · {recipe.difficulty}</Text></View>
+          {recipe.missing_seasonings.length > 0 && (
+            <View className='mini-chip red'><Text>缺:{recipe.missing_seasonings.join('、')}</Text></View>
+          )}
+        </View>
+        <View className='bubble core'>
+          <View className='star-burst star-burst--mini'>核心秘诀</View>
+          <Text className='core-text'>{recipe.tips[0] || '按步骤操作，注意火候是关键'}</Text>
+        </View>
+      </View>
+
+      <View className='seg'>
+        {SEGS.map((s, i) => (
+          <View key={s} className={`seg-item ${i === seg ? 'on' : ''}`} onClick={() => setSeg(i)}>
+            <Text>{s}</Text>
+          </View>
+        ))}
+      </View>
+
+      {seg === 0 && (
+        <View className='step-list'>
+          {recipe.steps.map((st, i) => (
+            <View key={i} className='step'>
+              <View className={`sno ${i % 2 === 1 ? 'gold' : ''}`}><Text>{i + 1}</Text></View>
+              <View className='step-body'>
+                <Text className='step-title'>{st.title}</Text>
+                <Text className='step-detail'>{st.detail}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {seg === 1 && (
+        <View className='ing-list'>
+          {recipe.ingredients.map((ing, i) => (
+            <View key={i} className='ing-item'>
+              <View className={`ic ${ing.is_missing ? 'ic-trash ic-sm' : 'ic-check ic-sm'}`} />
+              <Text>{ing.name}</Text>
+              <Text className='alt'>{ing.is_missing ? '缺 · 可替代' : '已备齐'}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {seg === 2 && (
+        <View className='pit-list'>
+          {recipe.tips.map((t, i) => (
+            <View key={i} className='pit'><Text>⚠ {t}</Text></View>
+          ))}
+        </View>
+      )}
+
+      <View className='actbar'>
+        <View className='btn btn--white btn--sm' onClick={share}><View className='ic ic-share ic-sm' /><Text>分享</Text></View>
+        <View className='btn btn--white btn--sm' onClick={saveFavorite}><View className='ic ic-star ic-sm' /><Text>收藏</Text></View>
+        <View className='btn btn--red btn--sm' onClick={() => Taro.showToast({ title: '开火！跟着步骤一步步来 🔥', icon: 'none' })}>
+          <View className='ic ic-flame--white ic-sm' /><Text>开始做饭</Text>
+        </View>
+      </View>
+    </View>
+  )
+}

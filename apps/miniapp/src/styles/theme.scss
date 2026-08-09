@@ -1,0 +1,459 @@
+/* ============================================================
+   ChefPal 漫画插画风设计系统（《美食的俘虏》· 明亮暖色）
+   对齐 prototypes/01-核心业务闭环.html 的 :root 与组件类
+   ============================================================ */
+
+$red: #E8482A;
+$red-dark: #C7361F;
+$gold: #F0A73E;
+$gold-dark: #D18A2C;
+$green: #2FA37E;
+$green-dark: #1F7F60;
+$cream: #FFF7EC;
+$white: #FFFFFF;
+$ink: #241A12;
+$brown: #4A2E1D;
+$soft: #F6E3C3;
+$gray: #8A6F5C;
+
+/* 全局盒模型修正：微信不支持 * 选择器，用标签选择器（修复"框撑出屏幕"） */
+page,
+view,
+text,
+button,
+input,
+image {
+  box-sizing: border-box;
+}
+
+:root,
+page {
+  --red: #E8482A;
+  --red-dark: #C7361F;
+  --gold: #F0A73E;
+  --gold-dark: #D18A2C;
+  --green: #2FA37E;
+  --green-dark: #1F7F60;
+  --cream: #FFF7EC;
+  --white: #FFFFFF;
+  --ink: #241A12;
+  --brown: #4A2E1D;
+  --soft: #F6E3C3;
+  --gray: #8A6F5C;
+  --line: 2.5px solid #241A12;
+  --shadow: 4px 4px 0 #241A12;
+
+  font-family: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+page {
+  background: var(--cream);
+}
+
+.pop {
+  font-family: 'chefpal-brand', 'ZCOOL KuaiLe', 'Comic Sans MS', cursive;
+}
+
+/* ---------- 通用布局 ---------- */
+.page-content {
+  min-height: 100vh;
+  background: var(--cream);
+  padding-bottom: 280px; /* 为底部 TabBar 留白（含安全区） */
+  box-sizing: border-box;
+}
+
+.section {
+  padding: 28px 28px 8px;
+
+  .sec-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 30px;
+    font-weight: 900;
+    margin-bottom: 20px;
+
+    &::before {
+      content: '';
+      width: 16px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--red);
+      border: 4px solid var(--ink);
+      flex: none;
+    }
+
+    .more {
+      margin-left: auto;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray);
+    }
+  }
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 4px 4px 0 var(--ink);
+  font-weight: 900;
+  font-size: 30px;
+  padding: 26px 44px;
+  color: var(--ink);
+  background: var(--white);
+  box-sizing: border-box;
+  text-align: center;
+
+  &:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  &--red { background: var(--red); color: #fff; }
+  &--gold { background: var(--gold); color: var(--ink); }
+  &--green { background: var(--green); color: #fff; }
+  &--white { background: var(--white); color: var(--ink); }
+
+  &--block { display: flex; width: 100%; }
+  &--sm { padding: 16px 28px; font-size: 26px; border-radius: 22px; box-shadow: 3px 3px 0 var(--ink); }
+  &--xs { padding: 12px 24px; font-size: 24px; border-radius: 20px; box-shadow: 3px 3px 0 var(--ink); }
+}
+
+/* 红色/绿色实底按钮内的图标用白色（对齐原型：白描边图标） */
+.btn--red .ic,
+.btn--green .ic {
+  color: #fff;
+}
+
+/* ---------- 标签 chip ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 var(--ink);
+
+  &--hot { background: var(--gold); font-weight: 800; }
+  &--on { background: var(--red); color: #fff; }
+
+  .x { font-weight: 900; color: var(--gray); margin-left: 6px; }
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 28px;
+  margin: 0 28px 24px;
+}
+
+.field {
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 24px;
+}
+
+.field-label {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.note {
+  font-size: 22px;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+/* ---------- 迷你标签 mini-chip ---------- */
+.mini-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--soft);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  font-size: 21px;
+  font-weight: 800;
+  padding: 2px 12px;
+
+  &.red { background: #FFD9D0; color: var(--red-dark); }
+  &.green { background: #DFF3EA; color: var(--green-dark); }
+}
+
+/* ---------- 能量条（匹配度） ---------- */
+.energy {
+  height: 22px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: var(--soft);
+  overflow: hidden;
+  position: relative;
+
+  .energy-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--red));
+  }
+}
+
+/* ---------- 对话框气泡 ---------- */
+.bubble {
+  position: relative;
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 28px;
+  padding: 24px 28px;
+  box-shadow: 3px 3px 0 var(--ink);
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 44px;
+    bottom: -11px;
+    width: 14px;
+    height: 14px;
+    background: var(--white);
+    border-right: 2.5px solid var(--ink);
+    border-bottom: 2.5px solid var(--ink);
+    transform: rotate(45deg);
+  }
+
+  &.mini {
+    box-shadow: 2px 2px 0 var(--ink);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 24px;
+    font-weight: 800;
+    &::after { display: none; }
+  }
+}
+
+/* ---------- 星爆标签 ---------- */
+.star-burst {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--gold);
+  border: 2.5px solid var(--ink);
+  color: var(--ink);
+  font-weight: 900;
+  padding: 12px 24px;
+  border-radius: 20px;
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 26px;
+}
+
+/* ---------- 分段选择 ---------- */
+.seg {
+  display: flex;
+  border: 2.5px solid var(--ink);
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: 2px 2px 0 var(--ink);
+  margin: 0 28px 24px;
+
+  .seg-item {
+    flex: 1;
+    text-align: center;
+    padding: 18px 8px;
+    font-weight: 800;
+    font-size: 26px;
+    color: var(--gray);
+
+    &.on {
+      background: var(--red);
+      color: #fff;
+    }
+  }
+}
+
+/* ---------- 步骤列表 ---------- */
+.step-list {
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 3px 3px 0 var(--ink);
+  margin: 0 28px 24px;
+  padding: 12px 0;
+
+  .step {
+    display: flex;
+    gap: 24px;
+    padding: 24px 28px;
+    border-bottom: 2px dashed var(--soft);
+
+    &:last-child { border-bottom: none; }
+
+    .sno {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--red);
+      color: #fff;
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 26px;
+      flex: none;
+
+      &.gold { background: var(--gold); color: var(--ink); }
+    }
+
+    .step-body {
+      flex: 1;
+      b { display: block; font-size: 27px; }
+      p { font-size: 24px; color: var(--brown); line-height: 1.55; margin-top: 4px; }
+    }
+
+    .stime {
+      flex: none;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--green-dark);
+    }
+  }
+}
+
+/* ---------- 食材清单 ---------- */
+.ing-list {
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 3px 3px 0 var(--ink);
+  margin: 0 28px 24px;
+  padding: 16px 28px;
+
+  .ing-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 0;
+    border-bottom: 2px dashed var(--soft);
+    font-size: 27px;
+
+    &:last-child { border-bottom: none; }
+
+    .ic { width: 36px; height: 36px; }
+    .ok { color: var(--green); }
+    .warn { color: var(--red-dark); }
+    .alt { margin-left: auto; font-size: 22px; color: var(--gray); font-weight: 600; }
+  }
+}
+
+/* ---------- 避坑列表 ---------- */
+.pit-list {
+  margin: 0 28px 24px;
+
+  .pit {
+    background: #FFE9D9;
+    border: 2.5px solid var(--ink);
+    border-radius: 24px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1.55;
+
+    b { color: var(--red-dark); }
+  }
+}
+
+/* ---------- 空状态 ---------- */
+.empty {
+  padding: 108px 48px 60px;
+  text-align: center;
+
+  .empty-art {
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 36px;
+    border: 3px dashed var(--gray);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--soft);
+    color: var(--gray);
+    font-size: 80px;
+  }
+
+  h3 { font-size: 34px; font-weight: 900; }
+  p { font-size: 26px; color: var(--brown); margin-top: 16px; line-height: 1.6; }
+  .btn { margin-top: 40px; }
+}
+
+/* ---------- 顶部导航 ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 28px 20px;
+  background: var(--white);
+  border-bottom: 2.5px solid var(--ink);
+  min-height: 88px;
+
+  .nav-title {
+    flex: 1;
+    text-align: center;
+    font-size: 34px;
+    font-weight: 900;
+  }
+
+  .nbtn {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    border: 2px solid var(--ink);
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 2px 0 var(--ink);
+    color: var(--ink);
+    font-size: 28px;
+  }
+}
+
+/* ---------- 半调网点 / 速度线 装饰 ---------- */
+.halftone {
+  background-image: radial-gradient(rgba(36, 26, 18, 0.10) 1.3px, transparent 1.3px);
+  background-size: 9px 9px;
+}
+
+.speedlines {
+  background: repeating-linear-gradient(
+    108deg,
+    rgba(255, 255, 255, 0.12) 0 16px,
+    transparent 16px 34px
+  );
+}

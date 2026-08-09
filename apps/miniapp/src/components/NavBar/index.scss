@@ -1,0 +1,49 @@
+@import '../../styles/icons.scss';
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 28px 20px;
+  background: var(--white);
+  border-bottom: 2.5px solid var(--ink);
+  min-height: 88px;
+  box-sizing: border-box;
+
+  .nav-side {
+    width: 68px;
+    display: flex;
+    justify-content: flex-start;
+
+    &--right {
+      justify-content: flex-end;
+    }
+  }
+
+  .nav-title {
+    flex: 1;
+    text-align: center;
+    font-size: 34px;
+    font-weight: 900;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .nbtn {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    border: 2px solid var(--ink);
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 2px 0 var(--ink);
+    color: var(--ink);
+    box-sizing: border-box;
+  }
+}

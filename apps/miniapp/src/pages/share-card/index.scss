@@ -1,0 +1,58 @@
+.share-card-page {
+  .share-canvas {
+    width: 620px;
+    height: 980px;
+  }
+
+  .share-preview {
+    width: 620rpx;
+    margin: 32px auto 0;
+    display: block;
+    border-radius: 36px;
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+
+  .share-loading {
+    margin: 120px 0 0;
+    text-align: center;
+    color: var(--gray);
+    font-size: 26px;
+    font-weight: 600;
+  }
+
+  .share-hint {
+    display: block;
+    text-align: center;
+    margin: 28px 0 20px;
+    color: var(--gray);
+    font-size: 24px;
+  }
+
+  .actbar {
+    display: flex;
+    gap: 20px;
+    padding: 0 28px 60px;
+
+    .btn {
+      flex: 1;
+    }
+
+    .share-btn {
+      flex: 1;
+      margin: 0;
+      padding: 16px 28px;
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      background: var(--red);
+      border: 2.5px solid var(--ink);
+      border-radius: 22px;
+      box-shadow: 3px 3px 0 var(--ink);
+      line-height: 1.4;
+
+      &::after {
+        border: none;
+      }
+    }
+  }
+}

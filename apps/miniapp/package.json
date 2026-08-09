@@ -1,0 +1,44 @@
+{
+  "name": "chefpal-miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ChefPal 口袋 AI 厨师 · 微信小程序（Taro 4 + React + TS + NutUI）",
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp",
+    "dev:h5": "taro build --type h5 --watch",
+    "build:h5": "taro build --type h5"
+  },
+  "browserslist": [
+    "last 3 versions",
+    "Android >= 4.1",
+    "ios >= 8"
+  ],
+  "dependencies": {
+    "@babel/runtime": "^7.24.0",
+    "@nutui/nutui-react-taro": "3.0.20",
+    "@tarojs/components": "4.2.1",
+    "@tarojs/helper": "4.2.1",
+    "@tarojs/plugin-framework-react": "4.2.1",
+    "@tarojs/plugin-platform-weapp": "4.2.1",
+    "@tarojs/react": "4.2.1",
+    "@tarojs/runtime": "4.2.1",
+    "@tarojs/shared": "4.2.1",
+    "@tarojs/taro": "4.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-react": "^7.29.7",
+    "@tarojs/cli": "4.2.1",
+    "@tarojs/webpack5-runner": "4.2.1",
+    "@types/react": "^18.2.0",
+    "@types/webpack-env": "^1.13.6",
+    "babel-preset-taro": "4.2.1",
+    "postcss": "^8.4.0",
+    "react-refresh": "^0.14.0",
+    "typescript": "^5.3.0"
+  }
+}

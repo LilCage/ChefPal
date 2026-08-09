@@ -1,0 +1,45 @@
+export default defineAppConfig({
+  pages: [
+    'pages/index/index',
+    'pages/kitchen/index',
+    'pages/discover/index',
+    'pages/mine/index',
+    'pages/login/index',
+    'pages/recipe-detail/index',
+    'pages/favorites/index',
+    'pages/preferences/index',
+    'pages/qa-history/index',
+    'pages/profile-edit/index',
+    'pages/agreement/index',
+    'pages/privacy/index',
+    'pages/onboarding/index',
+    'pages/share-card/index',
+    'pages/post-create/index',
+    'pages/post-detail/index',
+    'pages/post-share-card/index',
+  ],
+  window: {
+    // 所有页面都用自定义漫画风导航，隐藏微信原生导航栏（避免重复 title）
+    navigationStyle: 'custom',
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#FFF7EC',
+    navigationBarTitleText: 'ChefPal',
+    navigationBarTextStyle: 'black',
+    backgroundColor: '#FFF7EC',
+  },
+  tabBar: {
+    custom: true,
+    color: '#8A6F5C',
+    selectedColor: '#E8482A',
+    backgroundColor: '#FFFFFF',
+    borderStyle: 'black',
+    list: [
+      { pagePath: 'pages/index/index', text: '百科' },
+      { pagePath: 'pages/kitchen/index', text: '厨房' },
+      { pagePath: 'pages/discover/index', text: '发现' },
+      { pagePath: 'pages/mine/index', text: '我的' },
+    ],
+  },
+  // 本地开发不校验域名
+  permission: {},
+})

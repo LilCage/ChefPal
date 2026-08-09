@@ -1,0 +1,91 @@
+.pedit {
+  .avatar-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 56px 28px 24px;
+  }
+
+  .avatar-pick {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(135deg, var(--gold), var(--red));
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    line-height: 1;
+    position: relative;
+
+    /* 去掉微信 button 默认样式 */
+    &::after {
+      border: none;
+    }
+  }
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .avatar-ph {
+    font-size: 100px;
+    color: #fff;
+  }
+
+  .avatar-tip {
+    margin-top: 24px;
+    font-size: 24px;
+    color: var(--gray);
+    font-weight: 600;
+  }
+
+  .clear-avatar {
+    margin-top: 20px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--red-dark);
+  }
+
+  .nick-field {
+    margin: 24px 28px;
+    padding: 28px;
+
+    .field-label {
+      display: block;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--gray);
+      margin-bottom: 16px;
+    }
+
+    .nick-input {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink);
+      height: 72px;
+      line-height: 72px;
+    }
+
+    .nick-ph {
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    .field-hint {
+      display: block;
+      margin-top: 12px;
+      font-size: 22px;
+      color: var(--gray);
+    }
+  }
+
+  .save-wrap {
+    margin: 32px 28px;
+  }
+}

@@ -1,0 +1,62 @@
+.r-card {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 3px 3px 0 var(--ink);
+  overflow: hidden;
+  cursor: pointer;
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  &.wide .r-img {
+    height: 220px;
+    font-size: 88px;
+  }
+
+  .r-img {
+    height: 184px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 88px;
+    border-bottom: 2.5px solid var(--ink);
+    position: relative;
+    background: linear-gradient(135deg, #ffd9b0, #ff9d6b);
+
+    .r-emoji { font-size: 88px; }
+
+    .deg {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      font-size: 21px;
+      font-weight: 900;
+      padding: 2px 12px;
+      color: var(--red);
+    }
+  }
+
+  .r-name {
+    font-size: 29px;
+    font-weight: 900;
+    padding: 18px 20px 6px;
+  }
+
+  .r-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 4px 20px 20px;
+    align-items: center;
+  }
+
+  .energy.matched {
+    margin: 0 20px 16px;
+  }
+}

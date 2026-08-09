@@ -1,0 +1,107 @@
+.login-bg {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f7b26b 0%, var(--red) 46%, var(--red-dark) 100%);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.login-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(104px + env(safe-area-inset-top)) 60px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.logo-badge {
+  width: 208px;
+  height: 208px;
+  border-radius: 56px;
+  background: var(--gold);
+  border: 3px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 36px;
+}
+
+.logo-emoji { font-size: 120px; }
+
+.login-title {
+  font-size: 68px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 3px 3px 0 rgba(36, 26, 18, 0.4);
+}
+
+.login-sub {
+  font-size: 28px;
+  color: #ffe9d9;
+  font-weight: 600;
+  margin-top: 16px;
+}
+
+.feat-list {
+  margin-top: 52px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.feat {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  padding: 24px 28px;
+  color: #fff;
+
+  .f-ic {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    background: var(--gold);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    font-size: 36px;
+    flex: none;
+  }
+
+  .feat-body { display: flex; flex-direction: column; }
+  .feat-t { font-size: 28px; font-weight: 900; display: block; }
+  .feat-s { font-size: 23px; color: #ffe9d9; font-weight: 600; margin-top: 4px; }
+}
+
+.login-footer {
+  position: relative;
+  padding: 40px 44px;
+  background: linear-gradient(transparent, rgba(36, 26, 18, 0.28));
+}
+
+.agree {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #ffe9d9;
+  font-size: 21px;
+  margin-top: 20px;
+
+  .agree-link {
+    font-weight: 800;
+    text-decoration: underline;
+    padding: 0 4px;
+  }
+}

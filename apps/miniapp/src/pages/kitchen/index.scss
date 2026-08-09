@@ -1,0 +1,44 @@
+.kitchen {
+  .chip-add {
+    padding: 0 20px;
+
+    .chip-input {
+      min-width: 220px;
+      font-size: 26px;
+      color: var(--ink);
+    }
+  }
+
+  .quick-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .generate-sec {
+    text-align: center;
+    padding-top: 32px;
+
+    .generate-btn {
+      display: inline-flex;
+      padding: 32px 80px;
+      font-size: 34px;
+    }
+
+    .generate-note {
+      display: block;
+      margin-top: 20px;
+    }
+  }
+
+  .r-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    .r-card.wide {
+      grid-column: 1 / -1;
+    }
+  }
+}

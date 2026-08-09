@@ -1,0 +1,68 @@
+/* 作品分享卡（原型 03 屏6）：canvas 绘制 + 保存/转发 */
+.pshare {
+  .share-canvas {
+    width: 0;
+    height: 0;
+  }
+
+  .share-preview {
+    width: 100%;
+    margin-top: 28px;
+    border: 3px solid var(--ink);
+    border-radius: 44px;
+    box-shadow: 6px 6px 0 var(--ink);
+    transform: rotate(1deg);
+  }
+
+  .share-loading {
+    text-align: center;
+    padding: 160px 0;
+    font-size: 26px;
+    color: var(--gray);
+    font-weight: 600;
+  }
+
+  .share-hint {
+    display: block;
+    text-align: center;
+    font-size: 22px;
+    color: var(--gray);
+    font-weight: 600;
+    margin: 24px 0;
+  }
+
+  .actbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    gap: 20px;
+    background: var(--white);
+    border-top: 2.5px solid var(--ink);
+    padding: 24px 28px calc(28px + env(safe-area-inset-bottom));
+    z-index: 20;
+
+    .btn { flex: 1; }
+
+    .share-btn {
+      flex: 1;
+      background: var(--red);
+      color: #fff;
+      border: 2.5px solid var(--ink);
+      border-radius: 28px;
+      box-shadow: 4px 4px 0 var(--ink);
+      font-weight: 900;
+      font-size: 30px;
+      padding: 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:active {
+        transform: translate(3px, 3px);
+        box-shadow: 1px 1px 0 var(--ink);
+      }
+    }
+  }
+}

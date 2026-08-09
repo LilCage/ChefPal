@@ -1,0 +1,49 @@
+/* 引入图标字体样式（含 @font-face），确保 TabBar 组件内可渲染线条图标 */
+@import '../styles/icons.scss';
+
+/* 自定义 TabBar：漫画风，底部固定（对齐原型 .tabbar） */
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  background: #ffffff;
+  border-top: 2.5px solid var(--ink);
+  padding: 16px 8px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 0 rgba(36, 26, 18, 0.06);
+
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--gray);
+
+    .tab-ic {
+      width: 48px;
+      height: 48px;
+      font-size: 44px;
+    }
+
+    /* 覆盖 .ic 默认墨色，让未激活图标为灰、激活为红 */
+    .ic {
+      color: var(--gray);
+    }
+
+    .tab-label {
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    &.on {
+      color: var(--red);
+
+      .ic {
+        color: var(--red);
+      }
+    }
+  }
+}

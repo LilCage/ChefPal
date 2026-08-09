@@ -1,0 +1,71 @@
+.qah {
+  .txtbtn {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--gray);
+  }
+
+  .his-list {
+    padding-top: 20px;
+  }
+
+  .his-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #fff;
+    border: 2.5px solid var(--ink);
+    border-radius: 28px;
+    box-shadow: 2px 2px 0 var(--ink);
+    padding: 22px 24px;
+    margin: 0 28px 20px;
+
+    .q-badge {
+      background: var(--gold);
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      font-size: 22px;
+      padding: 2px 14px;
+      font-weight: 900;
+      flex: none;
+    }
+
+    .htext {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hq {
+      font-size: 27px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .htime {
+      font-size: 21px;
+      color: var(--gray);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+  }
+
+  .clear-wrap {
+    margin: 32px 28px;
+
+    .note--center {
+      display: block;
+      text-align: center;
+      padding-top: 12px;
+    }
+  }
+
+  .note--center {
+    display: block;
+    text-align: center;
+    padding: 60px 0;
+  }
+}

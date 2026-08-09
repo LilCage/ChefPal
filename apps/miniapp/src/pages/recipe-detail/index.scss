@@ -1,0 +1,73 @@
+.detail {
+  .center-load {
+    display: block;
+    text-align: center;
+    padding-top: 200px;
+  }
+
+  .hero {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2.5px solid var(--ink);
+    background: linear-gradient(135deg, #ffd9b0, #ff9d6b);
+
+    .hero-emoji { font-size: 144px; }
+  }
+
+  .head {
+    padding: 28px 28px 0;
+
+    .head-title {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      .head-name { font-size: 40px; font-weight: 900; flex: 1; }
+    }
+
+    .head-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .core {
+      margin-top: 28px;
+
+      .core-text {
+        font-size: 26px;
+        font-weight: 700;
+        margin-top: 16px;
+        display: block;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  .seg {
+    margin-top: 28px;
+  }
+
+  .step-list {
+    .step-title { font-size: 27px; font-weight: 900; }
+    .step-detail { font-size: 24px; color: var(--brown); line-height: 1.55; margin-top: 4px; }
+  }
+
+  .actbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    gap: 20px;
+    background: #fff;
+    border-top: 2.5px solid var(--ink);
+    padding: 24px 28px calc(24px + env(safe-area-inset-bottom));
+
+    .btn { flex: 1; }
+  }
+}
