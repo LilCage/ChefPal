@@ -21,11 +21,23 @@ dist/
 build/
 *.egg-info/
 
+# 社区图片本地回落存储（COS 未配置时）
+apps/server/uploads/
+
+# 已修复 bug 的截图（临时调试产物）
+bug/
+
 # ===== Node / Taro (apps/miniapp) =====
 node_modules/
 .pnpm-store/
 .cache/
 *.tsbuildinfo
+apps/miniapp/dist/
+apps/miniapp/project.private.config.json
+# 编译/Edge 图标生成缓存
+apps/miniapp/.swc/
+apps/miniapp/scripts/.iconwork/
+apps/miniapp/scripts/svg-test/
 
 # ===== 日志 =====
 *.log
