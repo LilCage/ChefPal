@@ -136,18 +136,18 @@ page {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: var(--white);
   border: 2.5px solid var(--ink);
   border-radius: 999px;
-  padding: 12px 26px;
-  font-size: 26px;
+  padding: 16px 36px;
+  font-size: 28px;
   font-weight: 700;
   box-shadow: 2px 2px 0 var(--ink);
 
