@@ -133,23 +133,9 @@ export default function VoiceInput() {
     <View className='page-content voice-input'>
       <NavBar title='语音描述食材' showBack />
 
-      <View className='voice-zone'>
-        <View
-          className={`mic-big ${recording ? 'recording' : ''} ${transcribing ? 'transcribing' : ''}`}
-          onTouchStart={startRec}
-          onTouchEnd={stopRec}
-          onTouchCancel={stopRec}
-        >
-          <View className='ic ic-mic' />
-        </View>
-        <View className='wave'>
-          <View className='w-bar' /><View className='w-bar' /><View className='w-bar' />
-          <View className='w-bar' /><View className='w-bar' /><View className='w-bar' />
-          <View className='w-bar' />
-        </View>
-        <Text className='voice-hint'>
-          {transcribing ? 'AI 识别中…' : recording ? '正在录音… 松开结束' : '长按说话，说出冰箱里的食材'}
-        </Text>
+      {/* 上区：提示 + 识别结果 + 食材 chips（可滚动） */}
+      <View className='voice-top'>
+        <Text className='voice-hint'>长按下方麦克风，说出冰箱里的食材</Text>
 
         {liveText ? (
           <View className='bubble voice-bubble'>
@@ -180,10 +166,24 @@ export default function VoiceInput() {
           </View>
           <Text className='note note--mt'>识别结果仅供参考 · 点标签可删除，点添加可补充</Text>
         </View>
+      </View>
 
-        <View className='btn btn--red btn--block' onClick={goKitchen}>
+      {/* 下区：固定底部操作坞（生成按钮 + 麦克风），拇指区 */}
+      <View className='voice-dock'>
+        <View className='btn btn--red btn--block voice-go' onClick={goKitchen}>
           <Text>用这些食材去生成菜谱 →</Text>
         </View>
+        <View
+          className={`mic-big ${recording ? 'recording' : ''} ${transcribing ? 'transcribing' : ''}`}
+          onTouchStart={startRec}
+          onTouchEnd={stopRec}
+          onTouchCancel={stopRec}
+        >
+          <View className='ic ic-mic' />
+        </View>
+        <Text className='dock-hint'>
+          {transcribing ? 'AI 识别中…' : recording ? '正在录音… 松开结束' : '长按说话'}
+        </Text>
       </View>
     </View>
   )

@@ -114,6 +114,10 @@ body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sa
 .wave{display:flex;align-items:center;gap:5px;height:44px}
 .wave i{width:5px;border-radius:3px;background:var(--gold);border:1px solid var(--ink);height:12px}
 .wave i:nth-child(1){height:20px}.wave i:nth-child(2){height:34px}.wave i:nth-child(3){height:44px}.wave i:nth-child(4){height:28px}.wave i:nth-child(5){height:40px}.wave i:nth-child(6){height:16px}.wave i:nth-child(7){height:32px}
+/* 语音输入（屏2）底部操作坞：识别结果在上区，生成按钮+麦克风固定底部 */
+.voice-top{display:flex;flex-direction:column;gap:14px;padding:24px 20px 250px}
+.voice-hint{text-align:center;font-weight:800;color:var(--gray);font-size:13px}
+.voice-dock{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 20px 20px;background:var(--cream);border-top:2.5px solid var(--ink)}
 
 /* ---- 膳食规划 ---- */
 .plan-tabs{display:flex;gap:8px;margin:14px 14px 12px}
@@ -286,22 +290,24 @@ body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sa
           <div class="statusbar"></div>
         <div class="nav"><span class="nbtn"><svg class="ic"><use href="#i-back"/></svg></span><h2>语音描述食材</h2></div>
         <div class="content">
-          <div class="voice-zone">
-            <div class="mic-big"><svg class="ic"><use href="#i-mic"/></svg></div>
-            <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <p style="font-weight:900;font-size:14px">正在识别… 松开结束</p>
-            <div class="bubble" style="width:100%;margin-top:8px">
+          <div class="voice-top">
+            <p class="voice-hint">长按下方麦克风，说出冰箱里的食材</p>
+            <div class="bubble">
               <span class="star-burst" style="padding:2px 8px;font-size:11px">识别结果</span>
               <p style="font-size:14px;font-weight:800;margin-top:10px">"冰箱里有西红柿、鸡蛋、还有一把挂面"</p>
             </div>
-            <div class="chips" style="width:100%">
+            <div class="chips">
               <span class="chip on">西红柿<span class="x">×</span></span>
               <span class="chip on">鸡蛋<span class="x">×</span></span>
               <span class="chip on">挂面<span class="x">×</span></span>
               <span class="chip">＋ 添加</span>
             </div>
-            <button class="btn btn-red" style="width:100%">用这些食材去生成菜谱 →</button>
           </div>
+        </div>
+        <div class="voice-dock">
+          <button class="btn btn-red btn-block" style="width:100%">用这些食材去生成菜谱 →</button>
+          <div class="mic-big"><svg class="ic"><use href="#i-mic"/></svg></div>
+          <p style="font-weight:900;font-size:12px;color:var(--gray)">长按说话</p>
         </div>
       </div>
     </div>

@@ -1,117 +1,114 @@
-/* 语音输入（原型 04 屏2）：大麦克风 + 波形 + 识别结果 + 食材 chips */
+/* 语音输入（原型 04 屏2）：识别结果在上区可滚动，生成按钮+麦克风固定底部操作坞 */
 .voice-input {
-  padding-bottom: 80px;
+  /* 子页面无 tabBar，去除 theme 的底部留白；由 voice-top 的 padding-bottom 让位给固定坞 */
+  padding-bottom: 0;
 
-  .voice-zone {
+  /* ---- 上区：提示 + 识别结果 + 食材 chips ---- */
+  .voice-top {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 36px;
-    padding: 88px 40px 40px;
-  }
+    gap: 32px;
+    padding: 32px 40px 480px; /* 底部留白避开 fixed 操作坞 */
 
-  .mic-big {
-    width: 240px;
-    height: 240px;
-    border-radius: 50%;
-    background: var(--red);
-    border: 4px solid var(--ink);
-    box-shadow: 12px 12px 0 var(--ink);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    cursor: pointer;
-    animation: pulse 1.6s infinite;
-
-    .ic {
-      width: 104px;
-      height: 104px;
-      color: #fff;
-    }
-
-    &.recording {
-      background: var(--gold);
-    }
-
-    &.transcribing {
-      background: var(--green);
-      animation: none;
-    }
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-
-  .wave {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    height: 88px;
-
-    .w-bar {
-      width: 10px;
-      border-radius: 6px;
-      background: var(--gold);
-      border: 1px solid var(--ink);
-      height: 24px;
-    }
-    .w-bar:nth-child(1) { height: 40px; }
-    .w-bar:nth-child(2) { height: 68px; }
-    .w-bar:nth-child(3) { height: 88px; }
-    .w-bar:nth-child(4) { height: 56px; }
-    .w-bar:nth-child(5) { height: 80px; }
-    .w-bar:nth-child(6) { height: 32px; }
-    .w-bar:nth-child(7) { height: 64px; }
-  }
-
-  .voice-hint {
-    font-weight: 900;
-    font-size: 28px;
-    text-align: center;
-  }
-
-  .voice-bubble {
-    width: 100%;
-    margin-top: 16px;
-
-    .voice-text {
-      display: block;
-      font-size: 28px;
+    .voice-hint {
+      text-align: center;
       font-weight: 800;
-      margin-top: 20px;
-      line-height: 1.5;
+      color: var(--gray);
+      font-size: 26px;
     }
-  }
 
-  .star-burst--sm {
-    padding: 4px 16px;
-    font-size: 22px;
-  }
-
-  .voice-field {
-    width: 100%;
-    box-sizing: border-box;
-
-    .chip-add {
-      padding: 0 20px;
-
-      .chip-input {
-        min-width: 220px;
-        font-size: 26px;
-        color: var(--ink);
+    .voice-bubble {
+      .voice-text {
+        display: block;
+        font-size: 28px;
+        font-weight: 800;
+        margin-top: 20px;
+        line-height: 1.5;
       }
     }
 
-    .note--mt {
-      display: block;
-      margin-top: 16px;
+    .star-burst--sm {
+      padding: 4px 16px;
+      font-size: 22px;
+    }
+
+    .voice-field {
+      .chip-add {
+        padding: 0 20px;
+
+        .chip-input {
+          min-width: 220px;
+          font-size: 26px;
+          color: var(--ink);
+        }
+      }
+
+      .note--mt {
+        display: block;
+        margin-top: 16px;
+      }
     }
   }
 
-  .btn {
-    width: 100%;
+  /* ---- 下区：固定底部操作坞 ---- */
+  .voice-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 40px calc(28px + env(safe-area-inset-bottom));
+    background: var(--cream);
+    border-top: 2.5px solid var(--ink);
+    box-shadow: 0 -4px 0 rgba(36, 26, 18, 0.08);
+
+    .voice-go {
+      width: 100%;
+    }
+
+    .mic-big {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 4px solid var(--ink);
+      box-shadow: 10px 10px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      animation: pulse 1.6s infinite;
+
+      .ic {
+        width: 96px;
+        height: 96px;
+        color: #fff;
+      }
+
+      &.recording {
+        background: var(--gold);
+      }
+
+      &.transcribing {
+        background: var(--green);
+        animation: none;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .dock-hint {
+      font-weight: 900;
+      font-size: 24px;
+      color: var(--gray);
+    }
   }
 }
