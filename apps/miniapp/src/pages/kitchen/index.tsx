@@ -23,21 +23,25 @@ export default function Kitchen() {
   const [loading, setLoading] = useState(false)
 
   useDidShow(() => {
-    setTab(1)
-    // 拍照识食材页跳转过来时，读取待注入食材并清空
-    const pending = Taro.getStorageSync('pending_ingredients')
-    if (Array.isArray(pending) && pending.length > 0) {
-      setIngredients((prev) => {
-        const merged = [...prev]
-        for (const name of pending) {
-          if (typeof name === 'string' && name.trim() && !merged.includes(name.trim())) {
-            merged.push(name.trim())
+    // 延后到首渲染完成再更新状态：useDidShow 首次触发时同步 setData
+    // 会与微信基础库首渲染快照竞态（Expected updated data but get first rendering data）。
+    Taro.nextTick(() => {
+      setTab(1)
+      // 拍照识食材/语音输入页跳转过来时，读取待注入食材并清空
+      const pending = Taro.getStorageSync('pending_ingredients')
+      if (Array.isArray(pending) && pending.length > 0) {
+        setIngredients((prev) => {
+          const merged = [...prev]
+          for (const name of pending) {
+            if (typeof name === 'string' && name.trim() && !merged.includes(name.trim())) {
+              merged.push(name.trim())
+            }
           }
-        }
-        return merged
-      })
-      Taro.removeStorageSync('pending_ingredients')
-    }
+          return merged
+        })
+        Taro.removeStorageSync('pending_ingredients')
+      }
+    })
   })
 
   const addIngredient = (name: string) => {
