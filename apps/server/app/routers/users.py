@@ -1,10 +1,15 @@
-"""用户路由：GET /api/users/me、PUT /api/users/me/profile、PUT /api/users/me/preferences、DELETE /api/users/me。"""
+"""用户路由：GET /api/users/me、PUT /api/users/me/profile、PUT /api/users/me/preferences、DELETE /api/users/me、GET /api/users/{id}（作者主页）。"""
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user
-from app.core.response import ok
+from app.core.response import AppError, ok
 from app.db.session import get_db
+from app.models.follow import Follow
+from app.models.post import Post
 from app.models.user import User
 from app.schemas.api import PreferencesUpdate, ProfileUpdate, UserOut
 
@@ -60,3 +65,36 @@ async def update_preferences(
     await db.commit()
     await db.refresh(user)
     return ok(UserOut.model_validate(user).model_dump(mode="json"))
+
+
+# ---------- 作者主页（注意：/me 系列需在 /{user_id} 之前注册）----------
+@router.get("/{user_id}")
+async def get_user_profile(
+    user_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """作者主页：档案 + 关注/粉丝/作品计数 + 我是否已关注 TA。"""
+    target = await db.get(User, user_id)
+    if target is None:
+        raise AppError("用户不存在", code=404, status_code=404)
+
+    row = await db.execute(
+        select(Follow.id).where(Follow.follower_id == user.id, Follow.following_id == target.id)
+    )
+    is_following = row.scalar_one_or_none() is not None
+    post_count = (
+        await db.execute(select(func.count()).select_from(Post).where(Post.user_id == target.id))
+    ).scalar_one()
+
+    return ok(
+        {
+            "id": str(target.id),
+            "nickname": target.nickname if target.nickname else "美食猎人",
+            "avatar_url": target.avatar_url,
+            "follower_count": target.follower_count,
+            "following_count": target.following_count,
+            "post_count": post_count,
+            "is_following": is_following,
+        }
+    )

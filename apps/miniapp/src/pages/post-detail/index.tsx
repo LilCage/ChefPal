@@ -6,7 +6,8 @@ import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useLoad, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 import NavBar from '../../components/NavBar'
-import { fetchPost, likePost, unlikePost, type Post } from '../../services/api'
+import { fetchPost, followUser, likePost, unfollowUser, unlikePost, type Post } from '../../services/api'
+import { useAuthStore } from '../../stores/auth'
 import './index.scss'
 
 function timeText(iso: string | null): string {
@@ -36,9 +37,11 @@ function renderContent(content: string, topic: string | null): (string | { text:
 }
 
 export default function PostDetail() {
+  const me = useAuthStore((s) => s.user)
   const [post, setPost] = useState<Post | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [liking, setLiking] = useState(false)
+  const [isFollowing, setIsFollowing] = useState(false)
 
   useLoad((params) => {
     const id = (params as any).id as string
@@ -54,11 +57,32 @@ export default function PostDetail() {
     try {
       const p = await fetchPost(id)
       setPost(p)
+      setIsFollowing(!!p.author.is_following)
     } catch (e: any) {
       Taro.showToast({ title: e.message || '加载失败', icon: 'none' })
     } finally {
       setLoaded(true)
     }
+  }
+
+  const toggleFollow = async () => {
+    if (!post || post.author.id === me?.id) return
+    try {
+      if (isFollowing) {
+        await unfollowUser(post.author.id)
+        setIsFollowing(false)
+      } else {
+        await followUser(post.author.id)
+        setIsFollowing(true)
+      }
+    } catch (e: any) {
+      Taro.showToast({ title: e.message || '操作失败', icon: 'none' })
+    }
+  }
+
+  const goAuthor = () => {
+    if (!post) return
+    Taro.navigateTo({ url: `/pages/user-profile/index?id=${post.author.id}` })
   }
 
   const toggleLike = async () => {
@@ -110,17 +134,25 @@ export default function PostDetail() {
       <NavBar title='作品详情' showBack />
 
       <View className='post-head'>
-        <View className='p-av'>
+        <View className='p-av' onClick={goAuthor}>
           {post.author.avatar_url?.startsWith('data:') ? (
             <Image className='p-av-img' src={post.author.avatar_url} mode='aspectFill' />
           ) : (
             <Text className='p-av-ph'>{post.author.nickname.slice(0, 1)}</Text>
           )}
         </View>
-        <View className='ph-body'>
+        <View className='ph-body' onClick={goAuthor}>
           <Text className='ph-name'>{post.author.nickname}</Text>
           <Text className='ph-time'>{timeText(post.created_at)} · 跟做打卡</Text>
         </View>
+        {post.author.id !== me?.id && (
+          <View
+            className={`follow-btn ${isFollowing ? 'on' : ''}`}
+            onClick={toggleFollow}
+          >
+            <Text>{isFollowing ? '已关注' : '关注'}</Text>
+          </View>
+        )}
       </View>
 
       {post.images.length > 0 && (

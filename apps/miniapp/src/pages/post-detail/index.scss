@@ -45,6 +45,25 @@
       display: block;
       margin-top: 4px;
     }
+
+    /* 关注按钮（原型 03 屏2 作者行） */
+    .follow-btn {
+      flex: none;
+      background: var(--red);
+      color: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      font-size: 24px;
+      font-weight: 900;
+      padding: 10px 26px;
+      box-shadow: 2px 2px 0 var(--ink);
+      line-height: 1.2;
+
+      &.on {
+        background: var(--white);
+        color: var(--ink);
+      }
+    }
   }
 
   .post-img {

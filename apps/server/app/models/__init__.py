@@ -3,6 +3,7 @@ from app.models.ai_call import AICall
 from app.models.comment import Comment
 from app.models.comment_like import CommentLike
 from app.models.favorite import Favorite
+from app.models.follow import Follow
 from app.models.like import Like
 from app.models.meal_plan import MealPlan
 from app.models.post import Post
@@ -23,4 +24,5 @@ __all__ = [
     "CommentLike",
     "MealPlan",
     "ShoppingList",
+    "Follow",
 ]

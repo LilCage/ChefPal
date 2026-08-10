@@ -89,11 +89,63 @@ export const removeFavorite = (content_type: 'qa' | 'recipe', content_id: string
 export const fetchFavorites = (type?: 'qa' | 'recipe') =>
   http.get<FavoriteItem[]>(`/favorites${type ? `?type=${type}` : ''}`)
 
+/* ---------- 关注系统 ---------- */
+export interface UserProfile {
+  id: string
+  nickname: string
+  avatar_url: string | null
+  follower_count: number
+  following_count: number
+  post_count: number
+  is_following: boolean
+}
+
+export interface UserListItem {
+  id: string
+  nickname: string
+  avatar_url: string | null
+  follower_count: number
+  following_count: number
+  is_following: boolean
+}
+
+export interface FollowResponse {
+  following: boolean
+  follower_count: number
+  following_count: number
+}
+
+export interface UserListResult {
+  items: UserListItem[]
+  total: number
+  page: number
+  size: number
+  has_more: boolean
+}
+
+export const fetchUserProfile = (id: string) => http.get<UserProfile>(`/users/${id}`)
+export const followUser = (id: string) => http.post<FollowResponse>(`/users/${id}/follow`)
+export const unfollowUser = (id: string) => http.del<FollowResponse>(`/users/${id}/follow`)
+export const fetchFollowers = (id: string, page = 1, size = 20) =>
+  http.get<UserListResult>(`/users/${id}/followers?page=${page}&size=${size}`)
+export const fetchFollowing = (id: string, page = 1, size = 20) =>
+  http.get<UserListResult>(`/users/${id}/following?page=${page}&size=${size}`)
+export const fetchFollowFeed = (page = 1, size = 10) =>
+  http.get<PostList>(`/follows/feed?page=${page}&size=${size}`)
+
+/* ---------- 话题广场 ---------- */
+export interface TopicItem {
+  topic: string
+  count: number
+}
+export const fetchTopics = () => http.get<TopicItem[]>('/posts/topics')
+
 /* ---------- 社区作品 ---------- */
 export interface PostAuthor {
   id: string
   nickname: string
   avatar_url: string | null
+  is_following?: boolean
 }
 
 export interface Post {
@@ -136,9 +188,9 @@ export const createPost = (data: {
   recipe_id?: string
   topic?: string
 }) => http.post<Post>('/posts', data)
-export const fetchPosts = (page = 1, size = 10, topic?: string) =>
+export const fetchPosts = (page = 1, size = 10, topic?: string, userId?: string) =>
   http.get<PostList>(
-    `/posts?page=${page}&size=${size}${topic ? `&topic=${encodeURIComponent(topic)}` : ''}`,
+    `/posts?page=${page}&size=${size}${topic ? `&topic=${encodeURIComponent(topic)}` : ''}${userId ? `&user_id=${userId}` : ''}`,
   )
 export const fetchPost = (id: string) => http.get<Post>(`/posts/${id}`)
 export const fetchMyPosts = () => http.get<Post[]>('/posts/mine')
@@ -198,6 +250,8 @@ export interface PlanDay {
   meals: PlanMeal[]
   total_kcal: number
   protein_g: number
+  fat_g: number
+  carbs_g: number
 }
 export interface MealPlanData {
   days: PlanDay[]
@@ -208,8 +262,8 @@ export interface MealPlan {
   created_at: string | null
 }
 
-export const generatePlan = (prefs?: Record<string, any>) =>
-  http.post<MealPlan>('/plans/generate', { prefs })
+export const generatePlan = (prefs?: Record<string, any>, days = 3) =>
+  http.post<MealPlan>('/plans/generate', { prefs, days })
 export const fetchLatestPlan = () => http.get<MealPlan>('/plans/latest')
 
 /* ---------- 拍照识食材 ---------- */

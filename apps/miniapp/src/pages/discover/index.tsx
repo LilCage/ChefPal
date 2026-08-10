@@ -1,18 +1,18 @@
 /**
  * 屏5 · 发现 社区广场（原型 03 屏4 话题广场 + 屏5 关注动态）
- * 瀑布流作品卡 + 话题筛选 + FAB 发布 + 下拉刷新 + 触底分页
+ * 关注动态流 + 话题筛选 + 瀑布流作品卡 + FAB 发布 + 下拉刷新 + 触底分页
  */
 import { Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
 import EmptyState from '../../components/EmptyState'
-import { fetchPosts, likePost, unlikePost, type Post } from '../../services/api'
+import { fetchFollowFeed, fetchPosts, likePost, unlikePost, type Post } from '../../services/api'
 import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
 import './index.scss'
 
 const SIZE = 10
-const CHIPS = ['推荐', '#今日晚餐', '#减脂餐', '#一人食', '#跟做打卡']
+const CHIPS = ['关注', '推荐', '#今日晚餐', '#减脂餐', '#一人食', '#跟做打卡']
 
 function timeText(iso: string | null): string {
   if (!iso) return ''
@@ -39,8 +39,13 @@ export default function Discover() {
       if (loading) return
       setLoading(true)
       try {
-        const topic = target === '推荐' ? undefined : target
-        const data = await fetchPosts(p, SIZE, topic)
+        let data
+        if (target === '关注') {
+          data = await fetchFollowFeed(p, SIZE)
+        } else {
+          const topic = target === '推荐' ? undefined : target
+          data = await fetchPosts(p, SIZE, topic)
+        }
         setPosts((prev) => (append ? [...prev, ...data.items] : data.items))
         setHasMore(data.has_more)
         setPage(p)
@@ -95,6 +100,9 @@ export default function Discover() {
   }
 
   const goDetail = (p: Post) => Taro.navigateTo({ url: `/pages/post-detail/index?id=${p.id}` })
+  const goAuthor = (p: Post) =>
+    Taro.navigateTo({ url: `/pages/user-profile/index?id=${p.author.id}` })
+  const goTopicSquare = () => Taro.navigateTo({ url: '/pages/topic-square/index' })
 
   return (
     <View className='page-content discover'>
@@ -109,14 +117,27 @@ export default function Discover() {
               <Text>{t}</Text>
             </View>
           ))}
+          <View className='chip chip--hot' onClick={goTopicSquare}>
+            <Text>更多话题 →</Text>
+          </View>
         </View>
       </View>
 
       {loaded && posts.length === 0 ? (
         <EmptyState
-          icon='🍳'
-          title={active === '推荐' ? '还没有人发作品' : '这个话题下还没有作品'}
-          desc='第一个分享你的下厨成果吧，点右下角 ＋ 发布'
+          icon={active === '关注' ? '👋' : '🍳'}
+          title={
+            active === '关注'
+              ? '还没有关注的人'
+              : active === '推荐'
+                ? '还没有人发作品'
+                : '这个话题下还没有作品'
+          }
+          desc={
+            active === '关注'
+              ? '去广场逛逛，关注感兴趣的创作者，追更 TA 的动态'
+              : '第一个分享你的下厨成果吧，点右下角 ＋ 发布'
+          }
         />
       ) : (
         <View className='wf'>
@@ -131,7 +152,13 @@ export default function Discover() {
               <View className='p-body'>
                 <View className='p-name'>{p.content || '分享了下厨心得'}</View>
                 <View className='p-foot'>
-                  <View className='p-av'>
+                  <View
+                    className='p-av'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      goAuthor(p)
+                    }}
+                  >
                     {p.author.avatar_url?.startsWith('data:') ? (
                       <Image className='p-av-img' src={p.author.avatar_url} mode='aspectFill' />
                     ) : (
@@ -139,6 +166,7 @@ export default function Discover() {
                     )}
                   </View>
                   <Text className='p-who'>{p.author.nickname}</Text>
+                  {p.author.is_following && <View className='mini-chip green'><Text>已关注</Text></View>}
                   <View className={`p-like ${p.is_liked ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLike(p) }}>
                     <View className='ic ic-heart ic-xs' />
                     <Text>{p.like_count}</Text>

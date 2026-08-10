@@ -29,7 +29,7 @@ VALID_SHOPPING = {
 
 
 def _create_plan(client, auth_headers, monkeypatch):
-    async def _fake(prefs: dict | None = None) -> dict:
+    async def _fake(prefs: dict | None = None, days: int = 3) -> dict:
         return {"result": VALID_PLAN, "error": None}
 
     monkeypatch.setattr(planner_agent, "run_planner", _fake)

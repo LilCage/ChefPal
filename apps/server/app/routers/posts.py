@@ -37,7 +37,9 @@ def _normalize_topic(topic: str | None) -> str | None:
     return f"#{t}" if t else None
 
 
-def _post_out(post: Post, author: User | None, is_liked: bool) -> dict:
+def _post_out(
+    post: Post, author: User | None, is_liked: bool, followed_ids: set[UUID] | None = None
+) -> dict:
     return {
         "id": str(post.id),
         "content": post.content,
@@ -52,6 +54,9 @@ def _post_out(post: Post, author: User | None, is_liked: bool) -> dict:
             "id": str(author.id) if author else "",
             "nickname": (author.nickname if author and author.nickname else "美食猎人"),
             "avatar_url": author.avatar_url if author else None,
+            "is_following": (
+                bool(author and followed_ids is not None and author.id in followed_ids)
+            ),
         },
     }
 
@@ -66,6 +71,14 @@ async def _get_post_or_404(db: AsyncSession, post_id: UUID) -> Post:
 async def _is_liked(db: AsyncSession, user_id: UUID, post_id: UUID) -> bool:
     row = await db.execute(select(Like.id).where(Like.user_id == user_id, Like.post_id == post_id))
     return row.scalar_one_or_none() is not None
+
+
+async def _my_followed_ids(db: AsyncSession, user_id: UUID) -> set[UUID]:
+    """当前用户已关注的用户 id 集合（用于作品卡标注关注态）。"""
+    from app.models.follow import Follow
+
+    rows = await db.execute(select(Follow.following_id).where(Follow.follower_id == user_id))
+    return {r[0] for r in rows.all()}
 
 
 # ---------- 发布 ----------
@@ -127,12 +140,15 @@ async def list_posts(
     page: int = Query(default=1, ge=1),
     size: int = Query(default=10, ge=1, le=50),
     topic: str | None = Query(default=None),
+    user_id: UUID | None = Query(default=None, description="按作者筛选（作者主页）"),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """作品广场：最新倒序分页，可按话题筛选；返回作者信息与我的点赞态。"""
+    """作品广场：最新倒序分页，可按话题/作者筛选；返回作者信息与我的点赞态。"""
     topic_norm = _normalize_topic(topic)
     base_filter = [Post.topic == topic_norm] if topic_norm else []
+    if user_id is not None:
+        base_filter.append(Post.user_id == user_id)
 
     count_q = select(func.count()).select_from(Post)
     if base_filter:
@@ -157,8 +173,9 @@ async def list_posts(
             select(Like.post_id).where(Like.user_id == user.id, Like.post_id.in_([p.id for p in posts]))
         )
         liked_ids = {r[0] for r in rows.all()}
+    followed_ids = await _my_followed_ids(db, user.id)
 
-    items = [_post_out(p, authors.get(p.user_id), p.id in liked_ids) for p in posts]
+    items = [_post_out(p, authors.get(p.user_id), p.id in liked_ids, followed_ids) for p in posts]
     return ok(
         {
             "items": items,
@@ -184,6 +201,22 @@ async def my_posts(
     return ok([_post_out(p, user, is_liked=False) for p in posts])
 
 
+# ---------- 话题聚合（话题广场；必须在 /{post_id} 之前注册）----------
+@router.get("/topics")
+async def list_topics(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """全部话题及作品数（倒序），供话题广场聚合展示。"""
+    rows = await db.execute(
+        select(Post.topic, func.count().label("count"))
+        .where(Post.topic.is_not(None))
+        .group_by(Post.topic)
+        .order_by(func.count().desc(), Post.topic.asc())
+    )
+    return ok([{"topic": topic, "count": count} for topic, count in rows.all()])
+
+
 # ---------- 作品详情 ----------
 @router.get("/{post_id}")
 async def get_post(
@@ -195,7 +228,8 @@ async def get_post(
     post = await _get_post_or_404(db, post_id)
     author = await db.get(User, post.user_id)
     liked = await _is_liked(db, user.id, post.id)
-    return ok(_post_out(post, author, liked))
+    followed_ids = await _my_followed_ids(db, user.id)
+    return ok(_post_out(post, author, liked, followed_ids))
 
 
 # ---------- 点赞 / 取消 ----------

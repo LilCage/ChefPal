@@ -21,6 +21,9 @@ export default defineAppConfig({
     'pages/meal-plan/index',
     'pages/photo-capture/index',
     'pages/shopping-list/index',
+    'pages/topic-square/index',
+    'pages/user-profile/index',
+    'pages/follow-list/index',
   ],
   window: {
     // 所有页面都用自定义漫画风导航，隐藏微信原生导航栏（避免重复 title）

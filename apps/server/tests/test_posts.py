@@ -46,6 +46,10 @@ def _create_post(client, auth_headers, monkeypatch, **overrides):
     return res.json()["data"]
 
 
+def _me_id(client, headers) -> str:
+    return client.get("/api/users/me", headers=headers).json()["data"]["id"]
+
+
 # ---------- 发布 ----------
 def test_create_post_basic(client, auth_headers, monkeypatch):
     data = _create_post(client, auth_headers, monkeypatch)
@@ -322,3 +326,40 @@ def test_delete_account_cascades_posts_and_likes(client, auth_headers, make_head
 
     assert asyncio.run(_count_rows(Post)) == 0
     assert asyncio.run(_count_rows(Like)) == 0  # 作者删除 → 作品级联 → 点赞级联
+
+
+# ---------- 话题聚合（话题广场） ----------
+def test_list_posts_topics_aggregation(client, auth_headers, monkeypatch):
+    _create_post(client, auth_headers, monkeypatch, content="晚餐A", topic="今日晚餐")
+    _create_post(client, auth_headers, monkeypatch, content="晚餐B", topic="今日晚餐")
+    _create_post(client, auth_headers, monkeypatch, content="减脂", topic="减脂餐")
+    res = client.get("/api/posts/topics", headers=auth_headers)
+    assert res.status_code == 200
+    items = res.json()["data"]
+    counts = {t["topic"]: t["count"] for t in items}
+    assert counts == {"#今日晚餐": 2, "#减脂餐": 1}
+    # 按数量倒序
+    assert items[0]["topic"] == "#今日晚餐"
+
+
+def test_list_posts_topics_aggregation_excludes_none(client, auth_headers, monkeypatch):
+    _create_post(client, auth_headers, monkeypatch, content="无话题")
+    res = client.get("/api/posts/topics", headers=auth_headers)
+    assert res.json()["data"] == []
+
+
+def test_list_posts_topics_aggregation_requires_auth(client):
+    assert client.get("/api/posts/topics").status_code == 401
+
+
+# ---------- 按作者筛选（作者主页） ----------
+def test_list_posts_filter_by_user(client, auth_headers, make_headers, monkeypatch):
+    other = make_headers("openid-other")
+    other_id = _me_id(client, other)
+    _create_post(client, auth_headers, monkeypatch, content="我的作品")
+    _create_post(client, other, monkeypatch, content="TA 的作品 1")
+    _create_post(client, other, monkeypatch, content="TA 的作品 2")
+    res = client.get(f"/api/posts?user_id={other_id}", headers=auth_headers)
+    data = res.json()["data"]
+    assert data["total"] == 2
+    assert {i["content"] for i in data["items"]} == {"TA 的作品 1", "TA 的作品 2"}

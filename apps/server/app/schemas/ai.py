@@ -49,18 +49,20 @@ class PlanMeal(BaseModel):
 
 
 class PlanDay(BaseModel):
-    """一天的计划：三餐 + 全天合计。"""
+    """一天的计划：三餐 + 全天合计 + 宏量营养（蛋白/脂肪/碳水）。"""
 
-    day_label: str                             # 今天 / 明天 / 后天
+    day_label: str                             # 今天 / 明天 / 后天 或 周一~周日
     meals: list[PlanMeal] = Field(min_length=3, max_length=3)  # 早中晚三顿
     total_kcal: int = Field(ge=0, le=10000)
     protein_g: int = Field(ge=0, le=1000)
+    fat_g: int = Field(default=0, ge=0, le=1000)    # 脂肪（g），7 天营养分析用
+    carbs_g: int = Field(default=0, ge=0, le=1000)  # 碳水（g），7 天营养分析用
 
 
 class MealPlanSchema(BaseModel):
-    """3 天膳食计划集合。"""
+    """膳食计划集合：3 天（今天/明天/后天）或 7 天（周一~周日）。"""
 
-    days: list[PlanDay] = Field(min_length=3, max_length=3)  # 3 天
+    days: list[PlanDay] = Field(min_length=1, max_length=7)
 
 
 class ShopItem(BaseModel):

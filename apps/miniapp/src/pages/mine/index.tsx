@@ -5,7 +5,7 @@
 import { Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
-import { deleteAccount, fetchFavorites, fetchMyPosts } from '../../services/api'
+import { deleteAccount, fetchFavorites, fetchMyPosts, fetchUserProfile } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
@@ -13,7 +13,8 @@ import './index.scss'
 
 const MENU = [
   { key: 'preferences', icon: 'ic-sliders', title: '口味设置', sub: '忌口 · 辣度 · 咸淡 · 技能', url: '/pages/preferences/index' },
-  { key: 'meal-plan', icon: 'ic-cal', title: '3 天膳食规划', sub: 'AI 定制三餐计划', url: '/pages/meal-plan/index' },
+  { key: 'meal-plan', icon: 'ic-cal', title: '膳食规划', sub: '3 天 / 7 天 · 营养分析', url: '/pages/meal-plan/index' },
+  { key: 'follow', icon: 'ic-heart', title: '我的关注 · 粉丝', sub: '关注的人 · 粉丝列表' },
   { key: 'history', icon: 'ic-comment', title: '我的问答历史', sub: '最近 20 条', url: '/pages/qa-history/index' },
   { key: 'share', icon: 'ic-share', title: '我的分享卡片', sub: '生成精美卡片' },
   { key: 'agreement', icon: 'ic-lock', title: '用户协议与隐私政策', sub: '服务条款 · 隐私说明', url: '/pages/agreement/index' },
@@ -27,6 +28,8 @@ export default function Mine() {
   const [qaCount, setQaCount] = useState(0)
   const [recipeCount, setRecipeCount] = useState(0)
   const [postCount, setPostCount] = useState(0)
+  const [followerCount, setFollowerCount] = useState(0)
+  const [followingCount, setFollowingCount] = useState(0)
 
   useDidShow(() => {
     setTab(3)
@@ -35,14 +38,17 @@ export default function Mine() {
 
   const loadCounts = async () => {
     try {
-      const [qa, recipe, posts] = await Promise.all([
+      const [qa, recipe, posts, profile] = await Promise.all([
         fetchFavorites('qa'),
         fetchFavorites('recipe'),
         fetchMyPosts(),
+        fetchUserProfile(user?.id || ''),
       ])
       setQaCount(qa.length)
       setRecipeCount(recipe.length)
       setPostCount(posts.length)
+      setFollowerCount(profile.follower_count)
+      setFollowingCount(profile.following_count)
     } catch {
       /* 未登录忽略 */
     }
@@ -53,6 +59,11 @@ export default function Mine() {
   const onMenu = (item: (typeof MENU)[number]) => {
     if (item.key === 'share') {
       Taro.navigateTo({ url: '/pages/share-card/index' })
+      return
+    }
+    if (item.key === 'follow') {
+      if (!user) return
+      Taro.navigateTo({ url: `/pages/follow-list/index?id=${user.id}&tab=following` })
       return
     }
     if (item.key === 'disclaimer') {
@@ -145,7 +156,9 @@ export default function Mine() {
             <View className='mi-ic'><View className={`ic ${m.icon} ic-sm`} /></View>
             <View className='mi-body'>
               <Text className='mi-title'>{m.title}</Text>
-              <Text className='mi-sub'>{m.sub}</Text>
+              <Text className='mi-sub'>
+                {m.key === 'follow' ? `关注 ${followingCount} · 粉丝 ${followerCount}` : m.sub}
+              </Text>
             </View>
             <View className='ic ic-chev-r ic-sm' />
           </View>

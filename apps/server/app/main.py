@@ -14,6 +14,7 @@ from app.routers import (
     auth,
     comments,
     favorites,
+    follows,
     plans,
     posts,
     qa,
@@ -66,5 +67,7 @@ for router in (
     plans.router,
     vision.router,
     shopping.router,
+    follows.users_router,
+    follows.follows_router,
 ):
     app.include_router(router, prefix=settings.API_PREFIX)
