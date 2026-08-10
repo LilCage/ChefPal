@@ -16,6 +16,23 @@
     margin-top: 16px;
   }
 
+  .photo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 24px;
+    margin-top: 16px;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--brown);
+    box-shadow: 2px 2px 0 var(--ink);
+
+    .ic { color: var(--red); }
+  }
+
   .generate-sec {
     text-align: center;
     padding-top: 32px;

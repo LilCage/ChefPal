@@ -80,6 +80,11 @@ export default function PostDetail() {
     Taro.navigateTo({ url: `/pages/post-share-card/index?id=${post.id}` })
   }
 
+  const goComments = () => {
+    if (!post) return
+    Taro.navigateTo({ url: `/pages/comments/index?id=${post.id}` })
+  }
+
   if (!loaded) {
     return (
       <View className='page-content post-detail'>
@@ -102,7 +107,7 @@ export default function PostDetail() {
 
   return (
     <View className='page-content post-detail'>
-      <NavBar title='作品详情' showBack right={<View className='nbtn' onClick={goShareCard}><View className='ic ic-share ic-sm' /></View>} />
+      <NavBar title='作品详情' showBack />
 
       <View className='post-head'>
         <View className='p-av'>
@@ -155,6 +160,10 @@ export default function PostDetail() {
           <View className='ic ic-heart ic-sm' />
           <Text>{post.like_count}</Text>
         </View>
+        <View className='share-chip' onClick={goComments}>
+          <View className='ic ic-comment ic-sm' />
+          <Text>评论 {post.comment_count}</Text>
+        </View>
         <View className='share-chip' onClick={goShareCard}>
           <View className='ic ic-share ic-sm' />
           <Text>分享</Text>
@@ -162,6 +171,10 @@ export default function PostDetail() {
       </View>
 
       <View className='actbar'>
+        <View className='cmt-input' onClick={goComments}>
+          <View className='ic ic-comment ic-sm' />
+          <Text className='cmt-input-ph'>说点什么…</Text>
+        </View>
         <Button className={`btn btn--red actbar-like ${post.is_liked ? 'liked' : ''}`} onClick={toggleLike}>
           <View className='ic ic-heart ic-sm' />
           <Text>{post.is_liked ? '已点赞' : '点赞'}</Text>

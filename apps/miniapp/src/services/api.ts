@@ -62,6 +62,7 @@ export interface Recipe {
   match_score: number
   time_minutes: number
   difficulty: string
+  style: string
   steps: RecipeStep[]
   tips: string[]
   missing_seasonings: string[]
@@ -101,6 +102,7 @@ export interface Post {
   images: string[]
   topic: string | null
   like_count: number
+  comment_count: number
   is_liked: boolean
   recipe_id: string | null
   created_at: string | null
@@ -146,3 +148,99 @@ export const unlikePost = (id: string) =>
   http.del<{ liked: boolean; like_count: number }>(`/posts/${id}/like`)
 export const fetchPostShareCard = (id: string) =>
   http.get<PostShareCardData>(`/posts/${id}/share-card`)
+
+/* ---------- 评论 ---------- */
+export interface CommentAuthor {
+  id: string
+  nickname: string
+  avatar_url: string | null
+}
+
+export interface Comment {
+  id: string
+  content: string
+  like_count: number
+  is_liked: boolean
+  is_owner: boolean
+  created_at: string | null
+  author: CommentAuthor
+}
+
+export interface CommentList {
+  items: Comment[]
+  total: number
+  page: number
+  size: number
+  has_more: boolean
+}
+
+export const fetchComments = (postId: string, page = 1, size = 20) =>
+  http.get<CommentList>(`/posts/${postId}/comments?page=${page}&size=${size}`)
+export const createComment = (postId: string, content: string) =>
+  http.post<Comment>(`/posts/${postId}/comments`, { content })
+export const likeComment = (id: string) =>
+  http.post<{ liked: boolean; like_count: number }>(`/comments/${id}/like`)
+export const unlikeComment = (id: string) =>
+  http.del<{ liked: boolean; like_count: number }>(`/comments/${id}/like`)
+export const deleteComment = (id: string) => http.del(`/comments/${id}`)
+
+/* ---------- 膳食规划 ---------- */
+export interface PlanDish {
+  name: string
+}
+export interface PlanMeal {
+  name: string
+  total_kcal: number
+  dishes: PlanDish[]
+}
+export interface PlanDay {
+  day_label: string
+  meals: PlanMeal[]
+  total_kcal: number
+  protein_g: number
+}
+export interface MealPlanData {
+  days: PlanDay[]
+}
+export interface MealPlan {
+  id: string
+  data: MealPlanData
+  created_at: string | null
+}
+
+export const generatePlan = (prefs?: Record<string, any>) =>
+  http.post<MealPlan>('/plans/generate', { prefs })
+export const fetchLatestPlan = () => http.get<MealPlan>('/plans/latest')
+
+/* ---------- 拍照识食材 ---------- */
+export const recognizeIngredients = (imageBase64: string) =>
+  http.post<{ ingredients: string[] }>('/vision/recognize', { image_base64: imageBase64 })
+
+/* ---------- 购物清单 ---------- */
+export interface ShopItem {
+  item_id: string
+  name: string
+  quantity: string
+  checked: boolean
+}
+export interface ShopCategory {
+  name: string
+  items: ShopItem[]
+}
+export interface ShoppingListData {
+  categories: ShopCategory[]
+}
+export interface ShoppingList {
+  id: string
+  data: ShoppingListData
+  created_at: string | null
+}
+
+export const generateShoppingList = (mealPlanId?: string) =>
+  http.post<ShoppingList>('/shopping-list/generate', { meal_plan_id: mealPlanId })
+export const fetchLatestShoppingList = () => http.get<ShoppingList>('/shopping-list/latest')
+export const toggleShopItem = (listId: string, itemId: string, checked: boolean) =>
+  http.put<{ item_id: string; checked: boolean }>(
+    `/shopping-list/${listId}/items/${itemId}/checked`,
+    { checked },
+  )

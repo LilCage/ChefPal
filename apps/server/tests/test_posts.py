@@ -121,15 +121,18 @@ def _create_recipe(client, auth_headers, monkeypatch):
         "recipes": [
             {
                 "name": "番茄炒蛋", "match_score": 92, "time_minutes": 20, "difficulty": "简单",
+                "style": "浓香下饭",
                 "missing_seasonings": [], "steps": [{"title": "打蛋", "detail": "打散"}], "tips": [],
             },
             {
                 "name": "番茄鸡蛋面", "match_score": 98, "time_minutes": 15, "difficulty": "简单",
+                "style": "清爽快手",
                 "missing_seasonings": ["葱末"], "steps": [{"title": "煮面", "detail": "水开下面"}],
                 "tips": ["西红柿加盐炒出沙，汤底才浓郁"],
             },
             {
                 "name": "葱油拌面", "match_score": 85, "time_minutes": 10, "difficulty": "简单",
+                "style": "清爽快手",
                 "missing_seasonings": [], "steps": [{"title": "煮面", "detail": "水开下面"}], "tips": [],
             },
         ]

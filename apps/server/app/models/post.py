@@ -28,4 +28,6 @@ class Post(Base):
     topic: Mapped[str | None] = mapped_column(String(32), nullable=True, default=None)
     # 冗余点赞计数（LIKES 表幂等保障）
     like_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # 冗余评论计数（comments 表幂等保障）
+    comment_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

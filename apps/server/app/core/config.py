@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     AI_TIMEOUT_SECONDS: float = 60.0
     AI_MAX_RETRIES: int = 1
 
+    # ---- 智谱 GLM 视觉（拍照识食材，免费模型）----
+    # 与百炼独立；未配置时视觉识别接口返回清晰错误，不影响其他功能
+    ZHIPU_API_KEY: str = ""
+    ZHIPU_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
+    ZHIPU_VISION_MODEL: str = "glm-4v-flash"
+
     # ---- 风控 ----
     DAILY_AI_LIMIT: int = 20
 

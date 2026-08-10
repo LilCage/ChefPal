@@ -1,0 +1,123 @@
+/* 拍照识食材（原型 04 屏1）：取景框 + 快门 + 识别结果 chips */
+.photo-capture {
+  padding-bottom: 60px;
+
+  .cam-view {
+    position: relative;
+    height: 460px;
+    background: #201712;
+    margin: 28px 28px 0;
+    border-radius: 36px;
+    border: 2.5px solid var(--ink);
+    overflow: hidden;
+    box-shadow: 3px 3px 0 var(--ink);
+
+    .cam-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .cam-corners {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        width: 88px;
+        height: 88px;
+        border: 3px solid var(--gold);
+      }
+      &::before { top: 32px; left: 32px; border-right: none; border-bottom: none; border-radius: 16px 0 0 0; }
+      &::after { bottom: 32px; right: 32px; border-left: none; border-top: none; border-radius: 0 0 16px 0; }
+    }
+
+    .cam-ghost {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 128px;
+      opacity: 0.35;
+    }
+
+    .cam-img { width: 100%; height: 100%; }
+
+    .cam-hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 24px;
+      text-align: center;
+      color: #ffe9d9;
+      font-size: 24px;
+      font-weight: 700;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .shutter-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 32px;
+
+    .shutter {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 4px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 3px 3px 0 var(--ink);
+
+      .shutter-inner {
+        width: 104px;
+        height: 104px;
+        border-radius: 50%;
+        background: var(--red);
+        border: 3px solid var(--ink);
+      }
+    }
+
+    .btn--album {
+      padding: 14px 36px;
+      color: var(--brown);
+    }
+  }
+
+  .sec {
+    padding: 0 28px 28px;
+
+    .sec-title {
+      display: flex;
+      align-items: center;
+      font-size: 30px;
+      font-weight: 900;
+      margin-bottom: 20px;
+
+      .more { margin-left: auto; font-size: 24px; font-weight: 700; color: var(--gray); }
+    }
+
+    .field {
+      background: var(--white);
+      border: 2.5px solid var(--ink);
+      border-radius: 28px;
+      box-shadow: 3px 3px 0 var(--ink);
+      padding: 24px;
+    }
+
+    .note--mt { display: block; margin-top: 16px; }
+
+    .btn--disabled { opacity: 0.6; }
+  }
+}

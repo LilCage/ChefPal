@@ -10,7 +10,18 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.core.response import AppError, fail
-from app.routers import auth, favorites, posts, qa, recipes, users
+from app.routers import (
+    auth,
+    comments,
+    favorites,
+    plans,
+    posts,
+    qa,
+    recipes,
+    shopping,
+    users,
+    vision,
+)
 
 settings = get_settings()
 
@@ -44,5 +55,16 @@ async def health() -> dict:
     return {"code": 0, "message": "ok", "data": {"status": "up"}}
 
 
-for router in (auth.router, users.router, qa.router, recipes.router, favorites.router, posts.router):
+for router in (
+    auth.router,
+    users.router,
+    qa.router,
+    recipes.router,
+    favorites.router,
+    posts.router,
+    comments.router,
+    plans.router,
+    vision.router,
+    shopping.router,
+):
     app.include_router(router, prefix=settings.API_PREFIX)

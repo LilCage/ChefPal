@@ -40,6 +40,19 @@
       padding: 2px 12px;
       color: var(--red);
     }
+
+    .style-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--gold);
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      font-size: 21px;
+      font-weight: 900;
+      padding: 2px 12px;
+      color: var(--ink);
+    }
   }
 
   .r-name {

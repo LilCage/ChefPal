@@ -20,6 +20,8 @@ class Recipe(Base):
     match_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     time_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     difficulty: Mapped[str] = mapped_column(String(16), nullable=False, default="简单")
+    # 风味标签（浓香下饭/清爽快手/蒸煮清淡/香辣过瘾等），TOP3 推荐多样性校验用
+    style: Mapped[str] = mapped_column(String(16), nullable=False, default="")
     # [{ title, detail }]
     steps: Mapped[list] = mapped_column(JSONType, nullable=False)
     tips: Mapped[list] = mapped_column(JSONType, nullable=False, default=list)

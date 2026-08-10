@@ -44,6 +44,7 @@ def _post_out(post: Post, author: User | None, is_liked: bool) -> dict:
         "images": post.images,
         "topic": post.topic,
         "like_count": post.like_count,
+        "comment_count": post.comment_count,
         "is_liked": is_liked,
         "recipe_id": str(post.recipe_id) if post.recipe_id else None,
         "created_at": post.created_at.isoformat() if post.created_at else None,

@@ -1,0 +1,123 @@
+/* 3 天膳食规划（原型 04 屏3）：tabs + 三餐卡 + 汇总 + 购物清单 */
+.meal-plan {
+  padding-bottom: 60px;
+
+  .plan-tabs {
+    display: flex;
+    gap: 16px;
+    margin: 28px 28px 24px;
+
+    .pt {
+      flex: 1;
+      text-align: center;
+      background: var(--white);
+      border: 2.5px solid var(--ink);
+      border-radius: 24px;
+      padding: 18px 4px;
+      font-weight: 800;
+      font-size: 26px;
+      box-shadow: 2px 2px 0 var(--ink);
+      color: var(--gray);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      &.on { background: var(--red); color: #fff; }
+
+      .pt-label { font-weight: 900; }
+      .pt-sub { font-size: 20px; font-weight: 600; opacity: 0.85; }
+    }
+  }
+
+  .meal-card {
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    margin: 0 28px 24px;
+    overflow: hidden;
+
+    .meal-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 28px;
+      border-bottom: 2px dashed var(--soft);
+
+      .m-ic {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        border: 2px solid var(--ink);
+        background: var(--soft);
+      }
+
+      .meal-name { font-size: 28px; font-weight: 900; }
+
+      .meal-kcal {
+        margin-left: auto;
+        color: var(--gray);
+        font-weight: 600;
+        font-size: 22px;
+      }
+    }
+
+    .meal-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 22px 28px;
+      border-bottom: 2px dashed var(--soft);
+
+      &:last-child { border-bottom: none; }
+
+      .done {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        border: 2.5px solid var(--ink);
+        background: var(--white);
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--green);
+      }
+
+      .dish { flex: 1; font-size: 28px; font-weight: 800; line-height: 1.5; }
+    }
+  }
+
+  .plan-summary {
+    display: flex;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    margin: 0 28px 28px;
+    overflow: hidden;
+
+    .ps {
+      flex: 1;
+      text-align: center;
+      padding: 24px 2px;
+      border-right: 2px dashed var(--soft);
+
+      &:last-child { border-right: none; }
+
+      .ps-num { display: block; font-size: 32px; font-weight: 900; color: var(--red); }
+      .ps-label { font-size: 21px; color: var(--gray); font-weight: 700; }
+    }
+  }
+
+  .sec {
+    padding: 0 28px;
+
+    .btn--disabled { opacity: 0.6; }
+    .btn--regen { margin-bottom: 20px; color: var(--brown); }
+  }
+}

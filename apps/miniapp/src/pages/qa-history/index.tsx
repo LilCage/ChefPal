@@ -55,11 +55,7 @@ export default function QAHistory() {
 
   return (
     <View className='page-content qah'>
-      <NavBar
-        title='问答历史'
-        showBack
-        right={<View className='txtbtn' onClick={clearAll}><Text>清空</Text></View>}
-      />
+      <NavBar title='问答历史' showBack />
 
       <View className='his-list'>
         {records.map((r) => (

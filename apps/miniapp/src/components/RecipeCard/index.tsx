@@ -10,6 +10,7 @@ interface RecipeCardProps {
   matchScore: number
   timeMinutes: number
   difficulty: string
+  style?: string
   missing?: string[]
   emoji?: string
   wide?: boolean
@@ -21,6 +22,7 @@ export default function RecipeCard({
   matchScore,
   timeMinutes,
   difficulty,
+  style = '',
   missing = [],
   emoji = '🍜',
   wide,
@@ -31,6 +33,7 @@ export default function RecipeCard({
       <View className='r-img'>
         <Text className='r-emoji'>{emoji}</Text>
         <View className='deg'>{matchScore}%</View>
+        {style && <View className='style-badge'><Text>{style}</Text></View>}
       </View>
       <View className='r-name'>{name}</View>
       <View className='r-meta'>

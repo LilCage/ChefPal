@@ -202,6 +202,7 @@ page {
 
   &.red { background: #FFD9D0; color: var(--red-dark); }
   &.green { background: #DFF3EA; color: var(--green-dark); }
+  &.gold { background: var(--gold); color: var(--ink); }
 }
 
 /* ---------- 能量条（匹配度） ---------- */

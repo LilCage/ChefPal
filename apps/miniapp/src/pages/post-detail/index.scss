@@ -145,13 +145,31 @@
     left: 0;
     right: 0;
     bottom: 0;
+    display: flex;
+    gap: 20px;
     background: var(--white);
     border-top: 2.5px solid var(--ink);
     padding: 24px 28px calc(28px + env(safe-area-inset-bottom));
     z-index: 20;
 
+    .cmt-input {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--cream);
+      border: 2.5px solid var(--ink);
+      border-radius: 999px;
+      padding: 18px 28px;
+      box-sizing: border-box;
+      min-width: 0;
+
+      .ic { color: var(--red); flex: none; }
+      .cmt-input-ph { font-size: 26px; color: var(--gray); font-weight: 600; }
+    }
+
     .actbar-like {
-      width: 100%;
+      flex: none;
       &.liked { background: var(--gold); color: var(--ink); }
     }
   }

@@ -15,6 +15,7 @@ from gen_icons import PATHS
 
 CELL = 64
 INK = "#4A2E1D"
+WHITE = "#FFFFFF"
 STROKE_WIDTH = 2.2
 
 EDGE_CANDIDATES = [
@@ -30,7 +31,7 @@ def find_edge() -> str:
     raise SystemExit("未找到 Edge，请安装 Microsoft Edge")
 
 
-def render(name: str) -> str:
+def render(name: str, color: str = INK) -> str:
     here = os.path.dirname(os.path.abspath(__file__))
     work = os.path.join(here, ".iconwork")
     os.makedirs(work, exist_ok=True)
@@ -38,7 +39,7 @@ def render(name: str) -> str:
     scale = CELL / 24.0
     svg = (
         '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">'
-        f'<g transform="scale({scale})" fill="none" stroke="{INK}" stroke-width="{STROKE_WIDTH}" '
+        f'<g transform="scale({scale})" fill="none" stroke="{color}" stroke-width="{STROKE_WIDTH}" '
         'stroke-linecap="round" stroke-linejoin="round">'
         f"{PATHS[name]}</g></svg>"
     )
@@ -69,11 +70,15 @@ def render(name: str) -> str:
 
 
 def main() -> None:
+    # 用法：python scripts/gen_lock_icon.py <name> [ink|white]
     name = sys.argv[1] if len(sys.argv) > 1 else "lock"
-    b64 = render(name)
+    color_arg = sys.argv[2] if len(sys.argv) > 2 else "ink"
+    is_white = color_arg == "white"
+    color = WHITE if is_white else INK
+    cls = f"ic-{name}" + ("--white" if is_white else "")
+    b64 = render(name, color)
 
     scss = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "styles", "icons.scss")
-    cls = f"ic-{name}"
     with open(scss, "r", encoding="utf-8") as f:
         content = f.read()
 

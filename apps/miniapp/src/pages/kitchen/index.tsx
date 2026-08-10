@@ -24,6 +24,20 @@ export default function Kitchen() {
 
   useDidShow(() => {
     setTab(1)
+    // 拍照识食材页跳转过来时，读取待注入食材并清空
+    const pending = Taro.getStorageSync('pending_ingredients')
+    if (Array.isArray(pending) && pending.length > 0) {
+      setIngredients((prev) => {
+        const merged = [...prev]
+        for (const name of pending) {
+          if (typeof name === 'string' && name.trim() && !merged.includes(name.trim())) {
+            merged.push(name.trim())
+          }
+        }
+        return merged
+      })
+      Taro.removeStorageSync('pending_ingredients')
+    }
   })
 
   const addIngredient = (name: string) => {
@@ -61,6 +75,8 @@ export default function Kitchen() {
     ? `${preferences.spiciness === 1 ? '微辣' : ''}${preferences.saltiness ? ` · ${preferences.saltiness}` : ''}${preferences.allergies?.length ? ` · 忌口:${preferences.allergies.join('/')}` : ''}`.replace(/^ · /, '')
     : ''
 
+  const goPhoto = () => Taro.navigateTo({ url: '/pages/photo-capture/index' })
+
   return (
     <View className='page-content kitchen'>
       <View className='nav' style={{ paddingTop: `${getSafeTop()}px` }}>
@@ -94,6 +110,10 @@ export default function Kitchen() {
               <View key={q} className='chip' onClick={() => addIngredient(q)}><Text>+{q}</Text></View>
             ))}
           </View>
+          <View className='photo-chip' onClick={goPhoto}>
+            <View className='ic ic-camera ic-sm' />
+            <Text>拍照识食材</Text>
+          </View>
           <Text className='note'>
             {prefsText ? `已读取你的口味偏好 · ${prefsText}` : '尚未设置口味偏好，可在「我的」中设置'}
           </Text>
@@ -122,6 +142,7 @@ export default function Kitchen() {
                 matchScore={r.match_score}
                 timeMinutes={r.time_minutes}
                 difficulty={r.difficulty}
+                style={r.style}
                 missing={r.missing_seasonings}
                 wide={i === 2}
                 onClick={() => Taro.navigateTo({ url: `/pages/recipe-detail/index?id=${r.id}` })}

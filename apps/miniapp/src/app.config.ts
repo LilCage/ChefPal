@@ -17,6 +17,10 @@ export default defineAppConfig({
     'pages/post-create/index',
     'pages/post-detail/index',
     'pages/post-share-card/index',
+    'pages/comments/index',
+    'pages/meal-plan/index',
+    'pages/photo-capture/index',
+    'pages/shopping-list/index',
   ],
   window: {
     // 所有页面都用自定义漫画风导航，隐藏微信原生导航栏（避免重复 title）

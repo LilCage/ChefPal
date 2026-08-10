@@ -56,6 +56,7 @@ export default function RecipeDetail() {
           <View className='star-burst star-burst--mini'>匹配 {recipe.match_score}%</View>
         </View>
         <View className='head-meta'>
+          {recipe.style && <View className='mini-chip gold'><Text>{recipe.style}</Text></View>}
           <View className='mini-chip'><Text>⏱ {recipe.time_minutes}分钟</Text></View>
           <View className='mini-chip'><Text>难度 · {recipe.difficulty}</Text></View>
           {recipe.missing_seasonings.length > 0 && (

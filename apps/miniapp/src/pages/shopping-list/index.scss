@@ -1,0 +1,76 @@
+/* 购物清单（原型 04 屏5）：分类分组 + 勾选项 + 已选统计（不含价格） */
+.shopping {
+  padding-bottom: 60px;
+
+  .cart-cat {
+    margin: 28px 28px 0;
+
+    .cc-t {
+      font-size: 28px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+
+      .cc-count {
+        font-style: normal;
+        color: var(--gray);
+        font-size: 22px;
+        font-weight: 600;
+        margin-left: auto;
+      }
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--white);
+      border: 2.5px solid var(--ink);
+      border-radius: 24px;
+      box-shadow: 2px 2px 0 var(--ink);
+      padding: 22px 24px;
+      margin-bottom: 20px;
+
+      .check-box {
+        width: 44px;
+        height: 44px;
+        border: 2.5px solid var(--ink);
+        border-radius: 14px;
+        background: var(--white);
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+
+        &.on { background: var(--green); }
+      }
+
+      .ci-name { flex: 1; font-size: 27px; font-weight: 800; }
+      .ci-num { font-size: 24px; color: var(--gray); font-weight: 700; }
+
+      &.done .ci-name { text-decoration: line-through; color: var(--gray); }
+    }
+  }
+
+  .cart-total {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    margin: 28px 28px 28px;
+    padding: 24px 28px;
+
+    .ct-label { font-size: 28px; font-weight: 900; }
+    .ct-green { color: var(--green); }
+    .ct-note { margin-left: auto; font-size: 20px; color: var(--gray); font-weight: 600; }
+  }
+
+  .sec {
+    padding: 0 28px;
+  }
+}

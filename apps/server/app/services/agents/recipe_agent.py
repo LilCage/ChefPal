@@ -21,13 +21,16 @@ RECIPE_SYSTEM = """你是资深中餐厨师。基于用户现有食材与口味�
       "match_score": 0-100,
       "time_minutes": 预计耗时分钟数,
       "difficulty": "简单|中等|较难",
+      "style": "风味标签，如 浓香下饭/清爽快手/蒸煮清淡/香辣过瘾/甜口绵密/汤羹温润",
       "missing_seasonings": ["缺少的调料，尽量给替代方案"],
       "steps": [{"title": "步骤名", "detail": "详细做法（写给厨房小白，明确火候与大致时长）"}],
       "tips": ["避坑指南"]
     }
   ]
 }
-要求：
+硬性要求：
+- 【多样性·最重要】3 道菜必须风味、做法、荤素差异明显，风格标签（style）至少 2 种不同，禁止 3 道高度重合
+- 即使口味偏好偏重口/辛辣，也必须至少包含 1 道清淡、清爽或换口味的菜，供用户换口味
 - 优先使用用户现有食材，匹配度 match_score 越高越好
 - 每道必须给出完整可执行的 steps，至少 3 步
 - 严格规避用户忌口/过敏原，并在 tips 中提示
@@ -57,6 +60,7 @@ class RecipeState(TypedDict, total=False):
     retries: int
     result: dict | None
     error: str | None
+    retry_note: str | None  # 上次失败的修正指令，重试时追加到 user 消息
 
 
 def _route(state: RecipeState) -> dict:
@@ -67,6 +71,9 @@ async def _generate(state: RecipeState) -> dict:
     ingredients = "、".join(state["ingredients"])
     prefs_text = build_prefs_text(state.get("prefs") or {})
     user_msg = f"我冰箱里现有食材：{ingredients}。我的口味偏好：{prefs_text}。请生成 3 道可行性最高的菜。"
+    note = state.get("retry_note")
+    if note:
+        user_msg += f"\n\n{note}"
     try:
         data = await ainvoke_json(
             model=settings.DEEPSEEK_MODEL,
@@ -80,12 +87,13 @@ async def _generate(state: RecipeState) -> dict:
 
 
 def _route_after_generate(state: RecipeState) -> str:
-    """校验：至少 3 道且字段完整，否则重试(≤AI_MAX_RETRIES)或降级。"""
+    """校验：至少 3 道、字段完整、且风格多样性（style 去重 ≥2 种），否则重试或降级。"""
     result = state.get("result")
     if result is not None:
         try:
             parsed = RecipeSetSchema.model_validate(result)
-            if len(parsed.recipes) >= 3:
+            styles = {r.style for r in parsed.recipes if r.style}
+            if len(parsed.recipes) >= 3 and len(styles) >= 2:
                 return "accept"
         except Exception:  # noqa: BLE001
             pass
@@ -95,7 +103,13 @@ def _route_after_generate(state: RecipeState) -> str:
 
 
 def _retry(state: RecipeState) -> dict:
-    return {"retries": state.get("retries", 0) + 1}
+    return {
+        "retries": state.get("retries", 0) + 1,
+        "retry_note": (
+            "上一版 3 道菜风味过于重合。请重新生成：3 道菜的风味标签（style）必须至少 2 种不同，"
+            "做法/荤素也要拉开差异；如果偏好偏重口/辛辣，请务必加入至少 1 道清淡或清爽的菜。"
+        ),
+    }
 
 
 async def _fallback(state: RecipeState) -> dict:
