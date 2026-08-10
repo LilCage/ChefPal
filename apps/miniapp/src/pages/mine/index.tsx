@@ -28,6 +28,7 @@ const FUN_MENU = [
   { key: 'vote', icon: 'ic-heart', title: '家庭口味投票', sub: '全家决定吃什么', url: '/pages/family-vote/index' },
   { key: 'challenge', icon: 'ic-award', title: '烹饪挑战', sub: '一周只花 50 元', url: '/pages/cooking-challenge/index' },
   { key: 'agents', icon: 'ic-spark', title: 'AI 主厨团', sub: '营养师+大厨+采购', url: '/pages/multi-agent/index' },
+  { key: 'fridge', icon: 'ic-bell', title: '冰箱管家', sub: '食材过期预警', url: '/pages/fridge/index' },
 ]
 
 export default function Mine() {

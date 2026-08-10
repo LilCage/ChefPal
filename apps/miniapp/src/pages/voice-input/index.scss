@@ -1,0 +1,112 @@
+/* 语音输入（原型 04 屏2）：大麦克风 + 波形 + 识别结果 + 食材 chips */
+.voice-input {
+  padding-bottom: 80px;
+
+  .voice-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+    padding: 88px 40px 40px;
+  }
+
+  .mic-big {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: var(--red);
+    border: 4px solid var(--ink);
+    box-shadow: 12px 12px 0 var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    animation: pulse 1.6s infinite;
+
+    .ic {
+      width: 104px;
+      height: 104px;
+      color: #fff;
+    }
+
+    &.recording {
+      background: var(--gold);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .wave {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 88px;
+
+    .w-bar {
+      width: 10px;
+      border-radius: 6px;
+      background: var(--gold);
+      border: 1px solid var(--ink);
+      height: 24px;
+    }
+    .w-bar:nth-child(1) { height: 40px; }
+    .w-bar:nth-child(2) { height: 68px; }
+    .w-bar:nth-child(3) { height: 88px; }
+    .w-bar:nth-child(4) { height: 56px; }
+    .w-bar:nth-child(5) { height: 80px; }
+    .w-bar:nth-child(6) { height: 32px; }
+    .w-bar:nth-child(7) { height: 64px; }
+  }
+
+  .voice-hint {
+    font-weight: 900;
+    font-size: 28px;
+    text-align: center;
+  }
+
+  .voice-bubble {
+    width: 100%;
+    margin-top: 16px;
+
+    .voice-text {
+      display: block;
+      font-size: 28px;
+      font-weight: 800;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+  }
+
+  .star-burst--sm {
+    padding: 4px 16px;
+    font-size: 22px;
+  }
+
+  .voice-field {
+    width: 100%;
+    box-sizing: border-box;
+
+    .chip-add {
+      padding: 0 20px;
+
+      .chip-input {
+        min-width: 220px;
+        font-size: 26px;
+        color: var(--ink);
+      }
+    }
+
+    .note--mt {
+      display: block;
+      margin-top: 16px;
+    }
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

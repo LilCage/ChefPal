@@ -30,7 +30,17 @@ export default defineAppConfig({
     'pages/cooking-challenge/index',
     'pages/multi-agent/index',
     'pages/recipe-tree/index',
+    'pages/voice-input/index',
+    'pages/fridge/index',
   ],
+  // 微信「同声传译」插件（语音输入 ASR）：需先在 mp.weixin.qq.com 后台
+  // 设置→第三方设置→插件管理 搜索添加；version 以后台「插件详情」显示为准
+  plugins: {
+    WechatSI: {
+      version: '0.3.5',
+      provider: 'wx069ba97219f66d99',
+    },
+  },
   window: {
     // 所有页面都用自定义漫画风导航，隐藏微信原生导航栏（避免重复 title）
     navigationStyle: 'custom',

@@ -33,6 +33,14 @@
     .ic { color: var(--red); }
   }
 
+  .input-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .photo-chip { margin-top: 0; }
+  }
+
   .fun-row {
     display: flex;
     gap: 16px;

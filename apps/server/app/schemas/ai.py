@@ -128,3 +128,19 @@ class ShoppingListSchema(BaseModel):
     """从膳食计划汇总的分类购物清单。"""
 
     categories: list[ShopCategory] = Field(min_length=1)
+
+
+class FridgeSuggestion(BaseModel):
+    """冰箱管家组合推荐（原型 04 屏6）：用临期食材做的一道菜。"""
+
+    ingredients: list[str] = Field(min_length=1)
+    dish: str
+    time_minutes: int = Field(ge=0, le=1440)
+    match_score: int = Field(ge=0, le=100)
+
+
+class FridgeAdviceSchema(BaseModel):
+    """冰箱管家 AI 组合建议：优先消耗即将过期食材。"""
+
+    suggestions: list[FridgeSuggestion] = Field(min_length=1, max_length=3)
+    note: str = ""  # 补充建议（如"还有 1 份挂面，可加做 XX 双保险"）

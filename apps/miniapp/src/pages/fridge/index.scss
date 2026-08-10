@@ -1,0 +1,177 @@
+/* 冰箱管家（原型 04 屏6）：过期横幅 + 临期列表 + AI 建议 + 添加食材 */
+.fridge {
+  padding-bottom: 80px;
+
+  /* ---- 过期横幅 ---- */
+  .exp-banner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: #ffe9d9;
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 6px 6px 0 var(--ink);
+    margin: 28px;
+    padding: 24px 28px;
+
+    &--ok {
+      background: #ddf0e8;
+    }
+
+    .eb-ic {
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
+      background: var(--red);
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex: none;
+
+      &--green { background: var(--green); }
+
+      .ic { width: 48px; height: 48px; }
+    }
+
+    .eb-body { flex: 1; }
+
+    .eb-title {
+      font-size: 28px;
+      font-weight: 900;
+      display: block;
+    }
+
+    .eb-sub {
+      font-size: 23px;
+      color: var(--brown);
+      font-weight: 600;
+      display: block;
+      margin-top: 4px;
+    }
+  }
+
+  /* ---- 食材条目 ---- */
+  .fridge-item {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 28px;
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 24px 28px;
+    margin: 0 0 20px;
+
+    .fi-ic {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: var(--soft);
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      flex: none;
+    }
+
+    .fi-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .fi-name {
+      font-size: 28px;
+      font-weight: 900;
+      display: block;
+    }
+
+    .fi-note {
+      font-size: 22px;
+      color: var(--gray);
+      font-weight: 600;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .fi-cta {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 20px;
+      font-size: 22px;
+      font-weight: 900;
+      padding: 12px 24px;
+      box-shadow: 4px 4px 0 var(--ink);
+      flex: none;
+    }
+  }
+
+  /* ---- 临期标签 ---- */
+  .exp-tag {
+    font-size: 21px;
+    font-weight: 900;
+    border: 2px solid var(--ink);
+    border-radius: 16px;
+    padding: 2px 16px;
+    flex: none;
+
+    &--now { background: var(--red); color: #fff; }
+    &--warn { background: var(--gold); color: var(--ink); }
+    &--ok { background: #ddf0e8; color: var(--green-dark); }
+  }
+
+  /* ---- AI 建议 ---- */
+  .advice-loading,
+  .advice-empty {
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 28px;
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 28px;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gray);
+    text-align: center;
+  }
+
+  .advice-bubble {
+    margin: 0;
+
+    .star-burst--sm {
+      padding: 4px 16px;
+      font-size: 22px;
+    }
+
+    .advice-line {
+      font-size: 27px;
+      font-weight: 800;
+      margin-top: 20px;
+      line-height: 1.5;
+
+      .advice-dish { color: var(--red); }
+
+      .advice-meta {
+        font-size: 22px;
+        color: var(--gray);
+        font-weight: 700;
+      }
+    }
+
+    .advice-note {
+      display: block;
+      font-size: 24px;
+      color: var(--gray);
+      font-weight: 600;
+      margin-top: 16px;
+    }
+  }
+
+  /* ---- 添加食材 ---- */
+  .fridge-add {
+    padding: 8px 28px 0;
+  }
+}

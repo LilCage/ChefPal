@@ -443,3 +443,35 @@ export const toggleShopItem = (listId: string, itemId: string, checked: boolean)
     `/shopping-list/${listId}/items/${itemId}/checked`,
     { checked },
   )
+
+/* ---------- 冰箱管家（食材过期预警） ---------- */
+export interface FridgeItem {
+  id: string
+  name: string
+  emoji: string
+  added_at: string | null
+  best_before_days: number
+  days_stored: number
+  days_left: number
+  status: 'now' | 'warn' | 'ok'
+}
+export interface FridgeList {
+  items: FridgeItem[]
+  expiring_count: number
+}
+export interface FridgeSuggestion {
+  ingredients: string[]
+  dish: string
+  time_minutes: number
+  match_score: number
+}
+export interface FridgeAdvice {
+  suggestions: FridgeSuggestion[]
+  note: string
+}
+export const fetchFridge = () => http.get<FridgeList>('/fridge')
+export const addFridgeItem = (data: { name: string; emoji?: string; best_before_days?: number }) =>
+  http.post<FridgeItem>('/fridge', data)
+export const removeFridgeItem = (id: string) =>
+  http.del<{ id: string; removed: boolean }>(`/fridge/${id}`)
+export const fetchFridgeAdvice = () => http.post<FridgeAdvice>('/fridge/advice')

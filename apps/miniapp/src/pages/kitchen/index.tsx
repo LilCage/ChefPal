@@ -76,8 +76,10 @@ export default function Kitchen() {
     : ''
 
   const goPhoto = () => Taro.navigateTo({ url: '/pages/photo-capture/index' })
+  const goVoice = () => Taro.navigateTo({ url: '/pages/voice-input/index' })
   const goRescue = () => Taro.navigateTo({ url: '/pages/dark-rescue/index' })
   const goAgents = () => Taro.navigateTo({ url: '/pages/multi-agent/index' })
+  const goFridge = () => Taro.navigateTo({ url: '/pages/fridge/index' })
 
   return (
     <View className='page-content kitchen'>
@@ -112,9 +114,15 @@ export default function Kitchen() {
               <View key={q} className='chip' onClick={() => addIngredient(q)}><Text>+{q}</Text></View>
             ))}
           </View>
-          <View className='photo-chip' onClick={goPhoto}>
-            <View className='ic ic-camera ic-sm' />
-            <Text>拍照识食材</Text>
+          <View className='input-row'>
+            <View className='photo-chip' onClick={goPhoto}>
+              <View className='ic ic-camera ic-sm' />
+              <Text>拍照识食材</Text>
+            </View>
+            <View className='photo-chip' onClick={goVoice}>
+              <View className='ic ic-mic ic-sm' />
+              <Text>语音输入</Text>
+            </View>
           </View>
           <View className='fun-row'>
             <View className='fun-chip' onClick={goRescue}>
@@ -124,6 +132,10 @@ export default function Kitchen() {
             <View className='fun-chip' onClick={goAgents}>
               <Text className='fun-emoji'>🤝</Text>
               <Text>AI 主厨团</Text>
+            </View>
+            <View className='fun-chip' onClick={goFridge}>
+              <Text className='fun-emoji'>🧊</Text>
+              <Text>冰箱管家</Text>
             </View>
           </View>
           <Text className='note'>

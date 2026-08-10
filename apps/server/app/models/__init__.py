@@ -8,6 +8,7 @@ from app.models.family_vote import FamilyVote
 from app.models.family_vote_record import FamilyVoteRecord
 from app.models.favorite import Favorite
 from app.models.follow import Follow
+from app.models.fridge_item import FridgeItem
 from app.models.like import Like
 from app.models.meal_plan import MealPlan
 from app.models.post import Post
@@ -31,6 +32,7 @@ __all__ = [
     "MealPlan",
     "ShoppingList",
     "Follow",
+    "FridgeItem",
     "FamilyVote",
     "FamilyVoteRecord",
     "Challenge",
