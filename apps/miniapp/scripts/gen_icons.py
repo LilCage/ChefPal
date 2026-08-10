@@ -33,6 +33,7 @@ PATHS = {
     "check": '<path d="m5 12 5 5 9-11"/>',
     "edit": '<path d="M12 20h8"/><path d="M16.5 3.5 20 7 8 19l-4 1 1-4z"/>',
     "chev-r": '<path d="m9 5 7 7-7 7"/>',
+    "chev-l": '<path d="m15 5-7 7 7 7"/>',
     "comment": '<path d="M4 5h16v12H9l-5 4z"/>',
     "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
     "cal": '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',

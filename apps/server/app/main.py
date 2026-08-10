@@ -11,7 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.core.response import AppError, fail
 from app.routers import (
+    agents,
     auth,
+    challenges,
     comments,
     favorites,
     follows,
@@ -19,9 +21,12 @@ from app.routers import (
     posts,
     qa,
     recipes,
+    rescue,
+    seasonal,
     shopping,
     users,
     vision,
+    votes,
 )
 
 settings = get_settings()
@@ -67,6 +72,11 @@ for router in (
     plans.router,
     vision.router,
     shopping.router,
+    seasonal.router,
+    rescue.router,
+    votes.router,
+    challenges.router,
+    agents.router,
     follows.users_router,
     follows.follows_router,
 ):

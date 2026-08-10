@@ -20,23 +20,20 @@ RECOGNIZE_PROMPT = (
     "4) 只输出 JSON，不要多余文字。"
 )
 
-
-class VisionError(Exception):
-    """视觉识别调用/解析失败。"""
-
-
-def _client() -> AsyncOpenAI:
-    return AsyncOpenAI(
-        api_key=settings.ZHIPU_API_KEY,
-        base_url=settings.ZHIPU_BASE_URL,
-        timeout=settings.AI_TIMEOUT_SECONDS,
-    )
+DIAGNOSE_PROMPT = (
+    "你是一位耐心的中式家常菜补救专家。用户上传了做菜的翻车现场照片（成品或半成品），"
+    "请从照片中判断最可能的 1~3 个问题，并给出具体、可执行的补救方案。"
+    "只输出 JSON，格式：{\"issues\": [{\"title\": \"问题名\", \"detail\": \"为什么会这样（简短）\", \"fix\": \"补救方案（具体做法）\"}]}。"
+    "要求：1) 每条 fix 是一条明确的补救动作，不要用'建议'开头；"
+    "2) 如果照片没有明显翻车迹象，issues 返回空数组；"
+    "3) 只输出 JSON，不要多余文字。"
+)
 
 
-async def recognize_ingredients(image_data_url: str) -> list[str]:
-    """识别图片中的食材，返回去重后的中文名列表。
+async def _chat_vision(image_data_url: str, prompt: str) -> dict:
+    """通用 GLM-4v 多模态调用：发图 + 提示词 → 解析 JSON 对象。
 
-    未配置 ZHIPU_API_KEY 时抛 VisionError（提示先填 .env），便于本地 mock 测试与集成测试区分。
+    未配置 ZHIPU_API_KEY 时抛 VisionError。返回解析后的 dict（调用方负责字段校验）。
     """
     if not settings.ZHIPU_API_KEY:
         raise VisionError("未配置 ZHIPU_API_KEY，请先在 apps/server/.env 中填入智谱 Key")
@@ -48,7 +45,7 @@ async def recognize_ingredients(image_data_url: str) -> list[str]:
             "role": "user",
             "content": [
                 {"type": "image_url", "image_url": {"url": image_data_url}},
-                {"type": "text", "text": RECOGNIZE_PROMPT},
+                {"type": "text", "text": prompt},
             ],
         },
     ]
@@ -70,7 +67,30 @@ async def recognize_ingredients(image_data_url: str) -> list[str]:
         except Exception as exc:  # noqa: BLE001
             raise VisionError("视觉识别结果解析失败，请重试") from exc
 
-    raw = data.get("ingredients") if isinstance(data, dict) else None
+    if not isinstance(data, dict):
+        raise VisionError("视觉识别结果格式异常，请重试")
+    return data
+
+
+class VisionError(Exception):
+    """视觉识别调用/解析失败。"""
+
+
+def _client() -> AsyncOpenAI:
+    return AsyncOpenAI(
+        api_key=settings.ZHIPU_API_KEY,
+        base_url=settings.ZHIPU_BASE_URL,
+        timeout=settings.AI_TIMEOUT_SECONDS,
+    )
+
+
+async def recognize_ingredients(image_data_url: str) -> list[str]:
+    """识别图片中的食材，返回去重后的中文名列表。
+
+    未配置 ZHIPU_API_KEY 时抛 VisionError（提示先填 .env），便于本地 mock 测试与集成测试区分。
+    """
+    data = await _chat_vision(image_data_url, RECOGNIZE_PROMPT)
+    raw = data.get("ingredients")
     if not isinstance(raw, list):
         raise VisionError("视觉识别结果格式异常，请重试")
 
@@ -85,3 +105,27 @@ async def recognize_ingredients(image_data_url: str) -> list[str]:
         if len(cleaned) >= 30:
             break
     return cleaned
+
+
+async def diagnose_dish(image_data_url: str) -> dict:
+    """黑暗料理拯救：诊断翻车现场照片，返回 {"issues": [{title, detail, fix}]}。
+
+    未配置 ZHIPU_API_KEY 时抛 VisionError。
+    """
+    data = await _chat_vision(image_data_url, DIAGNOSE_PROMPT)
+    issues = data.get("issues")
+    if not isinstance(issues, list):
+        raise VisionError("视觉识别结果格式异常，请重试")
+
+    cleaned: list[dict] = []
+    for item in issues:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        detail = str(item.get("detail") or "").strip()
+        fix = str(item.get("fix") or "").strip()
+        if title and detail and fix:
+            cleaned.append({"title": title, "detail": detail, "fix": fix})
+        if len(cleaned) >= 3:
+            break
+    return {"issues": cleaned}

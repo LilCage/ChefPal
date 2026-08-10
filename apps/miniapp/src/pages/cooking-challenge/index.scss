@@ -1,0 +1,169 @@
+/* 烹饪挑战（原型 05 屏4）：挑战 hero 卡 + 排行榜 + 创建挑战 */
+.cooking-challenge {
+  padding-bottom: 60px;
+
+  .chal-hero {
+    background: linear-gradient(135deg, #F7B26B, var(--red));
+    border: 3px solid var(--ink);
+    border-radius: 40px;
+    box-shadow: 5px 5px 0 var(--ink);
+    margin: 28px;
+    padding: 36px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+
+    .speedlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        108deg,
+        rgba(255, 255, 255, 0.10) 0 16px,
+        transparent 16px 34px
+      );
+    }
+
+    .chal-title {
+      display: block;
+      font-size: 38px;
+      font-weight: 900;
+      position: relative;
+    }
+
+    .chal-desc {
+      display: block;
+      font-size: 24px;
+      margin-top: 12px;
+      position: relative;
+      color: #FFE9D9;
+      font-weight: 600;
+    }
+
+    .chal-progress {
+      background: rgba(255, 255, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 999px;
+      height: 32px;
+      margin-top: 28px;
+      overflow: hidden;
+      position: relative;
+
+      .chal-progress-fill {
+        display: block;
+        height: 100%;
+        background: var(--gold);
+        border-right: 2px solid var(--ink);
+      }
+    }
+
+    .chal-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 22px;
+      font-weight: 800;
+      margin-top: 16px;
+      position: relative;
+    }
+  }
+
+  .empty {
+    padding-top: 60px;
+  }
+
+  .sec {
+    padding: 28px 28px 8px;
+  }
+
+  .rank-list {
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    margin: 0 28px 24px;
+    overflow: hidden;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 28px;
+    border-bottom: 2px dashed var(--soft);
+
+    &:last-child { border-bottom: none; }
+    &.me { background: var(--soft); }
+
+    .r-no {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--soft);
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 24px;
+      flex: none;
+    }
+
+    &:nth-child(1) .r-no { background: var(--gold); }
+
+    .r-name {
+      font-size: 27px;
+      font-weight: 900;
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .r-days {
+      font-size: 22px;
+      color: var(--gray);
+      font-weight: 700;
+      flex: none;
+    }
+  }
+
+  .rank-empty {
+    padding: 36px;
+    text-align: center;
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .progress-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+
+    .progress-input {
+      flex: 1;
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      padding: 16px 20px;
+      font-size: 26px;
+      background: var(--cream);
+    }
+  }
+
+  .create-sec {
+    margin-top: 8px;
+  }
+
+  .create-input {
+    border: 2px solid var(--ink);
+    border-radius: 16px;
+    padding: 16px 20px;
+    font-size: 26px;
+    background: var(--cream);
+    margin-bottom: 16px;
+  }
+
+  .chips {
+    margin-top: 4px;
+  }
+}

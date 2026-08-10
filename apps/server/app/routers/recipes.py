@@ -1,4 +1,4 @@
-"""菜谱路由：POST /api/recipes/generate、GET /api/recipes/{id}、GET /api/recipes/{id}/share-card。"""
+"""菜谱路由：generate / 详情 / share-card / 进化树 fork+tree（原型 05 屏6）。"""
 import base64
 from uuid import UUID
 
@@ -12,6 +12,7 @@ from app.core.deps import get_current_user
 from app.core.response import AppError, ok
 from app.db.session import get_db
 from app.models.recipe import Recipe
+from app.models.recipe_version import RecipeVersion
 from app.models.user import User
 from app.services import wechat as wechat_service
 from app.services.agents import recipe_agent
@@ -20,6 +21,49 @@ from app.services.wechat import WeChatError
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 settings = get_settings()
+
+
+async def _get_recipe_or_404(db: AsyncSession, recipe_id: UUID) -> Recipe:
+    rec = await db.get(Recipe, recipe_id)
+    if rec is None:
+        raise AppError("菜谱不存在", code=404, status_code=404)
+    return rec
+
+
+def _version_out(v: RecipeVersion, is_root: bool) -> dict:
+    return {
+        "id": str(v.id),
+        "recipe_id": str(v.recipe_id),
+        "parent_id": str(v.parent_id) if v.parent_id else None,
+        "version_label": v.version_label,
+        "title": v.title,
+        "changes": v.changes,
+        "is_root": is_root,
+        "created_at": v.created_at.isoformat() if v.created_at else None,
+    }
+
+
+async def _ensure_root_version(db: AsyncSession, rec: Recipe) -> RecipeVersion:
+    """菜谱首次 fork 前确保存在 v1.0 根版本（懒创建）。"""
+    row = await db.execute(
+        select(RecipeVersion).where(
+            RecipeVersion.recipe_id == rec.id, RecipeVersion.parent_id.is_(None)
+        )
+    )
+    root = row.scalar_one_or_none()
+    if root is not None:
+        return root
+    root = RecipeVersion(
+        recipe_id=rec.id,
+        parent_id=None,
+        user_id=rec.user_id,
+        version_label="v1.0",
+        title=rec.title,
+        changes="",
+    )
+    db.add(root)
+    await db.flush()
+    return root
 
 
 class RecipeGenerateRequest(BaseModel):
@@ -103,6 +147,121 @@ async def get_recipe(
     if rec is None:
         raise AppError("菜谱不存在", code=404, status_code=404)
     return ok(_recipe_out(rec))
+
+
+class ForkRequest(BaseModel):
+    changes: str = Field(default="", max_length=200, description="这一版改了什么")
+
+
+async def _resolve_recipe_ref(
+    db: AsyncSession, ref: UUID
+) -> tuple[Recipe, RecipeVersion | None]:
+    """ref 可能是 recipe_id 或 version_id → (recipe, parent_version)。"""
+    v = await db.get(RecipeVersion, ref)
+    if v is not None:
+        rec = await _get_recipe_or_404(db, v.recipe_id)
+        return rec, v
+    rec = await _get_recipe_or_404(db, ref)
+    return rec, None
+
+
+def _next_label(versions: list[RecipeVersion]) -> str:
+    """链上最大版本号 +1，如 [v1.0] → v2.0。"""
+    nums = []
+    for v in versions:
+        try:
+            nums.append(int(v.version_label.lstrip("v").split(".")[0]))
+        except (ValueError, AttributeError):
+            continue
+    return f"v{max(nums) + 1 if nums else 1}.0"
+
+
+async def _recipe_chain(db: AsyncSession, recipe_id: UUID) -> list[RecipeVersion]:
+    """进化树链：沿 parent_id 从根走到最新（同一事务内 created_at 相同，不能按时间排序）。"""
+    rows = await db.execute(select(RecipeVersion).where(RecipeVersion.recipe_id == recipe_id))
+    versions = list(rows.scalars())
+    if not versions:
+        return []
+
+    by_id = {v.id: v for v in versions}
+    root = next((v for v in versions if v.parent_id is None), None)
+    if root is None:
+        return versions  # 数据异常时兜底
+
+    chain = [root]
+    cur = root
+    while cur.id in by_id and any(v.parent_id == cur.id for v in versions):
+        child = next(v for v in versions if v.parent_id == cur.id)
+        chain.append(child)
+        cur = child
+        if len(chain) > len(versions):  # 防环
+            break
+    return chain
+
+
+@router.post("/{recipe_id}/fork")
+async def fork_recipe(
+    recipe_id: UUID,
+    body: ForkRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """菜谱DNA进化树：基于某菜谱/某版本 fork 出我的分支（原型 05 屏6）。"""
+    rec, parent = await _resolve_recipe_ref(db, recipe_id)
+
+    # 无根版本则先创建 v1.0 原版
+    chain = await _recipe_chain(db, rec.id)
+    if not chain:
+        await _ensure_root_version(db, rec)
+        await db.flush()
+        chain = await _recipe_chain(db, rec.id)
+
+    # 指定了父版本则 fork 它；否则 fork 最新版本
+    parent_version = parent if parent is not None else chain[-1]
+    label = _next_label(chain)
+
+    v = RecipeVersion(
+        recipe_id=rec.id,
+        parent_id=parent_version.id,
+        user_id=user.id,
+        version_label=label,
+        title=rec.title,
+        changes=body.changes,
+    )
+    db.add(v)
+    await db.commit()
+    await db.refresh(v)
+    return ok(_version_out(v, is_root=False))
+
+
+@router.get("/{recipe_id}/tree")
+async def recipe_tree(
+    recipe_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """菜谱DNA进化树：返回该菜谱的版本链（根在前），无版本时合成 v1.0 原版。"""
+    rec, _ = await _resolve_recipe_ref(db, recipe_id)
+    versions = await _recipe_chain(db, rec.id)
+
+    if not versions:
+        # 尚未 fork：合成根节点（v1.0 原版，不入库）
+        items = [
+            {
+                "id": None,
+                "recipe_id": str(rec.id),
+                "parent_id": None,
+                "version_label": "v1.0",
+                "title": rec.title,
+                "changes": "",
+                "is_root": True,
+                "created_at": rec.created_at.isoformat() if rec.created_at else None,
+            }
+        ]
+    else:
+        items = [_version_out(v, v.parent_id is None) for v in versions]
+
+    return ok({"recipe_id": str(rec.id), "title": rec.title, "versions": items})
 
 
 @router.get("/{recipe_id}/share-card")

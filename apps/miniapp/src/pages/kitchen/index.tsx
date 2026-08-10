@@ -76,6 +76,8 @@ export default function Kitchen() {
     : ''
 
   const goPhoto = () => Taro.navigateTo({ url: '/pages/photo-capture/index' })
+  const goRescue = () => Taro.navigateTo({ url: '/pages/dark-rescue/index' })
+  const goAgents = () => Taro.navigateTo({ url: '/pages/multi-agent/index' })
 
   return (
     <View className='page-content kitchen'>
@@ -113,6 +115,16 @@ export default function Kitchen() {
           <View className='photo-chip' onClick={goPhoto}>
             <View className='ic ic-camera ic-sm' />
             <Text>拍照识食材</Text>
+          </View>
+          <View className='fun-row'>
+            <View className='fun-chip' onClick={goRescue}>
+              <Text className='fun-emoji'>🥣</Text>
+              <Text>翻车拯救</Text>
+            </View>
+            <View className='fun-chip' onClick={goAgents}>
+              <Text className='fun-emoji'>🤝</Text>
+              <Text>AI 主厨团</Text>
+            </View>
           </View>
           <Text className='note'>
             {prefsText ? `已读取你的口味偏好 · ${prefsText}` : '尚未设置口味偏好，可在「我的」中设置'}

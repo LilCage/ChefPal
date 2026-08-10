@@ -73,6 +73,26 @@ export const generateRecipes = (ingredients: string[], prefs?: Record<string, an
   http.post<Recipe[]>('/recipes/generate', { ingredients, prefs })
 export const fetchRecipe = (id: string) => http.get<Recipe>(`/recipes/${id}`)
 
+/* ---------- 菜谱DNA进化树 ---------- */
+export interface RecipeVersion {
+  id: string | null
+  recipe_id: string
+  parent_id: string | null
+  version_label: string
+  title: string
+  changes: string
+  is_root: boolean
+  created_at: string | null
+}
+export interface RecipeTreeData {
+  recipe_id: string
+  title: string
+  versions: RecipeVersion[]
+}
+export const fetchRecipeTree = (ref: string) => http.get<RecipeTreeData>(`/recipes/${ref}/tree`)
+export const forkRecipe = (ref: string, changes: string) =>
+  http.post<RecipeVersion>(`/recipes/${ref}/fork`, { changes })
+
 /* ---------- 收藏 ---------- */
 export interface FavoriteItem {
   favorite_id: string
@@ -88,6 +108,122 @@ export const removeFavorite = (content_type: 'qa' | 'recipe', content_id: string
   http.del<FavoriteItem>(`/favorites?content_type=${content_type}&content_id=${content_id}`)
 export const fetchFavorites = (type?: 'qa' | 'recipe') =>
   http.get<FavoriteItem[]>(`/favorites${type ? `?type=${type}` : ''}`)
+
+/* ---------- 时令食材日历 ---------- */
+export interface SeasonalItem {
+  name: string
+  emoji: string
+  level: '应季' | '正当时'
+  note: string
+}
+export interface SeasonalPairing {
+  ingredients: string[]
+  dish: string
+  note: string
+}
+export interface SeasonalData {
+  month: number
+  label: string
+  items: SeasonalItem[]
+  pairing: SeasonalPairing
+}
+export const fetchSeasonal = (month?: number) =>
+  http.get<SeasonalData>(`/seasonal${month ? `?month=${month}` : ''}`)
+
+/* ---------- 家庭口味投票 ---------- */
+export interface VoteOption {
+  name: string
+  count: number
+}
+export interface VoteDetail {
+  id: string
+  status: 'active' | 'closed'
+  ingredients: string[]
+  options: VoteOption[]
+  my_choice: number | null
+  total_count: number
+  created_at: string | null
+}
+export interface VoteShareCard {
+  title: string
+  options: string[]
+  options_count: number
+  qrcode_base64: string | null
+}
+export const generateVote = (ingredients: string[]) =>
+  http.post<VoteDetail>('/votes/generate', { ingredients })
+export const fetchVote = (id: string) => http.get<VoteDetail>(`/votes/${id}`)
+export const castVote = (id: string, optionIndex: number) =>
+  http.post<VoteDetail>(`/votes/${id}/vote`, { option_index: optionIndex })
+
+/* ---------- 烹饪挑战 ---------- */
+export interface Challenge {
+  id: string
+  title: string
+  budget: number
+  description: string | null
+  status: 'active' | 'finished'
+  participant_count: number
+  created_at: string | null
+}
+export interface ChallengeList {
+  items: Challenge[]
+}
+export interface JoinResult {
+  id: string
+  title: string
+  budget: number
+  status: 'active' | 'finished'
+  participant_count: number
+  joined: boolean
+}
+export interface LeaderboardItem {
+  user_id: string
+  nickname: string
+  spend: number
+  meal_count: number
+  is_me: boolean
+}
+export const createChallenge = (data: { title: string; budget: number; description?: string }) =>
+  http.post<Challenge>('/challenges', data)
+export const fetchChallenges = () => http.get<ChallengeList>('/challenges')
+export const joinChallenge = (id: string) => http.post<JoinResult>(`/challenges/${id}/join`)
+export const updateChallengeProgress = (id: string, spend: number, mealCount = 0) =>
+  http.put<{ spend: number; meal_count: number }>(`/challenges/${id}/progress`, { spend, meal_count: mealCount })
+export const fetchLeaderboard = (id: string) =>
+  http.get<{ items: LeaderboardItem[] }>(`/challenges/${id}/leaderboard`)
+
+/* ---------- 多智能体协作 ---------- */
+export interface NutritionistData {
+  calories_kcal: number
+  protein_g: number
+  advice: string
+  avoided_allergens: string[]
+}
+export interface ChefData {
+  dish_name: string
+  technique: string
+  plating: string
+}
+export interface ShopperItem {
+  name: string
+  quantity: string
+}
+export interface ShopperCategory {
+  name: string
+  items: ShopperItem[]
+}
+export interface ShopperData {
+  categories: ShopperCategory[]
+  tips: string
+}
+export interface CollaborateData {
+  nutritionist: NutritionistData
+  chef: ChefData
+  shopper: ShopperData
+}
+export const collaborateAgents = (ingredients: string[], prefs?: Record<string, any>) =>
+  http.post<CollaborateData>('/agents/collaborate', { ingredients, prefs })
 
 /* ---------- 关注系统 ---------- */
 export interface UserProfile {
@@ -269,6 +405,15 @@ export const fetchLatestPlan = () => http.get<MealPlan>('/plans/latest')
 /* ---------- 拍照识食材 ---------- */
 export const recognizeIngredients = (imageBase64: string) =>
   http.post<{ ingredients: string[] }>('/vision/recognize', { image_base64: imageBase64 })
+
+/* ---------- 黑暗料理拯救 ---------- */
+export interface RescueIssue {
+  title: string
+  detail: string
+  fix: string
+}
+export const diagnoseDish = (imageBase64: string) =>
+  http.post<{ issues: RescueIssue[] }>('/rescue/diagnose', { image_base64: imageBase64 })
 
 /* ---------- 购物清单 ---------- */
 export interface ShopItem {

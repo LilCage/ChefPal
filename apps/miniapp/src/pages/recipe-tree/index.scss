@@ -1,0 +1,104 @@
+/* 菜谱DNA进化树（原型 05 屏6）：版本时间线 + 保存按钮 */
+.recipe-tree {
+  padding-bottom: 60px;
+
+  .evo-tree {
+    padding: 36px 28px;
+  }
+
+  .evo-node {
+    display: flex;
+    gap: 28px;
+    position: relative;
+    padding-bottom: 44px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 32px;
+      top: 76px;
+      bottom: 0;
+      width: 3px;
+      background: var(--soft);
+      border-left: 2px dashed var(--gray);
+    }
+
+    &:last-child::before { display: none; }
+
+    .dot {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 3px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      flex: none;
+      z-index: 2;
+
+      &.mid { background: var(--gold); color: var(--ink); }
+      &.root { background: var(--green); }
+    }
+
+    .evo-card {
+      flex: 1;
+      background: var(--white);
+      border: 2.5px solid var(--ink);
+      border-radius: 28px;
+      box-shadow: 2px 2px 0 var(--ink);
+      padding: 24px;
+
+      .ev-title {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .ev-ver {
+        background: var(--soft);
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        font-size: 20px;
+        font-weight: 900;
+        padding: 0 12px;
+        color: var(--ink);
+      }
+
+      .ev-name {
+        font-size: 27px;
+        font-weight: 900;
+      }
+
+      .ev-desc {
+        display: block;
+        font-size: 24px;
+        color: var(--brown);
+        margin-top: 12px;
+        line-height: 1.6;
+      }
+
+      .ev-tag {
+        display: inline-block;
+        font-size: 21px;
+        font-weight: 800;
+        color: var(--green-dark);
+        margin-top: 12px;
+      }
+    }
+  }
+
+  .sec {
+    padding: 28px;
+  }
+
+  .evo-note {
+    display: block;
+    text-align: center;
+    padding: 0 28px;
+  }
+}

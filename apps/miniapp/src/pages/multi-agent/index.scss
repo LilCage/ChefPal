@@ -1,0 +1,183 @@
+/* 多智能体协作（原型 05 屏5）：agent tabs + agent 卡 + 并行按钮 */
+.multi-agent {
+  padding-bottom: 60px;
+
+  .field {
+    margin: 28px;
+  }
+
+  .chip-input {
+    min-width: 120px;
+  }
+
+  .agent-tabs {
+    display: flex;
+    gap: 16px;
+    padding: 8px 28px 4px;
+
+    .ag {
+      flex: 1;
+      text-align: center;
+      background: var(--white);
+      border: 2.5px solid var(--ink);
+      border-radius: 24px;
+      padding: 16px 4px;
+      font-weight: 800;
+      font-size: 25px;
+      box-shadow: 2px 2px 0 var(--ink);
+      color: var(--gray);
+
+      &.on {
+        background: var(--red);
+        color: #fff;
+      }
+
+      .ag-label { display: block; font-weight: 900; }
+      .ag-sub {
+        display: block;
+        font-size: 19px;
+        font-weight: 600;
+        opacity: 0.85;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  .agent-placeholder {
+    padding-top: 12px;
+  }
+
+  .agent-stack {
+    padding: 12px 0 0;
+  }
+
+  .agent-card {
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    margin: 24px 28px;
+    overflow: hidden;
+
+    &.dashed { border-style: dashed; box-shadow: none; }
+
+    .agent-head {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px 28px;
+      border-bottom: 2px dashed var(--soft);
+
+      .a-ic {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--ink);
+        flex: none;
+
+        &.green { background: #DDF0E8; color: var(--green-dark); }
+        &.soft { background: var(--soft); color: var(--red-dark); }
+      }
+
+      .agent-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .a-name {
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .a-desc {
+        font-size: 22px;
+        color: var(--gray);
+        font-weight: 600;
+        margin-top: 2px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .a-lv {
+        margin-left: auto;
+        background: var(--gold);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        font-size: 20px;
+        font-weight: 900;
+        padding: 2px 16px;
+        color: var(--ink);
+        flex: none;
+
+        &.gold { background: var(--soft); color: var(--brown); }
+      }
+    }
+
+    .agent-out {
+      padding: 24px 28px;
+      font-size: 25px;
+      line-height: 1.7;
+      color: var(--brown);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .out-line {
+        display: block;
+        font-size: 25px;
+        color: var(--brown);
+      }
+
+      .out-strong {
+        color: var(--ink);
+        font-weight: 900;
+      }
+
+      .tag {
+        display: inline-block;
+        background: var(--soft);
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        font-size: 21px;
+        font-weight: 800;
+        padding: 0 12px;
+        margin-right: 12px;
+        align-self: flex-start;
+        color: var(--ink);
+      }
+
+      .agent-hint {
+        color: var(--gray);
+        font-size: 24px;
+      }
+
+      .shop-cat {
+        margin-bottom: 8px;
+
+        .cat-name {
+          display: block;
+          font-weight: 900;
+          color: var(--ink);
+          font-size: 25px;
+          margin-bottom: 2px;
+        }
+      }
+    }
+  }
+
+  .sec {
+    padding: 28px;
+  }
+
+  .agent-note {
+    display: block;
+    text-align: center;
+    padding: 0 28px;
+  }
+}

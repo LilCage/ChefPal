@@ -33,6 +33,28 @@
     .ic { color: var(--red); }
   }
 
+  .fun-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+
+    .fun-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--soft);
+      border: 2.5px solid var(--ink);
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: 23px;
+      font-weight: 800;
+      color: var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+
+      .fun-emoji { font-size: 24px; }
+    }
+  }
+
   .generate-sec {
     text-align: center;
     padding-top: 32px;

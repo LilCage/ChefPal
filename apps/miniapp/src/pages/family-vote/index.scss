@@ -1,0 +1,120 @@
+/* 家庭口味投票（原型 05 屏2）：问题头 + A/B/C 选项卡 + 分享按钮 */
+.family-vote {
+  padding-bottom: 60px;
+
+  .field {
+    margin: 28px;
+  }
+
+  .chip-input {
+    min-width: 120px;
+  }
+
+  .sec {
+    padding: 28px;
+  }
+
+  .vote-q {
+    text-align: center;
+    padding: 36px 32px 24px;
+
+    .vote-title {
+      display: block;
+      font-size: 38px;
+      font-weight: 900;
+    }
+
+    .vote-sub {
+      display: block;
+      font-size: 24px;
+      color: var(--gray);
+      font-weight: 600;
+      margin-top: 12px;
+    }
+  }
+
+  .vote-opt {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    margin: 0 28px 24px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+
+    &.win {
+      border-color: var(--green);
+
+      .v-letter {
+        background: var(--gold);
+      }
+    }
+
+    .v-tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--green);
+      color: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      font-size: 20px;
+      font-weight: 900;
+      padding: 2px 14px;
+    }
+
+    .v-letter {
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
+      background: var(--soft);
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 28px;
+      flex: none;
+    }
+
+    .v-main {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      min-width: 0;
+
+      .v-name {
+        font-size: 29px;
+        font-weight: 900;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .v-num {
+        font-size: 26px;
+        font-weight: 900;
+        color: var(--red);
+      }
+    }
+
+    .v-bar {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 12px;
+      background: linear-gradient(90deg, var(--gold), var(--red));
+    }
+  }
+
+  .vote-note {
+    display: block;
+    text-align: center;
+    padding: 0 28px;
+  }
+}

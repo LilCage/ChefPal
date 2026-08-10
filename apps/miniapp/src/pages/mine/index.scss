@@ -95,6 +95,17 @@
     }
   }
 
+  .fun-title {
+    margin: 8px 28px 16px;
+    padding-top: 8px;
+
+    .fun-title-label {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--red);
+    }
+  }
+
   .menu {
     background: #fff;
     border: 2.5px solid var(--ink);

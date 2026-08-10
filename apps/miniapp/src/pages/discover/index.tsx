@@ -120,6 +120,9 @@ export default function Discover() {
           <View className='chip chip--hot' onClick={goTopicSquare}>
             <Text>更多话题 →</Text>
           </View>
+          <View className='chip chip--hot' onClick={() => Taro.navigateTo({ url: '/pages/cooking-challenge/index' })}>
+            <Text>🏆 挑战</Text>
+          </View>
         </View>
       </View>
 

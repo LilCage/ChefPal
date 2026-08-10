@@ -21,6 +21,15 @@ const MENU = [
   { key: 'disclaimer', icon: 'ic-info', title: '免责声明与帮助', sub: 'AI 结果仅供参考' },
 ]
 
+/* 趣味探索（原型 05）入口：右上角约束 → 全部放内容区 */
+const FUN_MENU = [
+  { key: 'seasonal', icon: 'ic-cal', title: '时令食材日历', sub: '吃当季 · 最新鲜', url: '/pages/seasonal-calendar/index' },
+  { key: 'rescue', icon: 'ic-camera', title: '黑暗料理拯救', sub: '翻车现场 AI 诊断', url: '/pages/dark-rescue/index' },
+  { key: 'vote', icon: 'ic-heart', title: '家庭口味投票', sub: '全家决定吃什么', url: '/pages/family-vote/index' },
+  { key: 'challenge', icon: 'ic-award', title: '烹饪挑战', sub: '一周只花 50 元', url: '/pages/cooking-challenge/index' },
+  { key: 'agents', icon: 'ic-spark', title: 'AI 主厨团', sub: '营养师+大厨+采购', url: '/pages/multi-agent/index' },
+]
+
 export default function Mine() {
   const setTab = useTabStore((s) => s.setIndex)
   const user = useAuthStore((s) => s.user)
@@ -159,6 +168,22 @@ export default function Mine() {
               <Text className='mi-sub'>
                 {m.key === 'follow' ? `关注 ${followingCount} · 粉丝 ${followerCount}` : m.sub}
               </Text>
+            </View>
+            <View className='ic ic-chev-r ic-sm' />
+          </View>
+        ))}
+      </View>
+
+      <View className='fun-title'>
+        <Text className='fun-title-label pop'>趣味探索</Text>
+      </View>
+      <View className='menu'>
+        {FUN_MENU.map((m) => (
+          <View key={m.key} className='menu-item' onClick={() => onMenu(m)}>
+            <View className='mi-ic'><View className={`ic ${m.icon} ic-sm`} /></View>
+            <View className='mi-body'>
+              <Text className='mi-title'>{m.title}</Text>
+              <Text className='mi-sub'>{m.sub}</Text>
             </View>
             <View className='ic ic-chev-r ic-sm' />
           </View>

@@ -1,0 +1,116 @@
+/* 时令食材日历（原型 05 屏3）：月份条 + 3列食材网格 + 当季推荐气泡 */
+.seasonal {
+  padding-bottom: 60px;
+
+  .month-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 28px 8px;
+
+    .month-label {
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    .arrow {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      border: 2px solid var(--ink);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 2px 2px 0 var(--ink);
+      color: var(--ink);
+    }
+  }
+
+  .season-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px 28px;
+
+    .season-item {
+      background: var(--white);
+      border: 2.5px solid var(--ink);
+      border-radius: 28px;
+      box-shadow: 2px 2px 0 var(--ink);
+      text-align: center;
+      padding: 24px 8px;
+      position: relative;
+
+      .s-emoji {
+        font-size: 56px;
+        display: block;
+        line-height: 1.2;
+      }
+
+      .s-name {
+        font-size: 25px;
+        font-weight: 900;
+        display: block;
+        margin-top: 12px;
+      }
+
+      .s-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 18px;
+        font-weight: 900;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        padding: 0 8px;
+
+        &.best { background: var(--red); color: #fff; }
+        &.ok { background: var(--gold); color: var(--ink); }
+      }
+
+      .s-note {
+        font-size: 20px;
+        color: var(--gray);
+        font-weight: 600;
+        margin-top: 4px;
+        display: block;
+      }
+    }
+  }
+
+  .sec {
+    padding: 20px 28px 8px;
+  }
+
+  .bubble {
+    margin: 0 28px 24px;
+
+    .star-burst {
+      padding: 4px 16px;
+      font-size: 22px;
+    }
+
+    .pair-title {
+      font-size: 28px;
+      font-weight: 900;
+      margin-top: 20px;
+      line-height: 1.5;
+
+      .pair-dish {
+        color: var(--red);
+      }
+    }
+
+    .note {
+      display: block;
+      margin-top: 16px;
+    }
+  }
+
+  .season-note {
+    display: block;
+    text-align: center;
+    padding: 0 28px;
+  }
+}

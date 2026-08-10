@@ -65,11 +65,56 @@ class MealPlanSchema(BaseModel):
     days: list[PlanDay] = Field(min_length=1, max_length=7)
 
 
+class VoteOptionsSchema(BaseModel):
+    """家庭口味投票的候选菜选项（原型 05 屏2）。"""
+
+    options: list[str] = Field(min_length=3, max_length=3)
+
+
 class ShopItem(BaseModel):
     """购物清单中的一项。"""
 
     name: str
     quantity: str = Field(default="", description="如 2 个 / 300g / 1 瓶")
+
+
+class NutritionistOut(BaseModel):
+    """营养师 Agent 输出（原型 05 屏5）：热量/蛋白/搭配建议/忌口规避。"""
+
+    calories_kcal: int = Field(ge=0, le=10000)   # 今日建议热量（千卡）
+    protein_g: int = Field(ge=0, le=1000)        # 建议蛋白质（克）
+    advice: str                                   # 搭配建议
+    avoided_allergens: list[str] = Field(default_factory=list)  # 已避开的忌口/过敏原
+
+
+class ChefOut(BaseModel):
+    """大厨 Agent 输出：推荐菜 + 烹饪技法 + 摆盘建议。"""
+
+    dish_name: str                                # 推荐菜
+    technique: str                                # 核心技法
+    plating: str = ""                             # 摆盘建议（可空）
+
+
+class ShopperCategory(BaseModel):
+    """采购清单中的一个品类。"""
+
+    name: str
+    items: list[ShopItem] = Field(min_length=1)
+
+
+class ShopperOut(BaseModel):
+    """采购 Agent 输出：省钱采购清单 + 省钱小贴士。"""
+
+    categories: list[ShopperCategory] = Field(min_length=1)
+    tips: str = ""
+
+
+class CollaborateSchema(BaseModel):
+    """多智能体协作总输出：营养师 + 大厨 + 采购。"""
+
+    nutritionist: NutritionistOut
+    chef: ChefOut
+    shopper: ShopperOut
 
 
 class ShopCategory(BaseModel):
