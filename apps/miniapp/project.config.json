@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "chefpal-miniapp",
   "description": "ChefPal 口袋 AI 厨师",
-  "appid": "wxe41597ad862e3874",
+  "appid": "wxccd17ea2cae2b48e",
   "setting": {
     "urlCheck": false,
     "es6": false,

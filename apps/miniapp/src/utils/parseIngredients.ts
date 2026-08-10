@@ -15,8 +15,11 @@ const NOISE_PREFIXES = [
   '冰箱里面', '冰箱里有', '冰箱里', '冰箱',
   '厨房里面', '厨房里', '厨房',
   '家里有', '家里', '还有一些', '还有', '以及',
-  '需要', '有', '加',
+  '需要', '有', '加', '这个', '那个',
 ]
+
+// 语气词/无意义词：识别出但应过滤，避免切出垃圾食材
+const FILLER_WORDS = new Set(['嗯', '啊', '哦', '呃', '好的', '对', '是的', '没错', '等等', '然后', '就是说'])
 
 const QUANTIFIER_RE = /^(一?几?把|一?几?些|一?两?三?个|一?几?颗|一?几?根|一?几?包|一?几?袋|一?几?盒|一?几?罐|一?几?瓶|一?几?份|一?点|一丢丢|不少|很多|大约|大概|差不多)/
 
@@ -42,7 +45,7 @@ export function parseIngredients(text: string): string[] {
     }
     // 剥离数量词前缀
     seg = seg.replace(QUANTIFIER_RE, '').trim()
-    if (seg && !seen.has(seg)) {
+    if (seg && !FILLER_WORDS.has(seg) && !seen.has(seg)) {
       seen.add(seg)
       result.push(seg)
     }

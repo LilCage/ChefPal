@@ -79,13 +79,14 @@ export default function FridgePage() {
   }
 
   const addItem = () => {
+    // Taro 类型未收录 showModal 的 editable，微信实际支持，做类型交叉补充
     Taro.showModal({
       title: '添加食材',
       editable: true,
       placeholderText: '输入食材名，如 西红柿',
       success: async (r) => {
         if (!r.confirm) return
-        const name = (r.content || '').trim()
+        const name = ((r as any).content || '').trim()
         if (!name) return
         try {
           await addFridgeItem({ name, emoji: fridgeEmoji(name, '') })
@@ -95,7 +96,7 @@ export default function FridgePage() {
           Taro.showToast({ title: e.message || '添加失败', icon: 'none' })
         }
       },
-    })
+    } as Taro.showModal.Option & { editable?: boolean; placeholderText?: string })
   }
 
   const removeItem = (it: FridgeItem) => {

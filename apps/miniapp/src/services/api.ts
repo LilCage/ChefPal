@@ -2,8 +2,10 @@
  * 后端 API 服务层：对齐 FastAPI OpenAPI 契约。
  * 所有方法返回解析后的 data（统一响应体的 data 字段）。
  */
+import Taro from '@tarojs/taro'
+import { API_BASE_URL } from '../config/env'
 import { http } from '../utils/request'
-import type { User } from '../stores/auth'
+import { useAuthStore, type User } from '../stores/auth'
 
 /* ---------- 认证 ---------- */
 export const login = (code: string) =>
@@ -475,3 +477,25 @@ export const addFridgeItem = (data: { name: string; emoji?: string; best_before_
 export const removeFridgeItem = (id: string) =>
   http.del<{ id: string; removed: boolean }>(`/fridge/${id}`)
 export const fetchFridgeAdvice = () => http.post<FridgeAdvice>('/fridge/advice')
+
+/* ---------- 语音输入（后端百炼 ASR） ---------- */
+export const transcribeVoice = (filePath: string) =>
+  new Promise<string>((resolve, reject) => {
+    const token = useAuthStore.getState().token
+    Taro.uploadFile({
+      url: `${API_BASE_URL}/voice/transcribe`,
+      filePath,
+      name: 'file',
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success: (res) => {
+        try {
+          const body = JSON.parse(res.data)
+          if (body.code === 0) resolve(body.data.text)
+          else reject(new Error(body.message || '识别失败'))
+        } catch {
+          reject(new Error('识别结果解析失败'))
+        }
+      },
+      fail: (err) => reject(new Error(err.errMsg || '音频上传失败')),
+    })
+  })

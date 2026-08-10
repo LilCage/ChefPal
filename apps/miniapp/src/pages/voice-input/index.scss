@@ -33,6 +33,11 @@
     &.recording {
       background: var(--gold);
     }
+
+    &.transcribing {
+      background: var(--green);
+      animation: none;
+    }
   }
 
   @keyframes pulse {

@@ -27,6 +27,7 @@ from app.routers import (
     shopping,
     users,
     vision,
+    voice,
     votes,
 )
 
@@ -77,6 +78,7 @@ for router in (
     fridge.router,
     rescue.router,
     votes.router,
+    voice.router,
     challenges.router,
     agents.router,
     follows.users_router,

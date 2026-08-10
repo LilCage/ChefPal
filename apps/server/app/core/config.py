@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     AI_TIMEOUT_SECONDS: float = 60.0
     AI_MAX_RETRIES: int = 1
 
+    # ---- 百炼语音识别（语音输入 ASR）----
+    # 走 OpenAI 兼容接口，同步返回文字；qwen3-asr-flash 便宜快速
+    BAILIAN_ASR_MODEL: str = "qwen3-asr-flash"
+
     # ---- 智谱 GLM 视觉（拍照识食材，免费模型）----
     # 与百炼独立；未配置时视觉识别接口返回清晰错误，不影响其他功能
     ZHIPU_API_KEY: str = ""
