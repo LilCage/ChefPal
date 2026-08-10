@@ -17,7 +17,8 @@ const CARDS = [
 export default function Onboarding() {
   const finish = () => {
     Taro.setStorageSync(ONBOARDED_KEY, true)
-    Taro.switchTab({ url: '/pages/index/index' })
+    // 延迟跳转：避免 setStorageSync 后立即 switchTab，触发渲染层「first rendering data」竞态
+    setTimeout(() => Taro.switchTab({ url: '/pages/index/index' }), 50)
   }
 
   return (
