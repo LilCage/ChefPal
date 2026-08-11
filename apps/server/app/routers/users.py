@@ -12,6 +12,7 @@ from app.models.follow import Follow
 from app.models.post import Post
 from app.models.user import User
 from app.schemas.api import PreferencesUpdate, ProfileUpdate, UserOut
+from app.services import taste_memory as taste_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -48,6 +49,27 @@ async def delete_me(
     await db.delete(user)
     await db.commit()
     return ok(message="账号已注销")
+
+
+@router.get("/me/taste-memory")
+async def get_taste_memory(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """AI 口味记忆（EXT-13.1）：查看聚合出的口味画像。"""
+    profile = await taste_service.summarize_taste(db, user.id)
+    return ok(profile)
+
+
+@router.delete("/me/taste-memory")
+async def clear_taste_memory(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """清空 AI 口味记忆（用户可随时重置，不再注入历史偏好）。"""
+    deleted = await taste_service.clear_signals(db, user.id)
+    await db.commit()
+    return ok({"deleted": deleted, "message": "口味记忆已清空"})
 
 
 @router.put("/me/preferences")

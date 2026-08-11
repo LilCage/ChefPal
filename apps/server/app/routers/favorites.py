@@ -14,6 +14,7 @@ from app.models.favorite import Favorite
 from app.models.qa_record import QA_Record
 from app.models.recipe import Recipe
 from app.models.user import User
+from app.services import taste_memory as taste_service
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
@@ -68,9 +69,31 @@ async def add_favorite(
     if fav is None:
         fav = Favorite(user_id=user.id, content_type=body.content_type, content_id=body.content_id)
         db.add(fav)
+        # AI 口味记忆埋点：收藏菜谱记 style，收藏问答记 question 关键词（EXT-13.1）
+        await _record_taste_signal(db, user.id, body.content_type, body.content_id)
         await db.commit()
         await db.refresh(fav)
     return ok(_fav_item(fav))
+
+
+async def _record_taste_signal(
+    db: AsyncSession, user_id: UUID, content_type: str, content_id: UUID
+) -> None:
+    """收藏时记录口味信号：菜谱→style，问答→question 前 5 个词。失败静默（不影响主流程）。"""
+    try:
+        if content_type == "recipe":
+            row = await db.execute(select(Recipe).where(Recipe.id == content_id))
+            rec = row.scalar_one_or_none()
+            if rec and rec.style:
+                await taste_service.record_signal(db, user_id, "favorite_recipe", rec.style)
+        elif content_type == "qa":
+            row = await db.execute(select(QA_Record).where(QA_Record.id == content_id))
+            rec = row.scalar_one_or_none()
+            if rec:
+                # 取 question 前 20 字作为关键词信号
+                await taste_service.record_signal(db, user_id, "favorite_qa", rec.question[:20])
+    except Exception:  # noqa: BLE001 埋点失败不影响收藏
+        pass
 
 
 @router.delete("")

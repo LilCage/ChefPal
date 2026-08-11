@@ -172,14 +172,18 @@ export default function PostDetail() {
           )}
         </Text>
 
-        {post.recipe_id && (
+        {(post.recipe_id || post.my_recipe_id) && (
           <View
             className='link-card'
-            onClick={() => Taro.navigateTo({ url: `/pages/recipe-detail/index?id=${post.recipe_id}` })}
+            onClick={() => Taro.navigateTo({
+              url: post.my_recipe_id
+                ? `/pages/my-recipe-create/index?id=${post.my_recipe_id}`
+                : `/pages/recipe-detail/index?id=${post.recipe_id}`,
+            })}
           >
             <View className='lc-ic'><Text>🍽</Text></View>
             <View className='lc-body'>
-              <Text className='lc-title'>查看完整 AI 菜谱</Text>
+              <Text className='lc-title'>{post.my_recipe_id ? '查看完整自建菜谱' : '查看完整 AI 菜谱'}</Text>
               <Text className='lc-sub'>点此查看做法步骤</Text>
             </View>
             <View className='ic ic-chev-r ic-sm lc-go' />

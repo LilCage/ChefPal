@@ -11,11 +11,13 @@ from app.models.follow import Follow
 from app.models.fridge_item import FridgeItem
 from app.models.like import Like
 from app.models.meal_plan import MealPlan
+from app.models.my_recipe import MyRecipe
 from app.models.post import Post
 from app.models.qa_record import QA_Record
 from app.models.recipe import Recipe
 from app.models.recipe_version import RecipeVersion
 from app.models.shopping_list import ShoppingList
+from app.models.taste_signal import TasteSignal
 from app.models.user import User
 
 __all__ = [
@@ -30,7 +32,9 @@ __all__ = [
     "Comment",
     "CommentLike",
     "MealPlan",
+    "MyRecipe",
     "ShoppingList",
+    "TasteSignal",
     "Follow",
     "FridgeItem",
     "FamilyVote",

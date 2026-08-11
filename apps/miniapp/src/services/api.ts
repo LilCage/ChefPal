@@ -19,6 +19,16 @@ export const updateProfile = (data: { nickname?: string; avatar_url?: string }) 
   http.put<User>('/users/me/profile', data)
 export const deleteAccount = () => http.del('/users/me')
 
+/* ---------- AI 口味记忆（EXT-13.1/13.2） ---------- */
+export interface TasteMemory {
+  preferred_styles: string[]
+  preferred_topics: string[]
+  recent_qa_keywords: string[]
+  total_signals: number
+}
+export const fetchTasteMemory = () => http.get<TasteMemory>('/users/me/taste-memory')
+export const clearTasteMemory = () => http.del<{ deleted: number }>('/users/me/taste-memory')
+
 /* ---------- 分享卡片 ---------- */
 export interface ShareCardData {
   title: string
@@ -74,6 +84,49 @@ export interface Recipe {
 export const generateRecipes = (ingredients: string[], prefs?: Record<string, any>) =>
   http.post<Recipe[]>('/recipes/generate', { ingredients, prefs })
 export const fetchRecipe = (id: string) => http.get<Recipe>(`/recipes/${id}`)
+
+/* ---------- 个人菜谱创作（EXT-4.1/4.2） ---------- */
+export interface MyRecipeIngredient {
+  name: string
+  amount?: string
+}
+export interface MyRecipeStep {
+  title: string
+  detail: string
+}
+export interface MyRecipe {
+  id: string
+  title: string
+  cover_image: string | null
+  ingredients: MyRecipeIngredient[]
+  steps: MyRecipeStep[]
+  tips: string[]
+  style: string
+  time_minutes: number
+  difficulty: string
+  created_at: string | null
+  updated_at: string | null
+}
+export interface PublishResult {
+  post_id: string
+  my_recipe_id: string
+  title: string
+  content: string
+  images: string[]
+  topic: string | null
+}
+
+export const createMyRecipe = (data: Partial<MyRecipe> & { title: string }) =>
+  http.post<MyRecipe>('/my-recipes', data)
+export const fetchMyRecipes = () => http.get<MyRecipe[]>('/my-recipes')
+export const fetchMyRecipe = (id: string) => http.get<MyRecipe>(`/my-recipes/${id}`)
+export const updateMyRecipe = (id: string, data: Partial<MyRecipe>) =>
+  http.put<MyRecipe>(`/my-recipes/${id}`, data)
+export const deleteMyRecipe = (id: string) => http.del(`/my-recipes/${id}`)
+export const publishMyRecipe = (
+  id: string,
+  data: { content?: string; images?: string[]; topic?: string },
+) => http.post<PublishResult>(`/my-recipes/${id}/publish`, data)
 
 /* ---------- 菜谱DNA进化树 ---------- */
 export interface RecipeVersion {
@@ -295,6 +348,7 @@ export interface Post {
   comment_count: number
   is_liked: boolean
   recipe_id: string | null
+  my_recipe_id: string | null
   created_at: string | null
   author: PostAuthor
 }
@@ -477,6 +531,15 @@ export const addFridgeItem = (data: { name: string; emoji?: string; best_before_
 export const removeFridgeItem = (id: string) =>
   http.del<{ id: string; removed: boolean }>(`/fridge/${id}`)
 export const fetchFridgeAdvice = () => http.post<FridgeAdvice>('/fridge/advice')
+
+/* ---------- 语音烹饪助手（EXT-14.1） ---------- */
+export interface CookAnswer {
+  answer: string
+  current_step: number
+  title: string
+}
+export const askCookAssistant = (recipeId: string, question: string) =>
+  http.post<CookAnswer>('/cook-assistant/query', { recipe_id: recipeId, question })
 
 /* ---------- 语音输入（后端百炼 ASR） ---------- */
 export const transcribeVoice = (filePath: string) =>

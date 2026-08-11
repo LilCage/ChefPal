@@ -1,0 +1,193 @@
+/* 语音烹饪助手（EXT-14.1）：步骤区上滚 + 底部固定麦克风操作坞 */
+.cook-asst {
+  padding-bottom: 0;
+
+  .center-load {
+    text-align: center;
+    padding: 120px 0;
+    font-weight: 700;
+    color: var(--gray);
+  }
+
+  .ca-top {
+    padding: 32px 40px 32px;
+    border-bottom: 2.5px solid var(--ink);
+
+    .ca-title-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+
+      .ca-name {
+        font-size: 40px;
+        font-weight: 900;
+        color: var(--ink);
+      }
+    }
+
+    .ca-answer {
+      min-height: 120px;
+
+      .ca-hint {
+        display: block;
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--gray);
+        line-height: 1.6;
+        background: var(--soft);
+        border: 2px dashed var(--ink);
+        border-radius: 20px;
+        padding: 24px;
+      }
+
+      .qbubble {
+        .qtext { display: block; font-size: 28px; font-weight: 800; margin-top: 16px; line-height: 1.5; }
+      }
+
+      .abubble {
+        margin-top: 20px;
+
+        .star-burst--sm { padding: 4px 16px; font-size: 22px; }
+
+        .atext {
+          display: block;
+          font-size: 30px;
+          font-weight: 800;
+          color: var(--red-dark);
+          margin-top: 16px;
+          line-height: 1.6;
+        }
+      }
+    }
+
+    .step-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 24px;
+
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 2.5px solid var(--ink);
+        border-radius: 16px;
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 12px 20px;
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--ink);
+
+        .ic { width: 28px; height: 28px; }
+      }
+
+      .step-progress {
+        font-size: 26px;
+        font-weight: 900;
+        color: var(--red);
+      }
+    }
+  }
+
+  .ca-steps {
+    padding: 32px 40px 520px; /* 底部让位 fixed 操作坞 */
+
+    .ca-step {
+      display: flex;
+      gap: 20px;
+      background: #fff;
+      border: 2.5px solid var(--ink);
+      border-radius: 24px;
+      box-shadow: 3px 3px 0 var(--ink);
+      padding: 24px;
+      margin-bottom: 20px;
+      opacity: 0.55;
+
+      .sno {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: var(--red);
+        color: #fff;
+        font-size: 28px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        border: 2px solid var(--ink);
+        box-shadow: 2px 2px 0 var(--ink);
+
+        &.gold { background: var(--gold); }
+      }
+
+      .step-body {
+        flex: 1;
+        min-width: 0;
+
+        .step-title { display: block; font-size: 28px; font-weight: 900; }
+        .step-detail { display: block; font-size: 24px; font-weight: 600; color: var(--brown); margin-top: 8px; line-height: 1.5; }
+      }
+
+      &.done {
+        opacity: 0.7;
+        .sno { background: var(--green); }
+      }
+
+      &.on {
+        opacity: 1;
+        background: var(--soft);
+        border-width: 3px;
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+
+        .sno { background: var(--red); }
+      }
+    }
+  }
+
+  .ca-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 40px calc(28px + env(safe-area-inset-bottom));
+    background: var(--cream);
+    border-top: 2.5px solid var(--ink);
+    box-shadow: 0 -4px 0 rgba(36, 26, 18, 0.08);
+
+    .mic-big {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 4px solid var(--ink);
+      box-shadow: 10px 10px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      animation: pulse 1.6s infinite;
+
+      .ic { width: 88px; height: 88px; color: #fff; }
+
+      &.recording { background: var(--gold); }
+      &.processing { background: var(--green); animation: none; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .dock-hint { font-weight: 900; font-size: 24px; color: var(--gray); }
+    .dock-note { font-size: 22px; color: var(--gray); font-weight: 600; }
+  }
+}

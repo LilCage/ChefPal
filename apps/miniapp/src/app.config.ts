@@ -7,6 +7,8 @@ export default defineAppConfig({
     'pages/login/index',
     'pages/recipe-detail/index',
     'pages/favorites/index',
+    'pages/my-recipes/index',
+    'pages/my-recipe-create/index',
     'pages/preferences/index',
     'pages/qa-history/index',
     'pages/profile-edit/index',
@@ -31,6 +33,7 @@ export default defineAppConfig({
     'pages/multi-agent/index',
     'pages/recipe-tree/index',
     'pages/voice-input/index',
+    'pages/cook-assistant/index',
     'pages/fridge/index',
   ],
   window: {

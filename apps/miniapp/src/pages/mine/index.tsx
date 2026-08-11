@@ -12,6 +12,7 @@ import { getSafeTop } from '../../utils/safeArea'
 import './index.scss'
 
 const MENU = [
+  { key: 'my-recipes', icon: 'ic-edit', title: '我的菜谱', sub: '自建图文菜谱 · 发布社区', url: '/pages/my-recipes/index' },
   { key: 'preferences', icon: 'ic-sliders', title: '口味设置', sub: '忌口 · 辣度 · 咸淡 · 技能', url: '/pages/preferences/index' },
   { key: 'meal-plan', icon: 'ic-cal', title: '膳食规划', sub: '3 天 / 7 天 · 营养分析', url: '/pages/meal-plan/index' },
   { key: 'follow', icon: 'ic-heart', title: '我的关注 · 粉丝', sub: '关注的人 · 粉丝列表' },

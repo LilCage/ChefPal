@@ -16,6 +16,7 @@ from app.models.post import Post
 from app.models.recipe import Recipe
 from app.models.user import User
 from app.services import storage, wechat as wechat_service
+from app.services import taste_memory as taste_service
 from app.services.storage import StorageError
 from app.services.wechat import WeChatError
 
@@ -49,6 +50,7 @@ def _post_out(
         "comment_count": post.comment_count,
         "is_liked": is_liked,
         "recipe_id": str(post.recipe_id) if post.recipe_id else None,
+        "my_recipe_id": str(post.my_recipe_id) if post.my_recipe_id else None,
         "created_at": post.created_at.isoformat() if post.created_at else None,
         "author": {
             "id": str(author.id) if author else "",
@@ -247,6 +249,12 @@ async def like_post(
     if exists.scalar_one_or_none() is None:
         db.add(Like(user_id=user.id, post_id=post.id))
         post.like_count += 1
+        # AI 口味记忆埋点：点赞作品记 topic（EXT-13.1），失败静默
+        if post.topic:
+            try:
+                await taste_service.record_signal(db, user.id, "like_post", post.topic)
+            except Exception:  # noqa: BLE001
+                pass
         await db.commit()
     return ok({"liked": True, "like_count": post.like_count})
 

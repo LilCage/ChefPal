@@ -115,7 +115,7 @@ export default function RecipeDetail() {
         <View className='btn btn--white btn--sm' onClick={share}><View className='ic ic-share ic-sm' /><Text>分享</Text></View>
         <View className='btn btn--white btn--sm' onClick={() => Taro.navigateTo({ url: `/pages/recipe-tree/index?id=${recipe.id}` })}><View className='ic ic-edit ic-sm' /><Text>进化树</Text></View>
         <View className='btn btn--white btn--sm' onClick={saveFavorite}><View className='ic ic-star ic-sm' /><Text>收藏</Text></View>
-        <View className='btn btn--red btn--sm' onClick={() => Taro.showToast({ title: '开火！跟着步骤一步步来 🔥', icon: 'none' })}>
+        <View className='btn btn--red btn--sm' onClick={() => Taro.navigateTo({ url: `/pages/cook-assistant/index?id=${recipe.id}` })}>
           <View className='ic ic-flame--white ic-sm' /><Text>开始做饭</Text>
         </View>
       </View>

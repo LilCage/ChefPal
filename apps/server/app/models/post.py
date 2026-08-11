@@ -24,6 +24,10 @@ class Post(Base):
     recipe_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("recipes.id", ondelete="SET NULL"), nullable=True
     )
+    # 关联个人创作菜谱（EXT-4.2；可空；菜谱删除时置空）
+    my_recipe_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("my_recipes.id", ondelete="SET NULL"), nullable=True
+    )
     # 话题标签（基础版单选，如 "#今日晚餐"）
     topic: Mapped[str | None] = mapped_column(String(32), nullable=True, default=None)
     # 冗余点赞计数（LIKES 表幂等保障）

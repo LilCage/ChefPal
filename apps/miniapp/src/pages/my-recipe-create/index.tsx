@@ -1,0 +1,279 @@
+/**
+ * 新建/编辑个人菜谱（EXT-4.1）：封面 + 标题 + 食材 + 步骤 + 避坑 + 风味/时间/难度
+ * 有 ?id= 为编辑模式（回填后 PUT），否则新建
+ */
+import { Image, Input, Text, Textarea, View } from '@tarojs/components'
+import Taro, { useLoad } from '@tarojs/taro'
+import { useState } from 'react'
+import NavBar from '../../components/NavBar'
+import {
+  createMyRecipe,
+  fetchMyRecipe,
+  updateMyRecipe,
+  type MyRecipeIngredient,
+  type MyRecipeStep,
+} from '../../services/api'
+import './index.scss'
+
+const STYLES = ['浓香下饭', '清爽快手', '蒸煮清淡', '香辣过瘾', '甜口绵密', '汤羹温润']
+const DIFFS = ['简单', '中等', '较难']
+
+function readAsBase64(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    Taro.getFileSystemManager().readFile({
+      filePath,
+      encoding: 'base64',
+      success: (res) => resolve(res.data as string),
+      fail: reject,
+    })
+  })
+}
+
+export default function MyRecipeCreate() {
+  const [id, setId] = useState<string | null>(null)
+  const [title, setTitle] = useState('')
+  const [cover, setCover] = useState<string | null>(null)
+  const [ingredients, setIngredients] = useState<MyRecipeIngredient[]>([{ name: '', amount: '' }])
+  const [steps, setSteps] = useState<MyRecipeStep[]>([{ title: '', detail: '' }])
+  const [tips, setTips] = useState<string[]>([''])
+  const [style, setStyle] = useState('')
+  const [timeMinutes, setTimeMinutes] = useState('30')
+  const [difficulty, setDifficulty] = useState('简单')
+  const [saving, setSaving] = useState(false)
+
+  useLoad((params) => {
+    const rid = (params as any).id as string | undefined
+    if (rid) {
+      setId(rid)
+      fetchMyRecipe(rid)
+        .then((r) => {
+          setTitle(r.title)
+          setCover(r.cover_image)
+          setIngredients(r.ingredients.length ? r.ingredients : [{ name: '', amount: '' }])
+          setSteps(r.steps.length ? r.steps : [{ title: '', detail: '' }])
+          setTips(r.tips.length ? r.tips : [''])
+          setStyle(r.style)
+          setTimeMinutes(String(r.time_minutes || 30))
+          setDifficulty(r.difficulty)
+        })
+        .catch((e: any) => Taro.showToast({ title: e.message || '加载失败', icon: 'none' }))
+    }
+  })
+
+  const pickCover = async () => {
+    try {
+      const res = await Taro.chooseMedia({
+        count: 1,
+        mediaType: ['image'],
+        sourceType: ['album', 'camera'],
+        sizeType: ['compressed'],
+      })
+      const f = res.tempFiles[0] as { tempFilePath: string }
+      const b64 = await readAsBase64(f.tempFilePath)
+      const ext = (f.tempFilePath.split('.').pop() || 'jpeg').toLowerCase()
+      const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg'
+      setCover(`data:${mime};base64,${b64}`)
+    } catch {
+      /* 用户取消 */
+    }
+  }
+
+  const updateIng = (i: number, patch: Partial<MyRecipeIngredient>) =>
+    setIngredients((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+  const updateStep = (i: number, patch: Partial<MyRecipeStep>) =>
+    setSteps((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+  const updateTip = (i: number, v: string) =>
+    setTips((prev) => prev.map((x, idx) => (idx === i ? v : x)))
+
+  const addIng = () => setIngredients((prev) => [...prev, { name: '', amount: '' }])
+  const rmIng = (i: number) => setIngredients((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
+  const addStep = () => setSteps((prev) => [...prev, { title: '', detail: '' }])
+  const rmStep = (i: number) => setSteps((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
+  const addTip = () => setTips((prev) => [...prev, ''])
+  const rmTip = (i: number) => setTips((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
+
+  const validate = (): string | null => {
+    if (!title.trim()) return '请填写菜谱标题'
+    const validIngs = ingredients.filter((x) => x.name.trim())
+    if (validIngs.length === 0) return '至少填写 1 种食材'
+    const validSteps = steps.filter((x) => x.title.trim())
+    if (validSteps.length === 0) return '至少填写 1 个步骤'
+    return null
+  }
+
+  const save = async () => {
+    if (saving) return
+    const err = validate()
+    if (err) {
+      Taro.showToast({ title: err, icon: 'none' })
+      return
+    }
+    setSaving(true)
+    const payload = {
+      title: title.trim(),
+      cover_image: cover || undefined,
+      ingredients: ingredients.filter((x) => x.name.trim()),
+      steps: steps.filter((x) => x.title.trim()),
+      tips: tips.map((t) => t.trim()).filter(Boolean),
+      style,
+      time_minutes: Number(timeMinutes) || 0,
+      difficulty,
+    }
+    try {
+      if (id) {
+        await updateMyRecipe(id, payload)
+        Taro.showToast({ title: '已保存', icon: 'none' })
+      } else {
+        await createMyRecipe(payload)
+        Taro.showToast({ title: '创建成功！', icon: 'none' })
+      }
+      setTimeout(() => Taro.navigateBack(), 600)
+    } catch (e: any) {
+      Taro.showToast({ title: e.message || '保存失败', icon: 'none' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <View className='page-content mrc'>
+      <NavBar title={id ? '编辑菜谱' : '新建菜谱'} showBack />
+
+      <View className='section'>
+        <View className='sec-title'>🖼 封面（选填）</View>
+        <View className='cover-row'>
+          {cover ? (
+            <View className='cover-box' onClick={pickCover}>
+              <Image className='cover-img' src={cover} mode='aspectFill' />
+              <View className='cover-edit'><Text>换图</Text></View>
+            </View>
+          ) : (
+            <View className='cover-box add' onClick={pickCover}>
+              <View className='ic ic-camera ic-lg' />
+              <Text className='cover-t'>添加封面</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>📛 菜谱标题</View>
+        <Input
+          className='mrc-input'
+          value={title}
+          maxlength={128}
+          placeholder='如：祖传红烧肉'
+          placeholderClass='mrc-ph'
+          onInput={(e) => setTitle(e.detail.value)}
+        />
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>🥬 食材清单 <Text className='sec-note'>名称 + 用量（可空）</Text></View>
+        {ingredients.map((ing, i) => (
+          <View key={i} className='ing-row'>
+            <Input
+              className='mrc-input ing-name'
+              value={ing.name}
+              placeholder={`食材 ${i + 1}`}
+              placeholderClass='mrc-ph'
+              onInput={(e) => updateIng(i, { name: e.detail.value })}
+            />
+            <Input
+              className='mrc-input ing-amount'
+              value={ing.amount || ''}
+              placeholder='如 300g'
+              placeholderClass='mrc-ph'
+              onInput={(e) => updateIng(i, { amount: e.detail.value })}
+            />
+            <View className='row-del' onClick={() => rmIng(i)}>×</View>
+          </View>
+        ))}
+        <View className='btn btn--sm btn--gold add-row' onClick={addIng}><Text>＋ 添加食材</Text></View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>👣 步骤</View>
+        {steps.map((st, i) => (
+          <View key={i} className='step-card'>
+            <View className='step-head'>
+              <View className='sno'><Text>{i + 1}</Text></View>
+              <Input
+                className='mrc-input step-title'
+                value={st.title}
+                placeholder='步骤名，如：焯水'
+                placeholderClass='mrc-ph'
+                onInput={(e) => updateStep(i, { title: e.detail.value })}
+              />
+              <View className='row-del' onClick={() => rmStep(i)}>×</View>
+            </View>
+            <Textarea
+              className='mrc-textarea'
+              value={st.detail}
+              maxlength={500}
+              placeholder='详细做法，写给厨房小白，写清火候与时长'
+              placeholderClass='mrc-ph'
+              autoHeight
+              onInput={(e) => updateStep(i, { detail: e.detail.value })}
+            />
+          </View>
+        ))}
+        <View className='btn btn--sm btn--gold add-row' onClick={addStep}><Text>＋ 添加步骤</Text></View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>⚠ 避坑指南（选填）</View>
+        {tips.map((t, i) => (
+          <View key={i} className='tip-row'>
+            <Input
+              className='mrc-input'
+              value={t}
+              maxlength={100}
+              placeholder='如：糖色宁浅勿深'
+              placeholderClass='mrc-ph'
+              onInput={(e) => updateTip(i, e.detail.value)}
+            />
+            <View className='row-del' onClick={() => rmTip(i)}>×</View>
+          </View>
+        ))}
+        <View className='btn btn--sm btn--gold add-row' onClick={addTip}><Text>＋ 添加避坑</Text></View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>🍲 风味 / 时间 / 难度</View>
+        <View className='chips'>
+          {STYLES.map((s) => (
+            <View key={s} className={`chip ${style === s ? 'chip--on' : ''}`} onClick={() => setStyle(style === s ? '' : s)}>
+              <Text>{s}</Text>
+            </View>
+          ))}
+        </View>
+        <View className='time-row'>
+          <Text className='time-label'>预计耗时</Text>
+          <Input
+            className='mrc-input time-input'
+            value={timeMinutes}
+            type='number'
+            maxlength={4}
+            onInput={(e) => setTimeMinutes(e.detail.value)}
+          />
+          <Text className='time-unit'>分钟</Text>
+        </View>
+        <View className='chips'>
+          {DIFFS.map((d) => (
+            <View key={d} className={`chip ${difficulty === d ? 'chip--on' : ''}`} onClick={() => setDifficulty(d)}>
+              <Text>{d}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View className='save-wrap'>
+        <View className='btn btn--red btn--block' onClick={save}>
+          <Text>{saving ? '保存中…' : id ? '保存修改' : '创建菜谱'}</Text>
+        </View>
+        {!id && <Text className='note note--center'>创建后可到「我的菜谱」一键发布到社区</Text>}
+      </View>
+    </View>
+  )
+}

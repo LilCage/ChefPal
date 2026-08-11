@@ -1,12 +1,12 @@
 /**
  * 屏1 · 作品发布（原型 03）
- * 图片上传网格(≤3张) + 心得(200字) + 关联收藏菜谱 + 话题选择 → 发布
+ * 图片上传网格(≤3张) + 心得(200字) + 关联菜谱(收藏AI菜谱 或 我的自建菜谱) + 话题选择 → 发布
  */
 import { Button, Image, Text, Textarea, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
 import { useRef, useState } from 'react'
 import NavBar from '../../components/NavBar'
-import { createPost, fetchFavorites, TOPICS } from '../../services/api'
+import { createPost, fetchFavorites, fetchMyRecipe, publishMyRecipe, TOPICS } from '../../services/api'
 import './index.scss'
 
 const MAX_IMAGES = 3
@@ -34,8 +34,20 @@ export default function PostCreate() {
   const [content, setContent] = useState('')
   const [topic, setTopic] = useState<string | null>(null)
   const [recipe, setRecipe] = useState<LinkedRecipe | null>(null)
+  const [myRecipeId, setMyRecipeId] = useState<string | null>(null) // 自建菜谱发布模式
   const [publishing, setPublishing] = useState(false)
   const favsRef = useRef<LinkedRecipe[]>([])
+
+  // 从「我的菜谱」进来：锁定关联我的自建菜谱，走 publishMyRecipe 发布
+  useLoad((params) => {
+    const myRid = (params as any).my_recipe_id as string | undefined
+    if (myRid) {
+      setMyRecipeId(myRid)
+      fetchMyRecipe(myRid)
+        .then((r) => setRecipe({ id: r.id, title: r.title, match_score: r.time_minutes > 0 ? 100 : 0 }))
+        .catch(() => { /* 忽略：菜谱可能已被删除 */ })
+    }
+  })
 
   const pickImages = async () => {
     const remain = MAX_IMAGES - images.length
@@ -102,12 +114,21 @@ export default function PostCreate() {
     }
     setPublishing(true)
     try {
-      await createPost({
-        content: content.trim(),
-        images,
-        recipe_id: recipe?.id,
-        topic: topic || undefined,
-      })
+      if (myRecipeId) {
+        // 自建菜谱发布 → 关联 my_recipe_id
+        await publishMyRecipe(myRecipeId, {
+          content: content.trim(),
+          images,
+          topic: topic || undefined,
+        })
+      } else {
+        await createPost({
+          content: content.trim(),
+          images,
+          recipe_id: recipe?.id,
+          topic: topic || undefined,
+        })
+      }
       Taro.showToast({ title: '发布成功！', icon: 'none' })
       setTimeout(() => Taro.navigateBack(), 600)
     } catch (e: any) {
@@ -154,12 +175,16 @@ export default function PostCreate() {
         </View>
       </View>
 
-      <View className='link-card' onClick={pickRecipe}>
+      <View className='link-card' onClick={myRecipeId ? undefined : pickRecipe}>
         <View className='lc-ic'><Text>{recipe ? '🍽' : '✨'}</Text></View>
         <View className='lc-body'>
           <Text className='lc-title'>{recipe ? recipe.title : '关联 AI 菜谱（可选）'}</Text>
           <Text className='lc-sub'>
-            {recipe ? `关联的 AI 菜谱 · 匹配 ${recipe.match_score}%` : '从我的收藏菜谱中选择'}
+            {myRecipeId
+              ? '关联我的自建菜谱'
+              : recipe
+                ? `关联的 AI 菜谱 · 匹配 ${recipe.match_score}%`
+                : '从我的收藏菜谱中选择'}
           </Text>
         </View>
         <View className='ic ic-chev-r ic-sm lc-go' />

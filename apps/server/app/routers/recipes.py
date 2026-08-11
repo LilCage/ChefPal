@@ -15,6 +15,7 @@ from app.models.recipe import Recipe
 from app.models.recipe_version import RecipeVersion
 from app.models.user import User
 from app.services import wechat as wechat_service
+from app.services import taste_memory as taste_service
 from app.services.agents import recipe_agent
 from app.services.rate_limit import ensure_within_limit, record_ai_call
 from app.services.wechat import WeChatError
@@ -97,6 +98,11 @@ async def generate(
     await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
 
     prefs = body.prefs if body.prefs is not None else (user.preferences or {})
+    # AI 口味记忆注入（EXT-13.2）：聚合收藏/点赞信号 → 追加到偏好 Prompt（信号不足自动跳过）
+    taste_profile = await taste_service.summarize_taste(db, user.id)
+    taste_text = taste_service.build_injection_text(taste_profile)
+    if taste_text:
+        prefs = {**prefs, "taste_memory": taste_text}
     out = await recipe_agent.run_recipe(body.ingredients, prefs)
     if out["error"] or out["result"] is None:
         raise AppError(out["error"] or "菜谱生成失败，请稍后重试", code=502, status_code=502)

@@ -144,3 +144,10 @@ class FridgeAdviceSchema(BaseModel):
 
     suggestions: list[FridgeSuggestion] = Field(min_length=1, max_length=3)
     note: str = ""  # 补充建议（如"还有 1 份挂面，可加做 XX 双保险"）
+
+
+class CookAnswerSchema(BaseModel):
+    """语音烹饪助手回答（EXT-14.1）：基于当前菜谱上下文回答用户提问。"""
+
+    answer: str = Field(min_length=1)          # 直接回答（口语化，简短）
+    current_step: int = Field(default=0, ge=0)  # 用户当前进行到的步骤序号（1 起，0=未知）

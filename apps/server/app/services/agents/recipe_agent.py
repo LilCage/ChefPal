@@ -51,6 +51,8 @@ def build_prefs_text(prefs: dict) -> str:
         parts.append(f"咸淡: {prefs['saltiness']}")
     if prefs.get("skill"):
         parts.append(f"厨艺技能: {prefs['skill']}")
+    if prefs.get("taste_memory"):
+        parts.append(f"口味记忆(来自收藏/点赞): {prefs['taste_memory']}")
     return "；".join(parts) if parts else "无特殊偏好"
 
 
