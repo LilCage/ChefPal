@@ -5,7 +5,7 @@
 import { Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
-import { deleteAccount, fetchFavorites, fetchMyPosts, fetchUserProfile } from '../../services/api'
+import { deleteAccount, fetchFavorites, fetchMyPosts, fetchTasteMemory, fetchUserProfile } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
@@ -42,18 +42,41 @@ export default function Mine() {
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
 
-  /* 口味偏好小字：按真实设置动态拼接（辣度 0-3 映射 / 咸淡 / 忌口 / 技能） */
+  /* 漫画风称呼：结合技能身份 + 口味画像（辣度/咸淡/忌口/口味记忆风格） */
   const prefs = user?.preferences || {}
-  const spicinessMap: Record<number, string> = { 0: '不吃辣', 1: '微辣', 2: '中辣', 3: '特辣' }
-  const tags: string[] = []
-  if (typeof prefs.spiciness === 'number') {
-    tags.push(spicinessMap[prefs.spiciness] || `辣度${prefs.spiciness}`)
+  const [tasteStyle, setTasteStyle] = useState<string>('')
+  const skillTitles: Record<string, string> = {
+    '厨房小白': '灶台萌新',
+    '进阶达人': '料理猎人',
+    '实力大厨': '食之大师',
   }
-  if (prefs.saltiness) tags.push(prefs.saltiness)
+  const spicinessAdj: Record<number, string> = {
+    0: '不食人间烟火辣',
+    1: '微辣微风',
+    2: '中辣热火',
+    3: '特辣爆炎',
+  }
+  const saltinessAdj: Record<string, string> = {
+    '偏淡': '清淡派',
+    '适中': '咸淡派',
+    '偏咸': '重口派',
+  }
+  /* 口味记忆风格 → 漫画修饰语 */
+  const styleAdj: Record<string, string> = {
+    '浓香下饭': '浓香', '清爽快手': '清爽', '蒸煮清淡': '鲜蒸', '香辣过瘾': '火辣',
+    '甜口绵绵': '甜蜜', '甜口绵密': '甜蜜', '汤羹温润': '温润',
+  }
   const allergyList = Array.isArray(prefs.allergies) ? prefs.allergies.filter((a: string) => a && a !== '无忌口') : []
-  if (allergyList.length) tags.push(`忌口:${allergyList.join('/')}`)
-  if (prefs.skill) tags.push(prefs.skill)
-  const prefsTag = tags.length ? tags.join(' · ') : '口味随缘 · 去设置你的偏好'
+  const identity = skillTitles[prefs.skill] || '美食猎人'
+  const styleMod = tasteStyle && styleAdj[tasteStyle] ? styleAdj[tasteStyle] : ''
+  const spicyMod = typeof prefs.spiciness === 'number' ? spicinessAdj[prefs.spiciness] : ''
+  const saltMod = saltinessAdj[prefs.saltiness] || ''
+  const mods = [styleMod, spicyMod, saltMod].filter(Boolean)
+  const modText = mods.length ? mods.join(' · ') : ''
+  const allergyText = allergyList.length ? `避开${allergyList.join('/')}` : ''
+  const prefsTag = modText
+    ? `${modText} · ${identity}${allergyText ? ` · ${allergyText}` : ''}`
+    : identity
 
   useDidShow(() => {
     setTab(3)
@@ -62,17 +85,19 @@ export default function Mine() {
 
   const loadCounts = async () => {
     try {
-      const [qa, recipe, posts, profile] = await Promise.all([
+      const [qa, recipe, posts, profile, taste] = await Promise.all([
         fetchFavorites('qa'),
         fetchFavorites('recipe'),
         fetchMyPosts(),
         fetchUserProfile(user?.id || ''),
+        fetchTasteMemory(),
       ])
       setQaCount(qa.length)
       setRecipeCount(recipe.length)
       setPostCount(posts.length)
       setFollowerCount(profile.follower_count)
       setFollowingCount(profile.following_count)
+      setTasteStyle(taste.preferred_styles?.[0] || '')
     } catch {
       /* 未登录忽略 */
     }
