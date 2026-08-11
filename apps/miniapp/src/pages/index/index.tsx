@@ -2,9 +2,9 @@
  * 屏2 · 首页 AI 烹饪百科（原型 01）
  * 搜索框 + 猜你想问 + 今日AI秘技 + 问答历史 + 收藏问答
  */
-import { Input, Text, View } from '@tarojs/components'
+import { Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import QACard from '../../components/QACard'
 import { addFavorite, askQA, fetchQAHistory, type QARecord } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
@@ -20,6 +20,18 @@ export default function Index() {
   const [current, setCurrent] = useState<QARecord | null>(null)
   const [history, setHistory] = useState<QARecord[]>([])
   const [loading, setLoading] = useState(false)
+  /* 猜你想问轮播 placeholder */
+  const [phIndex, setPhIndex] = useState(0)
+  const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    phTimerRef.current = setInterval(() => {
+      setPhIndex((i) => (i + 1) % HOT_QUESTIONS.length)
+    }, 3000)
+    return () => {
+      if (phTimerRef.current) clearInterval(phTimerRef.current)
+    }
+  }, [])
 
   useDidShow(() => {
     setTab(0)
@@ -72,11 +84,13 @@ export default function Index() {
 
       <View className='searchbar'>
         <View className='ic ic-search' />
-        <Input
+        <Textarea
           className='search-input'
           value={keyword}
-          placeholder='问 AI：红烧肉怎么做不腻？'
-          confirmType='search'
+          placeholder={`问 AI：${HOT_QUESTIONS[phIndex]}？`}
+          placeholderClass='search-ph'
+          autoHeight
+          maxlength={500}
           onInput={(e) => setKeyword(e.detail.value)}
           onConfirm={() => ask(keyword)}
         />
@@ -109,21 +123,55 @@ export default function Index() {
         <View className='bubble qa-answer'>
           <View className='qa-ans-head'>
             <Text className='qa-ans-q'>{current.question}</Text>
-            <View className='star-burst star-burst--mini'>核心秘诀</View>
+            {!current.answer.recommendations && (
+              <View className='star-burst star-burst--mini'>{current.answer.dish_name || '核心秘诀'}</View>
+            )}
           </View>
-          <Text className='qa-ans-secret'>{current.answer.core_secret}</Text>
-          <Text className='qa-ans-label'>烹饪步骤</Text>
-          <View className='qa-ans-steps'>
-            {current.answer.steps.map((s, i) => (
-              <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text>{s}</Text></View>
-            ))}
-          </View>
-          {current.answer.avoid_pitfalls.length > 0 && (
-            <>
-              <Text className='qa-ans-label'>避坑指南</Text>
-              {current.answer.avoid_pitfalls.map((p, i) => (
-                <View key={i} className='qa-pit'>⚠ {p}</View>
+
+          {/* 类型二 · 多菜推荐 */}
+          {current.answer.recommendations ? (
+            <View className='qa-recs'>
+              {current.answer.recommendations.map((r, i) => (
+                <View key={i} className='rec-card'>
+                  <View className='rec-head'>
+                    <Text className='rec-no'>{i + 1}</Text>
+                    <Text className='rec-name'>{r.name}</Text>
+                    {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
+                  </View>
+                  <Text className='rec-secret'>{r.core_secret}</Text>
+                  {r.ingredients.length > 0 && (
+                    <Text className='rec-ings'>食材：{r.ingredients.join('、')}</Text>
+                  )}
+                </View>
               ))}
+            </View>
+          ) : (
+            <>
+              <Text className='qa-ans-secret'>{current.answer.core_secret}</Text>
+              {current.answer.ingredients.length > 0 && (
+                <>
+                  <Text className='qa-ans-label'>食材清单</Text>
+                  <Text className='qa-ans-ings'>{current.answer.ingredients.join('、')}</Text>
+                </>
+              )}
+              {current.answer.steps.length > 0 && (
+                <>
+                  <Text className='qa-ans-label'>烹饪步骤</Text>
+                  <View className='qa-ans-steps'>
+                    {current.answer.steps.map((s, i) => (
+                      <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text>{s}</Text></View>
+                    ))}
+                  </View>
+                </>
+              )}
+              {current.answer.avoid_pitfalls.length > 0 && (
+                <>
+                  <Text className='qa-ans-label'>避坑指南</Text>
+                  {current.answer.avoid_pitfalls.map((p, i) => (
+                    <View key={i} className='qa-pit'>⚠ {p}</View>
+                  ))}
+                </>
+              )}
             </>
           )}
           <View className='qa-ans-actions'>

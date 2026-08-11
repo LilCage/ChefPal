@@ -2,14 +2,30 @@
 from pydantic import BaseModel, Field
 
 
-class QASchema(BaseModel):
-    """问答结构化回答。"""
+class QARecommendation(BaseModel):
+    """问答「多菜推荐」中的一道菜（推荐型问题用）。"""
 
-    core_secret: str                  # 核心秘诀（一句话）
-    ingredients: list[str]            # 食材清单
-    steps: list[str]                  # 步骤（序号化，含火候/时长）
-    avoid_pitfalls: list[str]         # 避坑指南
-    sources: list[str] | None = None  # 联网搜索来源 URL
+    name: str                                    # 菜名
+    core_secret: str                             # 这道菜的核心秘诀/做法一句话
+    time_minutes: int = Field(default=0, ge=0, le=1440)  # 预计耗时（可 0=未知）
+    ingredients: list[str] = Field(default_factory=list)  # 该菜主要食材（可空）
+
+
+class QASchema(BaseModel):
+    """问答结构化回答。
+
+    两类问题共用一套结构（方案C 通用升级）：
+    - 单菜做法型（"红烧肉怎么不腻"）：填 dish_name + core_secret + ingredients + steps + avoid_pitfalls
+    - 多菜推荐型（"推荐几道凉拌菜"）：填 recommendations 清单，steps 可为空
+    """
+
+    core_secret: str = ""                          # 核心秘诀（一句话；推荐型可为空串）
+    dish_name: str = ""                            # 菜名（单菜做法型必填）
+    ingredients: list[str] = Field(default_factory=list)   # 食材清单
+    steps: list[str] = Field(default_factory=list)         # 步骤（序号化，含火候/时长）
+    avoid_pitfalls: list[str] = Field(default_factory=list)  # 避坑指南
+    sources: list[str] | None = None               # 联网搜索来源 URL
+    recommendations: list[QARecommendation] | None = None   # 多菜推荐清单（推荐型用）
 
 
 class RecipeStep(BaseModel):

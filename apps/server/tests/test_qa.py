@@ -5,11 +5,13 @@ from app.services.agents import qa_agent
 from app.services.llm.client import LLMError
 
 VALID_QA = {
+    "dish_name": "红烧肉",
     "core_secret": "五花肉先焯透再煸油，肥而不腻的关键。",
     "ingredients": ["五花肉", "冰糖", "姜"],
     "steps": ["冷水下锅焯透", "小火炒糖色", "加热水焖 40 分钟"],
     "avoid_pitfalls": ["不要大火焯水，肉会柴"],
     "sources": ["https://example.com/hongshaorou"],
+    "recommendations": None,
 }
 
 
@@ -83,6 +85,48 @@ def test_delete_own_record(client, auth_headers, monkeypatch):
 def test_delete_nonexistent_returns_404(client, auth_headers):
     res = client.delete("/api/qa/00000000-0000-0000-0000-000000000000", headers=auth_headers)
     assert res.status_code == 404
+
+
+# ---------- 方案C：多菜推荐型 + 单菜菜名 ----------
+RECS_QA = {
+    "core_secret": "",
+    "dish_name": "",
+    "ingredients": [],
+    "steps": [],
+    "avoid_pitfalls": [],
+    "sources": None,
+    "recommendations": [
+        {"name": "凉拌黄瓜", "core_secret": "拍碎后先加盐杀水再拌", "time_minutes": 10, "ingredients": ["黄瓜", "蒜"]},
+        {"name": "凉拌木耳", "core_secret": "木耳焯水后过凉水更脆", "time_minutes": 15, "ingredients": ["木耳", "小米椒"]},
+    ],
+}
+
+
+def test_ask_recommendation_type_saves(client, auth_headers, monkeypatch):
+    _mock_ainvoke(monkeypatch, RECS_QA)
+    res = client.post("/api/qa/ask", json={"question": "天气太热了，帮我推荐几道凉拌菜"}, headers=auth_headers)
+    assert res.status_code == 200, res.text
+    data = res.json()["data"]
+    recs = data["answer"]["recommendations"]
+    assert len(recs) == 2
+    assert recs[0]["name"] == "凉拌黄瓜"
+    assert recs[0]["core_secret"]
+    assert recs[0]["time_minutes"] == 10
+
+
+def test_ask_single_with_dish_name(client, auth_headers, monkeypatch):
+    payload = {**VALID_QA, "dish_name": "红烧肉"}
+    _mock_ainvoke(monkeypatch, payload)
+    res = client.post("/api/qa/ask", json={"question": "红烧肉怎么不腻"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["data"]["answer"]["dish_name"] == "红烧肉"
+
+
+def test_ask_empty_shell_falls_back_502(client, auth_headers, monkeypatch):
+    """空壳（无推荐清单、无菜名+步骤）→ 语义校验失败 → 降级 502。"""
+    _mock_ainvoke(monkeypatch, {"core_secret": "只有一句话"})
+    res = client.post("/api/qa/ask", json={"question": "炖肉去腥"}, headers=auth_headers)
+    assert res.status_code == 502
 
 
 def test_daily_limit_429(client, auth_headers, monkeypatch):

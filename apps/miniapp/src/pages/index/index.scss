@@ -1,9 +1,9 @@
 /* 首页右上角已无功能按钮，无需额外导航调整 */
 
-/* 搜索栏（主对话框：加大加高，留足空白） */
+/* 搜索栏（主对话框：加大加高，留足空白；Textarea 支持多行自动换行） */
 .searchbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 24px;
   background: #fff;
   border: 2.5px solid var(--ink);
@@ -15,14 +15,21 @@
   > .ic {
     width: 48px;
     height: 48px;
+    margin-top: 10px;
+    flex: none;
   }
 
   .search-input {
     flex: 1;
+    min-width: 0;
     font-size: 32px;
     font-weight: 700;
     color: var(--ink);
+    line-height: 1.5;
+    max-height: 240px;
   }
+
+  .search-ph { color: #cbb8a3; font-weight: 600; }
 
   .sbtn {
     background: var(--red);
@@ -63,6 +70,68 @@
     margin-top: 20px;
     display: block;
     line-height: 1.6;
+  }
+
+  .qa-ans-ings {
+    font-size: 25px;
+    color: var(--brown);
+    font-weight: 600;
+    margin-top: 8px;
+    display: block;
+    line-height: 1.6;
+  }
+
+  /* 多菜推荐卡片 */
+  .qa-recs { margin-top: 16px; }
+
+  .rec-card {
+    background: var(--soft);
+    border: 2.5px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 20px;
+    margin-bottom: 16px;
+
+    .rec-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .rec-no {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--red);
+        border: 2px solid var(--ink);
+        color: #fff;
+        font-size: 22px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+
+      .rec-name { font-size: 28px; font-weight: 900; flex: 1; }
+    }
+
+    .rec-secret {
+      display: block;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--brown);
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+
+    .rec-ings {
+      display: block;
+      font-size: 22px;
+      color: var(--gray);
+      font-weight: 600;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
   }
 
   .qa-ans-label {

@@ -42,15 +42,23 @@ export interface ShareCardData {
 export const fetchShareCard = (id: string) => http.get<ShareCardData>(`/recipes/${id}/share-card`)
 
 /* ---------- 问答 ---------- */
+export interface QARecommendation {
+  name: string
+  core_secret: string
+  time_minutes: number
+  ingredients: string[]
+}
 export interface QARecord {
   id: string
   question: string
   answer: {
     core_secret: string
+    dish_name?: string
     ingredients: string[]
     steps: string[]
     avoid_pitfalls: string[]
     sources?: string[]
+    recommendations?: QARecommendation[]
   }
   sources: string[] | null
   created_at: string | null
