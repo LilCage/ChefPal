@@ -47,11 +47,14 @@
     border: 2.5px solid var(--ink);
     border-radius: 20px;
     box-shadow: 3px 3px 0 var(--ink);
-    padding: 22px 28px;
+    height: 92px;
+    line-height: 92px;
+    padding: 0 28px;
     font-size: 30px;
     font-weight: 700;
     color: var(--ink);
     min-width: 0;
+    box-sizing: border-box;
   }
 
   .mrc-ph { color: #cbb8a3; font-weight: 500; }
@@ -120,17 +123,17 @@
 
     .mrc-textarea {
       width: 100%;
-      min-height: 120px;
+      min-height: 160px;
       margin-top: 20px;
       background: var(--soft);
       border: 2px solid var(--ink);
       border-radius: 16px;
-      padding: 20px 24px;
+      padding: 24px 28px;
       font-size: 28px;
       font-weight: 600;
       color: var(--ink);
       box-sizing: border-box;
-      line-height: 1.5;
+      line-height: 1.6;
     }
   }
 
