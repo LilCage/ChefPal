@@ -215,4 +215,49 @@
   .save-wrap {
     margin: 8px 28px 48px;
   }
+
+  .exit-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(36, 26, 18, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 56px;
+  }
+
+  .exit-card {
+    width: 100%;
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 8px 8px 0 var(--ink);
+    padding: 40px 32px 32px;
+
+    .exit-title {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--red);
+    }
+
+    .exit-desc {
+      display: block;
+      text-align: center;
+      font-size: 26px;
+      color: var(--brown);
+      font-weight: 600;
+      line-height: 1.6;
+      margin: 24px 0 32px;
+    }
+
+    .exit-row {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+
+      .btn { flex: 1; }
+    }
+  }
 }

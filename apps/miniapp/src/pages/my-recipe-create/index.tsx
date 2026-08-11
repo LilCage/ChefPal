@@ -4,8 +4,8 @@
  * 有 ?id= 为编辑模式（回填后 PUT），否则新建
  */
 import { Image, Input, Text, Textarea, View } from '@tarojs/components'
-import Taro, { useLoad } from '@tarojs/taro'
-import { useState } from 'react'
+import Taro, { useLoad, useUnload } from '@tarojs/taro'
+import { useEffect, useRef, useState } from 'react'
 import NavBar from '../../components/NavBar'
 import {
   createMyRecipe,
@@ -52,6 +52,32 @@ export default function MyRecipeCreate() {
   const [timeMinutes, setTimeMinutes] = useState('30')
   const [difficulty, setDifficulty] = useState('简单')
   const [saving, setSaving] = useState(false)
+  const [showExitModal, setShowExitModal] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const initialSnapshotRef = useRef<string>('')
+  const savedRef = useRef(false)
+  const initializedRef = useRef(false)
+
+  /* 采集当前表单的"可比较快照"（忽略空行/尾随空格，用于判断是否有未保存修改） */
+  const captureSnapshot = () =>
+    JSON.stringify({
+      title: title.trim(),
+      cover,
+      servings,
+      ingredients: ingredients.filter((x) => x.name.trim()).map((x) => ({ name: x.name.trim(), note: (x.note || '').trim() })),
+      prepSteps: prepSteps.filter((x) => x.title.trim()).map((x) => ({ title: x.title.trim(), detail: (x.detail || '').trim() })),
+      cookSteps: cookSteps.filter((x) => x.title.trim()).map((x) => ({ title: x.title.trim(), detail: (x.detail || '').trim() })),
+      seasonings: seasonings.filter((x) => x.name.trim()).map((x) => ({ name: x.name.trim(), amount: (x.amount || '').trim() })),
+      tips: tips.map((t) => t.trim()).filter(Boolean),
+      style,
+      timeMinutes: timeMinutes.trim(),
+      difficulty,
+    })
+
+  const hasUnsavedChanges = () => {
+    if (!loaded) return false
+    return !savedRef.current && captureSnapshot() !== initialSnapshotRef.current
+  }
 
   useLoad((params) => {
     const rid = (params as any).id as string | undefined
@@ -62,18 +88,64 @@ export default function MyRecipeCreate() {
           setTitle(r.title)
           setCover(r.cover_image)
           setServings(r.servings || 2)
-          setIngredients(r.ingredients.length ? r.ingredients : [{ name: '', note: '' }])
+          setIngredients(r.ingredients?.length ? r.ingredients : [{ name: '', note: '' }])
           setPrepSteps(r.prep_steps?.length ? r.prep_steps : [])
           setCookSteps(r.cook_steps?.length ? r.cook_steps : [{ title: '', detail: '' }])
           setSeasonings(r.seasonings?.length ? r.seasonings : [{ name: '食用油', amount: '适量' }])
-          setTips(r.tips.length ? r.tips : [''])
-          setStyle(r.style)
+          setTips(r.tips?.length ? r.tips : [''])
+          setStyle(r.style || '')
           setTimeMinutes(String(r.time_minutes || 30))
-          setDifficulty(r.difficulty)
+          setDifficulty(r.difficulty || '简单')
+          setLoaded(true)
         })
         .catch((e: any) => Taro.showToast({ title: e.message || '加载失败', icon: 'none' }))
+    } else {
+      setLoaded(true) // 新建模式：默认值即为初始状态
     }
   })
+
+  /* 数据就绪（loaded=true）后，在本次重渲染完成时采集初始快照，记为"无未保存修改"基线 */
+  useEffect(() => {
+    if (!loaded || initializedRef.current) return
+    initializedRef.current = true
+    initialSnapshotRef.current = captureSnapshot()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded])
+
+  /* 系统返回手势兜底：有未保存修改时，微信弹"离开确认"防误退（无法自定义按钮） */
+  useEffect(() => {
+    if (!loaded) return
+    if (hasUnsavedChanges()) {
+      Taro.enableAlertBeforeUnload({
+        message: '还有未保存的修改，退出后内容将丢失',
+      })
+    } else {
+      Taro.disableAlertBeforeUnload()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, cover, servings, ingredients, prepSteps, cookSteps, seasonings, tips, style, timeMinutes, difficulty, loaded])
+
+  useUnload(() => {
+    Taro.disableAlertBeforeUnload()
+  })
+
+  /* 拦截返回：有未保存修改 → 弹自定义确认 */
+  const handleBack = () => {
+    if (hasUnsavedChanges()) {
+      setShowExitModal(true)
+    } else {
+      Taro.navigateBack({ delta: 1 })
+    }
+  }
+
+  const exitWithoutSaving = () => {
+    savedRef.current = true // 放弃修改也标记，避免二次弹窗
+    setShowExitModal(false)
+    Taro.disableAlertBeforeUnload()
+    Taro.navigateBack({ delta: 1 })
+  }
+
+  const cancelExit = () => setShowExitModal(false)
 
   const pickCover = async () => {
     try {
@@ -143,7 +215,22 @@ export default function MyRecipeCreate() {
     return null
   }
 
-  const save = async () => {
+  const buildPayload = () => ({
+    title: title.trim(),
+    cover_image: cover || undefined,
+    servings,
+    ingredients: ingredients.filter((x) => x.name.trim()),
+    prep_steps: prepSteps.filter((x) => x.title.trim()),
+    cook_steps: cookSteps.filter((x) => x.title.trim()),
+    seasonings: seasonings.filter((x) => x.name.trim()),
+    tips: tips.map((t) => t.trim()).filter(Boolean),
+    style,
+    time_minutes: Number(timeMinutes) || 0,
+    difficulty,
+  })
+
+  /* 保存并返回：保存成功后标记已保存 + 关闭系统离开确认 + 返回 */
+  const save = async (goBack = true) => {
     if (saving) return
     const err = validate()
     if (err) {
@@ -151,28 +238,18 @@ export default function MyRecipeCreate() {
       return
     }
     setSaving(true)
-    const payload = {
-      title: title.trim(),
-      cover_image: cover || undefined,
-      servings,
-      ingredients: ingredients.filter((x) => x.name.trim()),
-      prep_steps: prepSteps.filter((x) => x.title.trim()),
-      cook_steps: cookSteps.filter((x) => x.title.trim()),
-      seasonings: seasonings.filter((x) => x.name.trim()),
-      tips: tips.map((t) => t.trim()).filter(Boolean),
-      style,
-      time_minutes: Number(timeMinutes) || 0,
-      difficulty,
-    }
     try {
       if (id) {
-        await updateMyRecipe(id, payload)
+        await updateMyRecipe(id, buildPayload())
         Taro.showToast({ title: '已保存', icon: 'none' })
       } else {
-        await createMyRecipe(payload)
+        await createMyRecipe(buildPayload())
         Taro.showToast({ title: '创建成功！', icon: 'none' })
       }
-      setTimeout(() => Taro.navigateBack(), 600)
+      savedRef.current = true
+      setShowExitModal(false)
+      Taro.disableAlertBeforeUnload()
+      if (goBack) setTimeout(() => Taro.navigateBack(), 600)
     } catch (e: any) {
       Taro.showToast({ title: e.message || '保存失败', icon: 'none' })
     } finally {
@@ -182,7 +259,7 @@ export default function MyRecipeCreate() {
 
   return (
     <View className='page-content mrc'>
-      <NavBar title={id ? '编辑菜谱' : '新建菜谱'} showBack />
+      <NavBar title={id ? '编辑菜谱' : '新建菜谱'} showBack onBack={handleBack} />
 
       <View className='section'>
         <View className='sec-title'>🖼 封面（选填）</View>
@@ -398,11 +475,28 @@ export default function MyRecipeCreate() {
       </View>
 
       <View className='save-wrap'>
-        <View className='btn btn--red btn--block' onClick={save}>
+        <View className='btn btn--red btn--block' onClick={() => save(true)}>
           <Text>{saving ? '保存中…' : id ? '保存修改' : '创建菜谱'}</Text>
         </View>
         {!id && <Text className='note note--center'>创建后可到「我的菜谱」一键发布到社区</Text>}
       </View>
+
+      {/* 未保存修改退出确认（漫画风自定义弹窗） */}
+      {showExitModal && (
+        <View className='exit-mask' onClick={cancelExit}>
+          <View className='exit-card' onClick={(e) => e.stopPropagation()}>
+            <View className='exit-title pop'>⚠ 未保存的修改</View>
+            <Text className='exit-desc'>你还没有保存修改，退出后这些内容将丢失。</Text>
+            <View className='btn btn--red btn--block' onClick={() => save(true)}>
+              <Text>{saving ? '保存中…' : '保存并退出'}</Text>
+            </View>
+            <View className='exit-row'>
+              <View className='btn btn--white btn--sm' onClick={exitWithoutSaving}><Text>不保存退出</Text></View>
+              <View className='btn btn--white btn--sm' onClick={cancelExit}><Text>继续编辑</Text></View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }
