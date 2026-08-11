@@ -60,6 +60,14 @@
 .qa-answer {
   margin: 0 28px 24px;
 
+  /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与历史展开框一致） */
+  &::after {
+    top: -11px;
+    bottom: auto;
+    left: 44px;
+    transform: rotate(-135deg);
+  }
+
   .qa-ans-head {
     display: flex;
     align-items: center;
