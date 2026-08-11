@@ -85,6 +85,26 @@
     gap: 16px;
 
     .qa-ans-q { font-size: 30px; font-weight: 900; flex: 1; }
+
+    /* 折叠/展开指示箭头：ic-chev-r 朝右 → 展开时朝上(-90°)，折叠时朝下(90°) */
+    .ans-fold {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray);
+      flex: none;
+
+      .ic {
+        width: 32px;
+        height: 32px;
+        transition: transform 0.2s;
+        transform: rotate(90deg); /* 折叠状态朝下 */
+      }
+
+      &.up .ic { transform: rotate(-90deg); } /* 展开状态朝上 */
+    }
   }
 
   .qa-ans-secret {

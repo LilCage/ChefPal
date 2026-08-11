@@ -46,6 +46,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false)
   const [typing, setTyping] = useState('') // 流式打字机文本
   const [expandedId, setExpandedId] = useState<string | null>(null) // 当前展开的历史问答 id
+  const [answerCollapsed, setAnswerCollapsed] = useState(false) // 回答框内容是否折叠
   const streamAbortRef = useRef<(() => void) | null>(null)
   /* 猜你想问轮播 placeholder */
   const [phIndex, setPhIndex] = useState(0)
@@ -266,21 +267,28 @@ export default function Index() {
         </View>
       ) : current ? (
         <View className='bubble qa-answer'>
-          <View className='qa-ans-head'>
+          <View className='qa-ans-head' onClick={() => setAnswerCollapsed(!answerCollapsed)}>
             <Text className='qa-ans-q'>{current.question}</Text>
             {!current.answer.recommendations && (
               <View className='star-burst star-burst--mini'>{current.answer.dish_name || '核心秘诀'}</View>
             )}
-          </View>
-
-          {renderAnswerBody(current)}
-
-          <View className='qa-ans-actions'>
-            <View className='btn btn--white btn--xs' onClick={() => saveFavorite(current)}>
-              <View className='ic ic-star ic-sm' />
-              <Text>收藏</Text>
+            <View className={`ans-fold ${answerCollapsed ? 'down' : 'up'}`}>
+              <View className='ic ic-chev-r ic-sm' />
             </View>
           </View>
+
+          {!answerCollapsed && (
+            <>
+              {renderAnswerBody(current)}
+
+              <View className='qa-ans-actions'>
+                <View className='btn btn--white btn--xs' onClick={(e) => { e.stopPropagation(); saveFavorite(current) }}>
+                  <View className='ic ic-star ic-sm' />
+                  <Text>收藏</Text>
+                </View>
+              </View>
+            </>
+          )}
         </View>
       ) : (
         <View className='bubble tip-empty'>
