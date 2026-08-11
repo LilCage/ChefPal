@@ -60,8 +60,9 @@
 .qa-answer {
   margin: 32px 28px 24px; /* 上方留出空间给朝上的气泡尾巴 */
 
-  /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与历史展开框一致） */
-  &::after {
+  /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与历史展开框一致）。
+     用 .qa-answer.bubble 双 class 提升特异性，确保不被 theme.scss 的 .bubble::after 覆盖 */
+  &.bubble::after {
     top: -11px;
     bottom: auto;
     left: 44px;
