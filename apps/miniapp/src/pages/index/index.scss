@@ -1,25 +1,23 @@
 /* 首页右上角已无功能按钮，无需额外导航调整 */
 
-/* 搜索栏（主对话框：加大加高，留足空白；Textarea 支持多行自动换行；无放大镜） */
+/* 搜索栏（主对话框：加大加高容纳多行 placeholder；按钮固定右下角） */
 .searchbar {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
+  position: relative;
   background: #fff;
   border: 2.5px solid var(--ink);
   border-radius: 48px;
   box-shadow: 5px 5px 0 var(--ink);
-  padding: 38px 32px;
+  padding: 40px 32px 150px; /* 底部留出按钮空间 */
   margin: 28px 28px 8px;
 
   .search-input {
-    flex: 1;
-    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 120px;
     font-size: 32px;
     font-weight: 700;
     color: var(--ink);
     line-height: 1.5;
-    max-height: 240px;
     /* placeholder 换行生效：配合 \n 断行符 */
     white-space: pre-line;
     word-wrap: break-word;
@@ -28,6 +26,9 @@
   .search-ph { color: #cbb8a3; font-weight: 600; }
 
   .sbtn {
+    position: absolute;
+    right: 32px;
+    bottom: 32px;
     background: var(--red);
     color: #fff;
     border: 2px solid var(--ink);
@@ -38,7 +39,6 @@
     align-items: center;
     justify-content: center;
     box-shadow: 3px 3px 0 var(--ink);
-    flex: none;
 
     .ic {
       width: 44px;
