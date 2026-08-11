@@ -31,14 +31,22 @@ class MyRecipeStep(BaseModel):
 
 class MyRecipeIngredient(BaseModel):
     name: str = Field(min_length=1, max_length=40)
-    amount: str = Field(default="", max_length=40)
+    note: str = Field(default="", max_length=100, description="备注：用量/选材，如 300g，选带皮五花")
+
+
+class MyRecipeSeasoning(BaseModel):
+    name: str = Field(min_length=1, max_length=40)
+    amount: str = Field(default="", max_length=40, description="用量，如 适量 / 1勺")
 
 
 class MyRecipeCreate(BaseModel):
     title: str = Field(min_length=1, max_length=128)
     cover_image: str | None = Field(default=None, max_length=1024, description="data URL 或 URL")
+    servings: int = Field(default=2, ge=1, le=20, description="几人份")
     ingredients: list[MyRecipeIngredient] = Field(min_length=1, max_length=40)
-    steps: list[MyRecipeStep] = Field(min_length=1, max_length=40)
+    prep_steps: list[MyRecipeStep] = Field(default_factory=list, max_length=40)
+    cook_steps: list[MyRecipeStep] = Field(default_factory=list, max_length=40)
+    seasonings: list[MyRecipeSeasoning] = Field(default_factory=list, max_length=40)
     tips: list[str] = Field(default_factory=list, max_length=20)
     style: str = Field(default="", max_length=16)
     time_minutes: int = Field(default=0, ge=0, le=1440)
@@ -48,8 +56,11 @@ class MyRecipeCreate(BaseModel):
 class MyRecipeUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=128)
     cover_image: str | None = Field(default=None, max_length=1024)
+    servings: int | None = Field(default=None, ge=1, le=20)
     ingredients: list[MyRecipeIngredient] | None = Field(default=None, min_length=1, max_length=40)
-    steps: list[MyRecipeStep] | None = Field(default=None, min_length=1, max_length=40)
+    prep_steps: list[MyRecipeStep] | None = Field(default=None, max_length=40)
+    cook_steps: list[MyRecipeStep] | None = Field(default=None, max_length=40)
+    seasonings: list[MyRecipeSeasoning] | None = Field(default=None, max_length=40)
     tips: list[str] | None = Field(default=None, max_length=20)
     style: str | None = Field(default=None, max_length=16)
     time_minutes: int | None = Field(default=None, ge=0, le=1440)
@@ -78,8 +89,11 @@ def _out(rec: MyRecipe) -> dict:
         "id": str(rec.id),
         "title": rec.title,
         "cover_image": rec.cover_image,
+        "servings": rec.servings,
         "ingredients": rec.ingredients,
-        "steps": rec.steps,
+        "prep_steps": rec.prep_steps,
+        "cook_steps": rec.cook_steps,
+        "seasonings": rec.seasonings,
         "tips": rec.tips,
         "style": rec.style,
         "time_minutes": rec.time_minutes,
@@ -120,8 +134,11 @@ async def create_my_recipe(
         user_id=user.id,
         title=title,
         cover_image=cover,
+        servings=body.servings,
         ingredients=[i.model_dump() for i in body.ingredients],
-        steps=[s.model_dump() for s in body.steps],
+        prep_steps=[s.model_dump() for s in body.prep_steps],
+        cook_steps=[s.model_dump() for s in body.cook_steps],
+        seasonings=[s.model_dump() for s in body.seasonings],
         tips=body.tips,
         style=body.style,
         time_minutes=body.time_minutes,
@@ -181,10 +198,16 @@ async def update_my_recipe(
         if not title:
             raise AppError("标题不能为空", code=400, status_code=400)
         rec.title = title
+    if body.servings is not None:
+        rec.servings = body.servings
     if body.ingredients is not None:
         rec.ingredients = [i.model_dump() for i in body.ingredients]
-    if body.steps is not None:
-        rec.steps = [s.model_dump() for s in body.steps]
+    if body.prep_steps is not None:
+        rec.prep_steps = [s.model_dump() for s in body.prep_steps]
+    if body.cook_steps is not None:
+        rec.cook_steps = [s.model_dump() for s in body.cook_steps]
+    if body.seasonings is not None:
+        rec.seasonings = [s.model_dump() for s in body.seasonings]
     if body.tips is not None:
         rec.tips = body.tips
     if body.style is not None:

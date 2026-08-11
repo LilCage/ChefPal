@@ -11,8 +11,11 @@ BASE = "/api/my-recipes"
 VALID = {
     "title": "祖传红烧肉",
     "cover_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-    "ingredients": [{"name": "五花肉", "amount": "500g"}, {"name": "冰糖", "amount": "适量"}],
-    "steps": [{"title": "焯水", "detail": "冷水下锅煮 3 分钟去浮沫"}, {"title": "炒糖色", "detail": "小火炒至琥珀色"}],
+    "servings": 4,
+    "ingredients": [{"name": "五花肉", "note": "500g，选带皮五花"}, {"name": "冰糖", "note": "适量"}],
+    "prep_steps": [{"title": "切块", "detail": "五花肉切 3cm 见方块"}, {"title": "焯水", "detail": "冷水下锅煮 3 分钟去浮沫"}],
+    "cook_steps": [{"title": "炒糖色", "detail": "小火炒至琥珀色"}, {"title": "慢炖", "detail": "转小火炖 40 分钟"}],
+    "seasonings": [{"name": "生抽", "amount": "2勺"}, {"name": "食用油", "amount": "适量"}],
     "tips": ["糖色宁浅勿深"],
     "style": "浓香下饭",
     "time_minutes": 90,
@@ -32,7 +35,11 @@ def test_create_my_recipe(client, auth_headers):
     data = _create(client, auth_headers)
     assert data["title"] == "祖传红烧肉"
     assert len(data["ingredients"]) == 2
-    assert data["steps"][0]["title"] == "焯水"
+    assert data["ingredients"][0]["note"] == "500g，选带皮五花"
+    assert data["servings"] == 4
+    assert data["prep_steps"][0]["title"] == "切块"
+    assert data["cook_steps"][0]["title"] == "炒糖色"
+    assert data["seasonings"][0]["name"] == "生抽"
     assert data["style"] == "浓香下饭"
     assert data["time_minutes"] == 90
     assert data["cover_image"]  # data URL 已存储 → 返回可访问 URL

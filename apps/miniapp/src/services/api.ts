@@ -88,18 +88,25 @@ export const fetchRecipe = (id: string) => http.get<Recipe>(`/recipes/${id}`)
 /* ---------- 个人菜谱创作（EXT-4.1/4.2） ---------- */
 export interface MyRecipeIngredient {
   name: string
-  amount?: string
+  note?: string
 }
 export interface MyRecipeStep {
   title: string
   detail: string
 }
+export interface MyRecipeSeasoning {
+  name: string
+  amount?: string
+}
 export interface MyRecipe {
   id: string
   title: string
   cover_image: string | null
+  servings: number
   ingredients: MyRecipeIngredient[]
-  steps: MyRecipeStep[]
+  prep_steps: MyRecipeStep[]
+  cook_steps: MyRecipeStep[]
+  seasonings: MyRecipeSeasoning[]
   tips: string[]
   style: string
   time_minutes: number

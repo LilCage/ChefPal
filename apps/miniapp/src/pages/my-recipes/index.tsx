@@ -37,9 +37,10 @@ export default function MyRecipes() {
     Taro.navigateTo({ url: `/pages/post-create/index?my_recipe_id=${id}` })
 
   const goDetail = (r: MyRecipe) => {
+    const stepCount = (r.cook_steps?.length || 0) + (r.prep_steps?.length || 0)
     Taro.showModal({
       title: r.title,
-      content: `${r.steps.length} 步 · ⏱ ${r.time_minutes}分钟 · 难度 ${r.difficulty}\n${r.tips[0] ? `避坑：${r.tips[0]}` : ''}`,
+      content: `${r.servings || 2}人份 · ${stepCount} 步 · ⏱ ${r.time_minutes}分钟 · 难度 ${r.difficulty}\n${r.tips[0] ? `避坑：${r.tips[0]}` : ''}`,
       showCancel: true,
       confirmText: '去发布',
       cancelText: '关闭',
@@ -99,11 +100,14 @@ export default function MyRecipes() {
                   {r.style && <View className='mini-chip gold'><Text>{r.style}</Text></View>}
                 </View>
                 <View className='mr-meta'>
+                  <Text>{r.servings || 2}人份</Text>
+                  <Text>·</Text>
                   <Text>⏱ {r.time_minutes}分钟</Text>
                   <Text>·</Text>
                   <Text>难度 {r.difficulty}</Text>
-                  <Text>·</Text>
-                  <Text>{r.steps.length} 步</Text>
+                </View>
+                <View className='mr-sub'>
+                  <Text>食材 {r.ingredients?.length || 0} · 调味 {r.seasonings?.length || 0} · 步骤 {(r.cook_steps?.length || 0) + (r.prep_steps?.length || 0)}</Text>
                 </View>
                 <View className='mr-actions' onClick={(e) => e.stopPropagation()}>
                   <View className='btn btn--white btn--sm' onClick={() => goEdit(r.id)}>

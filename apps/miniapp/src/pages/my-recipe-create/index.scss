@@ -59,14 +59,28 @@
 
   .mrc-ph { color: #cbb8a3; font-weight: 500; }
 
-  .ing-row {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+  .ing-card {
+    background: #fff;
+    border: 2.5px solid var(--ink);
+    border-radius: 24px;
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 20px;
     margin-bottom: 20px;
 
-    .ing-name { flex: 3; }
-    .ing-amount { flex: 2; }
+    .ing-head {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+
+      .ing-name { flex: 1; }
+    }
+
+    .ing-note {
+      background: var(--soft);
+      font-weight: 600;
+      font-size: 28px;
+    }
   }
 
   .row-del {
@@ -83,6 +97,45 @@
     color: var(--red-dark);
     flex: none;
     box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .season-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+
+    .season-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .season-name {
+        flex: none;
+        min-width: 100px;
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--red);
+        background: var(--soft);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        padding: 12px 24px;
+        text-align: center;
+        box-shadow: 2px 2px 0 var(--ink);
+      }
+
+      .season-amount { flex: 1; }
+    }
+  }
+
+  .custom-add-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+
+    .mrc-input { flex: 1; }
+    .btn { flex: none; }
   }
 
   .add-row {
@@ -116,6 +169,8 @@
         flex: none;
         border: 2px solid var(--ink);
         box-shadow: 2px 2px 0 var(--ink);
+
+        &.green { background: var(--green); }
       }
 
       .step-title { flex: 1; }

@@ -1,5 +1,6 @@
 /**
- * 新建/编辑个人菜谱（EXT-4.1）：封面 + 标题 + 食材 + 步骤 + 避坑 + 风味/时间/难度
+ * 新建/编辑个人菜谱（EXT-4.1）：封面 + 标题 + 几人份 + 食材(名+备注) + 调味料(chips)
+ * + 处理食材/烹饪步骤两区块 + 避坑 + 风味/时间/难度
  * 有 ?id= 为编辑模式（回填后 PUT），否则新建
  */
 import { Image, Input, Text, Textarea, View } from '@tarojs/components'
@@ -11,12 +12,19 @@ import {
   fetchMyRecipe,
   updateMyRecipe,
   type MyRecipeIngredient,
+  type MyRecipeSeasoning,
   type MyRecipeStep,
 } from '../../services/api'
 import './index.scss'
 
 const STYLES = ['浓香下饭', '清爽快手', '蒸煮清淡', '香辣过瘾', '甜口绵密', '汤羹温润']
 const DIFFS = ['简单', '中等', '较难']
+const SERVING_OPTIONS = [1, 2, 3, 4, 6, 8]
+/* 常用调味料 chips（点选即加入清单，避免逐个输入） */
+const COMMON_SEASONINGS = [
+  '食用油', '盐', '生抽', '老抽', '蚝油', '料酒', '白糖', '香醋', '淀粉',
+  '白胡椒粉', '味精', '鸡精', '姜', '蒜', '葱', '辣椒', '花椒', '八角',
+]
 
 function readAsBase64(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -33,8 +41,12 @@ export default function MyRecipeCreate() {
   const [id, setId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [cover, setCover] = useState<string | null>(null)
-  const [ingredients, setIngredients] = useState<MyRecipeIngredient[]>([{ name: '', amount: '' }])
-  const [steps, setSteps] = useState<MyRecipeStep[]>([{ title: '', detail: '' }])
+  const [servings, setServings] = useState(2)
+  const [ingredients, setIngredients] = useState<MyRecipeIngredient[]>([{ name: '', note: '' }])
+  const [prepSteps, setPrepSteps] = useState<MyRecipeStep[]>([])
+  const [cookSteps, setCookSteps] = useState<MyRecipeStep[]>([{ title: '', detail: '' }])
+  const [seasonings, setSeasonings] = useState<MyRecipeSeasoning[]>([{ name: '食用油', amount: '适量' }])
+  const [customSeasoning, setCustomSeasoning] = useState('')
   const [tips, setTips] = useState<string[]>([''])
   const [style, setStyle] = useState('')
   const [timeMinutes, setTimeMinutes] = useState('30')
@@ -49,8 +61,11 @@ export default function MyRecipeCreate() {
         .then((r) => {
           setTitle(r.title)
           setCover(r.cover_image)
-          setIngredients(r.ingredients.length ? r.ingredients : [{ name: '', amount: '' }])
-          setSteps(r.steps.length ? r.steps : [{ title: '', detail: '' }])
+          setServings(r.servings || 2)
+          setIngredients(r.ingredients.length ? r.ingredients : [{ name: '', note: '' }])
+          setPrepSteps(r.prep_steps?.length ? r.prep_steps : [])
+          setCookSteps(r.cook_steps?.length ? r.cook_steps : [{ title: '', detail: '' }])
+          setSeasonings(r.seasonings?.length ? r.seasonings : [{ name: '食用油', amount: '适量' }])
           setTips(r.tips.length ? r.tips : [''])
           setStyle(r.style)
           setTimeMinutes(String(r.time_minutes || 30))
@@ -80,24 +95,51 @@ export default function MyRecipeCreate() {
 
   const updateIng = (i: number, patch: Partial<MyRecipeIngredient>) =>
     setIngredients((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
-  const updateStep = (i: number, patch: Partial<MyRecipeStep>) =>
-    setSteps((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+  const updatePrepStep = (i: number, patch: Partial<MyRecipeStep>) =>
+    setPrepSteps((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+  const updateCookStep = (i: number, patch: Partial<MyRecipeStep>) =>
+    setCookSteps((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+  const updateSeasoning = (i: number, patch: Partial<MyRecipeSeasoning>) =>
+    setSeasonings((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
   const updateTip = (i: number, v: string) =>
     setTips((prev) => prev.map((x, idx) => (idx === i ? v : x)))
 
-  const addIng = () => setIngredients((prev) => [...prev, { name: '', amount: '' }])
+  const addIng = () => setIngredients((prev) => [...prev, { name: '', note: '' }])
   const rmIng = (i: number) => setIngredients((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
-  const addStep = () => setSteps((prev) => [...prev, { title: '', detail: '' }])
-  const rmStep = (i: number) => setSteps((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
+  const addPrep = () => setPrepSteps((prev) => [...prev, { title: '', detail: '' }])
+  const rmPrep = (i: number) => setPrepSteps((prev) => prev.filter((_, idx) => idx !== i))
+  const addCook = () => setCookSteps((prev) => [...prev, { title: '', detail: '' }])
+  const rmCook = (i: number) => setCookSteps((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
   const addTip = () => setTips((prev) => [...prev, ''])
   const rmTip = (i: number) => setTips((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
+
+  /* 调味料 chips 点选：已加入则移除，未加入则追加 */
+  const toggleSeasoning = (name: string) => {
+    const exists = seasonings.find((s) => s.name === name)
+    if (exists) {
+      setSeasonings(seasonings.filter((s) => s.name !== name))
+    } else {
+      setSeasonings([...seasonings, { name, amount: '适量' }])
+    }
+  }
+  const addCustomSeasoning = () => {
+    const v = customSeasoning.trim()
+    if (!v) return
+    if (seasonings.some((s) => s.name === v)) {
+      Taro.showToast({ title: '已添加该调味料', icon: 'none' })
+      return
+    }
+    setSeasonings([...seasonings, { name: v, amount: '适量' }])
+    setCustomSeasoning('')
+  }
+  const rmSeasoning = (i: number) => setSeasonings((prev) => prev.filter((_, idx) => idx !== i))
 
   const validate = (): string | null => {
     if (!title.trim()) return '请填写菜谱标题'
     const validIngs = ingredients.filter((x) => x.name.trim())
     if (validIngs.length === 0) return '至少填写 1 种食材'
-    const validSteps = steps.filter((x) => x.title.trim())
-    if (validSteps.length === 0) return '至少填写 1 个步骤'
+    const validCook = cookSteps.filter((x) => x.title.trim())
+    if (validCook.length === 0) return '至少填写 1 个烹饪步骤'
     return null
   }
 
@@ -112,8 +154,11 @@ export default function MyRecipeCreate() {
     const payload = {
       title: title.trim(),
       cover_image: cover || undefined,
+      servings,
       ingredients: ingredients.filter((x) => x.name.trim()),
-      steps: steps.filter((x) => x.title.trim()),
+      prep_steps: prepSteps.filter((x) => x.title.trim()),
+      cook_steps: cookSteps.filter((x) => x.title.trim()),
+      seasonings: seasonings.filter((x) => x.name.trim()),
       tips: tips.map((t) => t.trim()).filter(Boolean),
       style,
       time_minutes: Number(timeMinutes) || 0,
@@ -169,43 +214,127 @@ export default function MyRecipeCreate() {
       </View>
 
       <View className='section'>
-        <View className='sec-title'>🥬 食材清单 <Text className='sec-note'>名称 + 用量（可空）</Text></View>
+        <View className='sec-title'>👥 几人份</View>
+        <View className='chips'>
+          {SERVING_OPTIONS.map((n) => (
+            <View key={n} className={`chip ${servings === n ? 'chip--on' : ''}`} onClick={() => setServings(n)}>
+              <Text>{n}人</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>🥬 食材清单 <Text className='sec-note'>名称 + 备注（用量/选材）</Text></View>
         {ingredients.map((ing, i) => (
-          <View key={i} className='ing-row'>
+          <View key={i} className='ing-card'>
+            <View className='ing-head'>
+              <Input
+                className='mrc-input ing-name'
+                value={ing.name}
+                placeholder={`食材 ${i + 1}`}
+                placeholderClass='mrc-ph'
+                onInput={(e) => updateIng(i, { name: e.detail.value })}
+              />
+              <View className='row-del' onClick={() => rmIng(i)}>×</View>
+            </View>
             <Input
-              className='mrc-input ing-name'
-              value={ing.name}
-              placeholder={`食材 ${i + 1}`}
+              className='mrc-input ing-note'
+              value={ing.note || ''}
+              placeholder='备注：用量/选材，如 300g，选带皮五花'
               placeholderClass='mrc-ph'
-              onInput={(e) => updateIng(i, { name: e.detail.value })}
+              onInput={(e) => updateIng(i, { note: e.detail.value })}
             />
-            <Input
-              className='mrc-input ing-amount'
-              value={ing.amount || ''}
-              placeholder='如 300g'
-              placeholderClass='mrc-ph'
-              onInput={(e) => updateIng(i, { amount: e.detail.value })}
-            />
-            <View className='row-del' onClick={() => rmIng(i)}>×</View>
           </View>
         ))}
         <View className='btn btn--sm btn--gold add-row' onClick={addIng}><Text>＋ 添加食材</Text></View>
       </View>
 
       <View className='section'>
-        <View className='sec-title'>👣 步骤</View>
-        {steps.map((st, i) => (
+        <View className='sec-title'>🧂 调味料 <Text className='sec-note'>点选常用项，可自定义</Text></View>
+        <View className='chips'>
+          {COMMON_SEASONINGS.map((s) => (
+            <View
+              key={s}
+              className={`chip ${seasonings.some((x) => x.name === s) ? 'chip--on' : ''}`}
+              onClick={() => toggleSeasoning(s)}
+            >
+              <Text>{s}</Text>
+            </View>
+          ))}
+        </View>
+        <View className='season-list'>
+          {seasonings.map((s, i) => (
+            <View key={i} className='season-item'>
+              <Text className='season-name'>{s.name}</Text>
+              <Input
+                className='mrc-input season-amount'
+                value={s.amount || ''}
+                placeholder='用量（如 1勺 / 适量）'
+                placeholderClass='mrc-ph'
+                onInput={(e) => updateSeasoning(i, { amount: e.detail.value })}
+              />
+              <View className='row-del' onClick={() => rmSeasoning(i)}>×</View>
+            </View>
+          ))}
+        </View>
+        <View className='custom-add-row'>
+          <Input
+            className='mrc-input'
+            value={customSeasoning}
+            maxlength={40}
+            placeholder='自定义调味料，如：十三香'
+            placeholderClass='mrc-ph'
+            onInput={(e) => setCustomSeasoning(e.detail.value)}
+            onConfirm={addCustomSeasoning}
+          />
+          <View className='btn btn--sm btn--gold' onClick={addCustomSeasoning}><Text>添加</Text></View>
+        </View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>✂️ 处理食材 <Text className='sec-note'>洗 / 切 / 腌（选填）</Text></View>
+        {prepSteps.map((st, i) => (
+          <View key={i} className='step-card'>
+            <View className='step-head'>
+              <View className='sno green'><Text>{i + 1}</Text></View>
+              <Input
+                className='mrc-input step-title'
+                value={st.title}
+                placeholder='步骤名，如：切块'
+                placeholderClass='mrc-ph'
+                onInput={(e) => updatePrepStep(i, { title: e.detail.value })}
+              />
+              <View className='row-del' onClick={() => rmPrep(i)}>×</View>
+            </View>
+            <Textarea
+              className='mrc-textarea'
+              value={st.detail}
+              maxlength={500}
+              placeholder='如：五花肉切 3cm 见方块，冷水下锅焯 3 分钟'
+              placeholderClass='mrc-ph'
+              autoHeight
+              onInput={(e) => updatePrepStep(i, { detail: e.detail.value })}
+            />
+          </View>
+        ))}
+        <View className='btn btn--sm btn--gold add-row' onClick={addPrep}><Text>＋ 添加处理步骤</Text></View>
+      </View>
+
+      <View className='section'>
+        <View className='sec-title'>🍳 烹饪步骤</View>
+        {cookSteps.map((st, i) => (
           <View key={i} className='step-card'>
             <View className='step-head'>
               <View className='sno'><Text>{i + 1}</Text></View>
               <Input
                 className='mrc-input step-title'
                 value={st.title}
-                placeholder='步骤名，如：焯水'
+                placeholder='步骤名，如：炒糖色'
                 placeholderClass='mrc-ph'
-                onInput={(e) => updateStep(i, { title: e.detail.value })}
+                onInput={(e) => updateCookStep(i, { title: e.detail.value })}
               />
-              <View className='row-del' onClick={() => rmStep(i)}>×</View>
+              <View className='row-del' onClick={() => rmCook(i)}>×</View>
             </View>
             <Textarea
               className='mrc-textarea'
@@ -214,11 +343,11 @@ export default function MyRecipeCreate() {
               placeholder='详细做法，写给厨房小白，写清火候与时长'
               placeholderClass='mrc-ph'
               autoHeight
-              onInput={(e) => updateStep(i, { detail: e.detail.value })}
+              onInput={(e) => updateCookStep(i, { detail: e.detail.value })}
             />
           </View>
         ))}
-        <View className='btn btn--sm btn--gold add-row' onClick={addStep}><Text>＋ 添加步骤</Text></View>
+        <View className='btn btn--sm btn--gold add-row' onClick={addCook}><Text>＋ 添加烹饪步骤</Text></View>
       </View>
 
       <View className='section'>

@@ -23,10 +23,16 @@ class MyRecipe(Base):
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     # 封面图 URL（COS 或本地 /static，可空）
     cover_image: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    # [{ name, amount }] 食材清单（amount 如 2个 / 300g / 适量）
+    # 几人份（默认 2 人）
+    servings: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    # [{ name, note }] 食材清单（name 名称，note 备注：用量+选材，如 "300g，选带皮五花"）
     ingredients: Mapped[list] = mapped_column(JSONType, nullable=False)
-    # [{ title, detail }] 步骤列表
-    steps: Mapped[list] = mapped_column(JSONType, nullable=False)
+    # [{ title, detail }] 处理食材步骤（洗/切/腌）
+    prep_steps: Mapped[list] = mapped_column(JSONType, nullable=False)
+    # [{ title, detail }] 烹饪步骤
+    cook_steps: Mapped[list] = mapped_column(JSONType, nullable=False)
+    # [{ name, amount }] 调味料清单（chips 点选 + 自定义）
+    seasonings: Mapped[list] = mapped_column(JSONType, nullable=False, default=list)
     # 避坑指南（字符串数组）
     tips: Mapped[list] = mapped_column(JSONType, nullable=False, default=list)
     # 风味标签（浓香下饭/清爽快手/蒸煮清淡/香辣过瘾等，与 AI 菜谱对齐）
