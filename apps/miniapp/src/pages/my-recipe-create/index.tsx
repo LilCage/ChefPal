@@ -267,12 +267,12 @@ export default function MyRecipeCreate() {
           {cover ? (
             <View className='cover-box' onClick={pickCover}>
               <Image className='cover-img' src={cover} mode='aspectFill' />
-              <View className='cover-edit'><Text>换图</Text></View>
+              <View className='cover-edit'><Text userSelect>换图</Text></View>
             </View>
           ) : (
             <View className='cover-box add' onClick={pickCover}>
               <View className='ic ic-camera ic-lg' />
-              <Text className='cover-t'>添加封面</Text>
+              <Text userSelect className='cover-t'>添加封面</Text>
             </View>
           )}
         </View>
@@ -295,14 +295,14 @@ export default function MyRecipeCreate() {
         <View className='chips'>
           {SERVING_OPTIONS.map((n) => (
             <View key={n} className={`chip ${servings === n ? 'chip--on' : ''}`} onClick={() => setServings(n)}>
-              <Text>{n}人</Text>
+              <Text userSelect>{n}人</Text>
             </View>
           ))}
         </View>
       </View>
 
       <View className='section'>
-        <View className='sec-title'>🥬 食材清单 <Text className='sec-note'>名称 + 备注（用量/选材）</Text></View>
+        <View className='sec-title'>🥬 食材清单 <Text userSelect className='sec-note'>名称 + 备注（用量/选材）</Text></View>
         {ingredients.map((ing, i) => (
           <View key={i} className='ing-card'>
             <View className='ing-head'>
@@ -324,11 +324,11 @@ export default function MyRecipeCreate() {
             />
           </View>
         ))}
-        <View className='btn btn--sm btn--gold add-row' onClick={addIng}><Text>＋ 添加食材</Text></View>
+        <View className='btn btn--sm btn--gold add-row' onClick={addIng}><Text userSelect>＋ 添加食材</Text></View>
       </View>
 
       <View className='section'>
-        <View className='sec-title'>🧂 调味料 <Text className='sec-note'>点选常用项，可自定义</Text></View>
+        <View className='sec-title'>🧂 调味料 <Text userSelect className='sec-note'>点选常用项，可自定义</Text></View>
         <View className='chips'>
           {COMMON_SEASONINGS.map((s) => (
             <View
@@ -336,14 +336,14 @@ export default function MyRecipeCreate() {
               className={`chip ${seasonings.some((x) => x.name === s) ? 'chip--on' : ''}`}
               onClick={() => toggleSeasoning(s)}
             >
-              <Text>{s}</Text>
+              <Text userSelect>{s}</Text>
             </View>
           ))}
         </View>
         <View className='season-list'>
           {seasonings.map((s, i) => (
             <View key={i} className='season-item'>
-              <Text className='season-name'>{s.name}</Text>
+              <Text userSelect className='season-name'>{s.name}</Text>
               <Input
                 className='mrc-input season-amount'
                 value={s.amount || ''}
@@ -365,16 +365,16 @@ export default function MyRecipeCreate() {
             onInput={(e) => setCustomSeasoning(e.detail.value)}
             onConfirm={addCustomSeasoning}
           />
-          <View className='btn btn--sm btn--gold' onClick={addCustomSeasoning}><Text>添加</Text></View>
+          <View className='btn btn--sm btn--gold' onClick={addCustomSeasoning}><Text userSelect>添加</Text></View>
         </View>
       </View>
 
       <View className='section'>
-        <View className='sec-title'>✂️ 处理食材 <Text className='sec-note'>洗 / 切 / 腌（选填）</Text></View>
+        <View className='sec-title'>✂️ 处理食材 <Text userSelect className='sec-note'>洗 / 切 / 腌（选填）</Text></View>
         {prepSteps.map((st, i) => (
           <View key={i} className='step-card'>
             <View className='step-head'>
-              <View className='sno green'><Text>{i + 1}</Text></View>
+              <View className='sno green'><Text userSelect>{i + 1}</Text></View>
               <Input
                 className='mrc-input step-title'
                 value={st.title}
@@ -395,7 +395,7 @@ export default function MyRecipeCreate() {
             />
           </View>
         ))}
-        <View className='btn btn--sm btn--gold add-row' onClick={addPrep}><Text>＋ 添加处理步骤</Text></View>
+        <View className='btn btn--sm btn--gold add-row' onClick={addPrep}><Text userSelect>＋ 添加处理步骤</Text></View>
       </View>
 
       <View className='section'>
@@ -403,7 +403,7 @@ export default function MyRecipeCreate() {
         {cookSteps.map((st, i) => (
           <View key={i} className='step-card'>
             <View className='step-head'>
-              <View className='sno'><Text>{i + 1}</Text></View>
+              <View className='sno'><Text userSelect>{i + 1}</Text></View>
               <Input
                 className='mrc-input step-title'
                 value={st.title}
@@ -424,7 +424,7 @@ export default function MyRecipeCreate() {
             />
           </View>
         ))}
-        <View className='btn btn--sm btn--gold add-row' onClick={addCook}><Text>＋ 添加烹饪步骤</Text></View>
+        <View className='btn btn--sm btn--gold add-row' onClick={addCook}><Text userSelect>＋ 添加烹饪步骤</Text></View>
       </View>
 
       <View className='section'>
@@ -442,7 +442,7 @@ export default function MyRecipeCreate() {
             <View className='row-del' onClick={() => rmTip(i)}>×</View>
           </View>
         ))}
-        <View className='btn btn--sm btn--gold add-row' onClick={addTip}><Text>＋ 添加避坑</Text></View>
+        <View className='btn btn--sm btn--gold add-row' onClick={addTip}><Text userSelect>＋ 添加避坑</Text></View>
       </View>
 
       <View className='section'>
@@ -450,12 +450,12 @@ export default function MyRecipeCreate() {
         <View className='chips'>
           {STYLES.map((s) => (
             <View key={s} className={`chip ${style === s ? 'chip--on' : ''}`} onClick={() => setStyle(style === s ? '' : s)}>
-              <Text>{s}</Text>
+              <Text userSelect>{s}</Text>
             </View>
           ))}
         </View>
         <View className='time-row'>
-          <Text className='time-label'>预计耗时</Text>
+          <Text userSelect className='time-label'>预计耗时</Text>
           <Input
             className='mrc-input time-input'
             value={timeMinutes}
@@ -463,12 +463,12 @@ export default function MyRecipeCreate() {
             maxlength={4}
             onInput={(e) => setTimeMinutes(e.detail.value)}
           />
-          <Text className='time-unit'>分钟</Text>
+          <Text userSelect className='time-unit'>分钟</Text>
         </View>
         <View className='chips'>
           {DIFFS.map((d) => (
             <View key={d} className={`chip ${difficulty === d ? 'chip--on' : ''}`} onClick={() => setDifficulty(d)}>
-              <Text>{d}</Text>
+              <Text userSelect>{d}</Text>
             </View>
           ))}
         </View>
@@ -476,9 +476,9 @@ export default function MyRecipeCreate() {
 
       <View className='save-wrap'>
         <View className='btn btn--red btn--block' onClick={() => save(true)}>
-          <Text>{saving ? '保存中…' : id ? '保存修改' : '创建菜谱'}</Text>
+          <Text userSelect>{saving ? '保存中…' : id ? '保存修改' : '创建菜谱'}</Text>
         </View>
-        {!id && <Text className='note note--center'>创建后可到「我的菜谱」一键发布到社区</Text>}
+        {!id && <Text userSelect className='note note--center'>创建后可到「我的菜谱」一键发布到社区</Text>}
       </View>
 
       {/* 未保存修改退出确认（漫画风自定义弹窗） */}
@@ -486,13 +486,13 @@ export default function MyRecipeCreate() {
         <View className='exit-mask' onClick={cancelExit}>
           <View className='exit-card' onClick={(e) => e.stopPropagation()}>
             <View className='exit-title pop'>⚠ 未保存的修改</View>
-            <Text className='exit-desc'>你还没有保存修改，退出后这些内容将丢失。</Text>
+            <Text userSelect className='exit-desc'>你还没有保存修改，退出后这些内容将丢失。</Text>
             <View className='btn btn--red btn--block' onClick={() => save(true)}>
-              <Text>{saving ? '保存中…' : '保存并退出'}</Text>
+              <Text userSelect>{saving ? '保存中…' : '保存并退出'}</Text>
             </View>
             <View className='exit-row'>
-              <View className='btn btn--white btn--sm' onClick={exitWithoutSaving}><Text>不保存退出</Text></View>
-              <View className='btn btn--white btn--sm' onClick={cancelExit}><Text>继续编辑</Text></View>
+              <View className='btn btn--white btn--sm' onClick={exitWithoutSaving}><Text userSelect>不保存退出</Text></View>
+              <View className='btn btn--white btn--sm' onClick={cancelExit}><Text userSelect>继续编辑</Text></View>
             </View>
           </View>
         </View>

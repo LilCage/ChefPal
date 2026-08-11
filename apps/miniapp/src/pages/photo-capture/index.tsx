@@ -92,19 +92,19 @@ export default function PhotoCapture() {
           <>
             <View className='cam-grid' />
             <View className='cam-corners' />
-            <View className='cam-ghost'><Text>🍅🥚🥬</Text></View>
+            <View className='cam-ghost'><Text userSelect>🍅🥚🥬</Text></View>
           </>
         )}
-        <View className='cam-hint'><Text>{recognizing ? '小伴识别中…' : '对准冰箱里的食材 · 自动识别'}</Text></View>
+        <View className='cam-hint'><Text userSelect>{recognizing ? '小伴识别中…' : '对准冰箱里的食材 · 自动识别'}</Text></View>
       </View>
 
       <View className='shutter-zone'>
         <View className='shutter' onClick={() => pick('camera')}>
           <View className='shutter-inner' />
         </View>
-        <Text className='note'>轻触拍照</Text>
+        <Text userSelect className='note'>轻触拍照</Text>
         <View className='btn btn--white btn--sm btn--album' onClick={() => pick('album')}>
-          <Text>🖼 从相册选择</Text>
+          <Text userSelect>🖼 从相册选择</Text>
         </View>
       </View>
 
@@ -117,8 +117,8 @@ export default function PhotoCapture() {
           <View className='chips'>
             {ingredients.map((i) => (
               <View key={i} className='chip chip--on'>
-                <Text>{i}</Text>
-                <Text className='x' onClick={() => remove(i)}>×</Text>
+                <Text userSelect>{i}</Text>
+                <Text userSelect className='x' onClick={() => remove(i)}>×</Text>
               </View>
             ))}
             <View className='chip chip-add'>
@@ -133,13 +133,13 @@ export default function PhotoCapture() {
               />
             </View>
           </View>
-          <Text className='note note--mt'>点标签可删除，点添加可补充 · 识别结果仅供参考</Text>
+          <Text userSelect className='note note--mt'>点标签可删除，点添加可补充 · 识别结果仅供参考</Text>
         </View>
       </View>
 
       <View className='sec'>
         <View className={`btn btn--red btn--block ${recognizing ? 'btn--disabled' : ''}`} onClick={goKitchen}>
-          <Text>用这些食材去生成菜谱 →</Text>
+          <Text userSelect>用这些食材去生成菜谱 →</Text>
         </View>
       </View>
     </View>

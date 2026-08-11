@@ -97,20 +97,20 @@ export default function Comments() {
               {c.author.avatar_url?.startsWith('data:') ? (
                 <Image className='p-av-img' src={c.author.avatar_url} mode='aspectFill' />
               ) : (
-                <Text className='p-av-ph'>{c.author.nickname.slice(0, 1)}</Text>
+                <Text userSelect className='p-av-ph'>{c.author.nickname.slice(0, 1)}</Text>
               )}
             </View>
             <View className='cmt-box'>
               <View className='cmt-name'>
-                <Text>{c.author.nickname}</Text>
-                {c.is_owner && <Text className='owner'>楼主</Text>}
+                <Text userSelect>{c.author.nickname}</Text>
+                {c.is_owner && <Text userSelect className='owner'>楼主</Text>}
               </View>
-              <Text className='cmt-content'>{c.content}</Text>
+              <Text userSelect className='cmt-content'>{c.content}</Text>
               <View className='cmt-foot'>
-                <Text className='cmt-time'>{timeText(c.created_at)}</Text>
+                <Text userSelect className='cmt-time'>{timeText(c.created_at)}</Text>
                 <View className={`cmt-like ${c.is_liked ? 'on' : ''}`} onClick={() => toggleLike(c)}>
                   <View className='ic ic-heart ic-xs' />
-                  <Text>{c.like_count}</Text>
+                  <Text userSelect>{c.like_count}</Text>
                 </View>
               </View>
             </View>
@@ -136,7 +136,7 @@ export default function Comments() {
           />
         </View>
         <View className='btn btn--red btn--sm btn--send' onClick={send}>
-          <Text>{sending ? '…' : '发送'}</Text>
+          <Text userSelect>{sending ? '…' : '发送'}</Text>
         </View>
       </View>
     </View>

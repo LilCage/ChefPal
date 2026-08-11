@@ -132,30 +132,30 @@ export default function CookAssistant() {
 
       <View className='ca-top'>
         <View className='ca-title-row'>
-          <Text className='ca-name'>{recipe.title}</Text>
-          <View className='mini-chip gold'><Text>{recipe.style || '家常'}</Text></View>
+          <Text userSelect className='ca-name'>{recipe.title}</Text>
+          <View className='mini-chip gold'><Text userSelect>{recipe.style || '家常'}</Text></View>
         </View>
 
         <View className='ca-answer'>
           {questionText ? (
             <>
-              <View className='bubble qbubble'><Text className='qtext'>{questionText}</Text></View>
+              <View className='bubble qbubble'><Text userSelect className='qtext'>{questionText}</Text></View>
               {answer && (
                 <View className='bubble abubble'>
-                  <View className='star-burst star-burst--sm'><Text>大厨说</Text></View>
-                  <Text className='atext'>{answer}</Text>
+                  <View className='star-burst star-burst--sm'><Text userSelect>大厨说</Text></View>
+                  <Text userSelect className='atext'>{answer}</Text>
                 </View>
               )}
             </>
           ) : (
-            <Text className='ca-hint'>长按下方麦克风提问，如"下一步做什么""放多少盐""要开多大火"</Text>
+            <Text userSelect className='ca-hint'>长按下方麦克风提问，如"下一步做什么""放多少盐""要开多大火"</Text>
           )}
         </View>
 
         <View className='step-nav'>
-          <View className='nav-btn' onClick={goPrev}><View className='ic ic-chev-l ic-sm' /><Text>上一步</Text></View>
-          <View className='step-progress'><Text>第 {current + 1} / {recipe.steps.length} 步</Text></View>
-          <View className='nav-btn' onClick={goNext}><Text>下一步</Text><View className='ic ic-chev-r ic-sm' /></View>
+          <View className='nav-btn' onClick={goPrev}><View className='ic ic-chev-l ic-sm' /><Text userSelect>上一步</Text></View>
+          <View className='step-progress'><Text userSelect>第 {current + 1} / {recipe.steps.length} 步</Text></View>
+          <View className='nav-btn' onClick={goNext}><Text userSelect>下一步</Text><View className='ic ic-chev-r ic-sm' /></View>
         </View>
       </View>
 
@@ -167,11 +167,11 @@ export default function CookAssistant() {
             onClick={() => setCurrent(i)}
           >
             <View className={`sno ${i % 2 === 1 ? 'gold' : ''}`}>
-              <Text>{i < current ? '✓' : i + 1}</Text>
+              <Text userSelect>{i < current ? '✓' : i + 1}</Text>
             </View>
             <View className='step-body'>
-              <Text className='step-title'>{st.title}</Text>
-              <Text className='step-detail'>{st.detail}</Text>
+              <Text userSelect className='step-title'>{st.title}</Text>
+              <Text userSelect className='step-detail'>{st.detail}</Text>
             </View>
           </View>
         ))}
@@ -186,10 +186,10 @@ export default function CookAssistant() {
         >
           <View className='ic ic-mic' />
         </View>
-        <Text className='dock-hint'>
+        <Text userSelect className='dock-hint'>
           {processing ? '小伴回答中…' : recording ? '正在录音… 松开结束' : '长按说话提问'}
         </Text>
-        <Text className='dock-note'>双手不便？直接问就行，小伴结合当前步骤回答</Text>
+        <Text userSelect className='dock-note'>双手不便？直接问就行，小伴结合当前步骤回答</Text>
       </View>
     </View>
   )

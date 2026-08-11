@@ -27,16 +27,16 @@ export default function Onboarding() {
         <View className='logo-badge'>
           <View className='ic ic-kitchen ic-lg' />
         </View>
-        <Text className='onboard-title'>欢迎来到美食猎人的世界</Text>
-        <Text className='onboard-sub'>把冰箱变成你的食材猎场 🗺</Text>
+        <Text userSelect className='onboard-title'>欢迎来到美食猎人的世界</Text>
+        <Text userSelect className='onboard-sub'>把冰箱变成你的食材猎场 🗺</Text>
 
         <View className='ob-cards'>
           {CARDS.map((c) => (
             <View key={c.title} className='ob-card'>
               <View className='ob-ic'><View className={`ic ${c.icon} ic-sm`} /></View>
               <View className='ob-body'>
-                <Text className='ob-t'>{c.title}</Text>
-                <Text className='ob-s'>{c.sub}</Text>
+                <Text userSelect className='ob-t'>{c.title}</Text>
+                <Text userSelect className='ob-s'>{c.sub}</Text>
               </View>
             </View>
           ))}
@@ -51,9 +51,9 @@ export default function Onboarding() {
 
       <View className='onboard-footer'>
         <View className='btn btn--gold btn--block' onClick={finish}>
-          <Text>开始我的美食之旅</Text>
+          <Text userSelect>开始我的美食之旅</Text>
         </View>
-        <Text className='ob-skip' onClick={finish}>跳过</Text>
+        <Text userSelect className='ob-skip' onClick={finish}>跳过</Text>
       </View>
     </View>
   )

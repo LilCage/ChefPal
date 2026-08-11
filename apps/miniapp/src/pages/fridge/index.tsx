@@ -127,10 +127,10 @@ export default function FridgePage() {
         <NavBar title='冰箱管家' showBack />
         <View className='empty'>
           <View className='empty-art'>🧊</View>
-          <Text className='empty-title'>冰箱空空如也</Text>
-          <Text className='empty-desc'>把放进冰箱的食材记下来，小伴帮你盯着保质期</Text>
+          <Text userSelect className='empty-title'>冰箱空空如也</Text>
+          <Text userSelect className='empty-desc'>把放进冰箱的食材记下来，小伴帮你盯着保质期</Text>
           <View className='btn btn--red btn--block' onClick={addItem}>
-            <Text>＋ 添加食材</Text>
+            <Text userSelect>＋ 添加食材</Text>
           </View>
         </View>
       </View>
@@ -145,58 +145,58 @@ export default function FridgePage() {
         <View className='exp-banner'>
           <View className='eb-ic'><View className='ic ic-bell' /></View>
           <View className='eb-body'>
-            <Text className='eb-title'>{expiring.length} 项食材快过期啦</Text>
-            <Text className='eb-sub'>建议今天做掉，避免浪费</Text>
+            <Text userSelect className='eb-title'>{expiring.length} 项食材快过期啦</Text>
+            <Text userSelect className='eb-sub'>建议今天做掉，避免浪费</Text>
           </View>
         </View>
       ) : (
         <View className='exp-banner exp-banner--ok'>
           <View className='eb-ic eb-ic--green'><View className='ic ic-check' /></View>
           <View className='eb-body'>
-            <Text className='eb-title'>冰箱状态良好</Text>
-            <Text className='eb-sub'>暂无临期食材，继续保持</Text>
+            <Text userSelect className='eb-title'>冰箱状态良好</Text>
+            <Text userSelect className='eb-sub'>暂无临期食材，继续保持</Text>
           </View>
         </View>
       )}
 
       {expiring.length > 0 && (
         <View className='section'>
-          <View className='sec-title'><Text>⏳ 即将过期</Text></View>
+          <View className='sec-title'><Text userSelect>⏳ 即将过期</Text></View>
           {expiring.map((it) => (
             <View key={it.id} className='fridge-item'>
-              <View className='fi-ic'><Text>{fridgeEmoji(it.name, it.emoji)}</Text></View>
+              <View className='fi-ic'><Text userSelect>{fridgeEmoji(it.name, it.emoji)}</Text></View>
               <View className='fi-body'>
-                <Text className='fi-name'>{it.name}</Text>
-                <Text className='fi-note'>已放 {it.days_stored} 天</Text>
+                <Text userSelect className='fi-name'>{it.name}</Text>
+                <Text userSelect className='fi-note'>已放 {it.days_stored} 天</Text>
               </View>
               <View className={`exp-tag exp-tag--${it.status}`}>
-                <Text>{it.status === 'now' ? '今日清空' : `还 ${it.days_left} 天`}</Text>
+                <Text userSelect>{it.status === 'now' ? '今日清空' : `还 ${it.days_left} 天`}</Text>
               </View>
-              <View className='fi-cta' onClick={() => removeItem(it)}><Text>做掉</Text></View>
+              <View className='fi-cta' onClick={() => removeItem(it)}><Text userSelect>做掉</Text></View>
             </View>
           ))}
         </View>
       )}
 
       <View className='section'>
-        <View className='sec-title'><Text>💡 小伴建议</Text></View>
+        <View className='sec-title'><Text userSelect>💡 小伴建议</Text></View>
         {adviceLoading ? (
-          <View className='advice-loading'><Text>小伴分析临期食材中…</Text></View>
+          <View className='advice-loading'><Text userSelect>小伴分析临期食材中…</Text></View>
         ) : advice ? (
           <View className='bubble advice-bubble'>
-            <View className='star-burst star-burst--sm'><Text>组合推荐</Text></View>
+            <View className='star-burst star-burst--sm'><Text userSelect>组合推荐</Text></View>
             {advice.suggestions.map((s, idx) => (
               <View key={idx} className='advice-line'>
-                <Text>
-                  {s.ingredients.join(' + ')} → <Text className='advice-dish'>{s.dish}</Text>
-                  <Text className='advice-meta'>（{s.time_minutes} 分钟 · 匹配 {s.match_score}%）</Text>
+                <Text userSelect>
+                  {s.ingredients.join(' + ')} → <Text userSelect className='advice-dish'>{s.dish}</Text>
+                  <Text userSelect className='advice-meta'>（{s.time_minutes} 分钟 · 匹配 {s.match_score}%）</Text>
                 </Text>
               </View>
             ))}
-            {advice.note && <Text className='advice-note'>{advice.note}</Text>}
+            {advice.note && <Text userSelect className='advice-note'>{advice.note}</Text>}
           </View>
         ) : (
-          <View className='advice-empty'><Text>没有临期食材时，不需要组合推荐</Text></View>
+          <View className='advice-empty'><Text userSelect>没有临期食材时，不需要组合推荐</Text></View>
         )}
       </View>
 
@@ -204,13 +204,13 @@ export default function FridgePage() {
         <View className='section'>
           {fresh.map((it) => (
             <View key={it.id} className='fridge-item'>
-              <View className='fi-ic'><Text>{fridgeEmoji(it.name, it.emoji)}</Text></View>
+              <View className='fi-ic'><Text userSelect>{fridgeEmoji(it.name, it.emoji)}</Text></View>
               <View className='fi-body'>
-                <Text className='fi-name'>{it.name}</Text>
-                <Text className='fi-note'>已放 {it.days_stored} 天 · 状态良好</Text>
+                <Text userSelect className='fi-name'>{it.name}</Text>
+                <Text userSelect className='fi-note'>已放 {it.days_stored} 天 · 状态良好</Text>
               </View>
               <View className={`exp-tag exp-tag--${it.status}`}>
-                <Text>还 {it.days_left} 天</Text>
+                <Text userSelect>还 {it.days_left} 天</Text>
               </View>
             </View>
           ))}
@@ -219,7 +219,7 @@ export default function FridgePage() {
 
       <View className='fridge-add'>
         <View className='btn btn--red btn--block' onClick={addItem}>
-          <Text>＋ 添加食材</Text>
+          <Text userSelect>＋ 添加食材</Text>
         </View>
       </View>
     </View>

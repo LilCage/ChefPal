@@ -41,16 +41,16 @@ export default function Privacy() {
     <View className='page-content legal'>
       <NavBar title='隐私政策' showBack />
       <View className='legal-intro'>
-        <Text>我们深知个人信息对你的重要性，将按法律法规要求保护你的隐私。</Text>
+        <Text userSelect>我们深知个人信息对你的重要性，将按法律法规要求保护你的隐私。</Text>
       </View>
       {SECTIONS.map((s) => (
         <View key={s.t} className='legal-card'>
-          <Text className='legal-h'>{s.t}</Text>
-          <Text className='legal-p'>{s.p}</Text>
+          <Text userSelect className='legal-h'>{s.t}</Text>
+          <Text userSelect className='legal-p'>{s.p}</Text>
         </View>
       ))}
       <View className='legal-footer'>
-        <Text className='legal-date'>更新日期：2026-08-09</Text>
+        <Text userSelect className='legal-date'>更新日期：2026-08-09</Text>
       </View>
     </View>
   )

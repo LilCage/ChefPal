@@ -96,21 +96,21 @@ export default function MealPlanPage() {
       <NavBar title={title} showBack />
 
       <View className='seg'>
-        <View className={`seg-item ${mode === 3 ? 'on' : ''}`} onClick={() => switchMode(3)}><Text>3 天</Text></View>
-        <View className={`seg-item ${mode === 7 ? 'on' : ''}`} onClick={() => switchMode(7)}><Text>7 天 + 营养</Text></View>
+        <View className={`seg-item ${mode === 3 ? 'on' : ''}`} onClick={() => switchMode(3)}><Text userSelect>3 天</Text></View>
+        <View className={`seg-item ${mode === 7 ? 'on' : ''}`} onClick={() => switchMode(7)}><Text userSelect>7 天 + 营养</Text></View>
       </View>
 
       {!plan ? (
         <View className='empty'>
-          <View className='empty-art'><Text>📅</Text></View>
-          <Text className='empty-title'>还没有{mode === 3 ? '3 天' : '7 天'}膳食计划</Text>
-          <Text className='empty-desc'>
+          <View className='empty-art'><Text userSelect>📅</Text></View>
+          <Text userSelect className='empty-title'>还没有{mode === 3 ? '3 天' : '7 天'}膳食计划</Text>
+          <Text userSelect className='empty-desc'>
             {mode === 3
               ? '基于你的口味偏好，小伴生成 3 天 × 早中晚三餐'
               : '基于你的口味偏好，小伴生成 7 天计划 + 每天营养分析（热量/蛋白/脂肪/碳水）'}
           </Text>
           <View className='btn btn--red btn--block' onClick={regenerate}>
-            <Text>{generating ? '生成中…' : `生成我的${mode === 3 ? '3 天' : '7 天'}膳食计划`}</Text>
+            <Text userSelect>{generating ? '生成中…' : `生成我的${mode === 3 ? '3 天' : '7 天'}膳食计划`}</Text>
           </View>
         </View>
       ) : mode === 3 ? (
@@ -161,8 +161,8 @@ function ThreeDayView({
       <View className='plan-tabs'>
         {days.map((d, i) => (
           <View key={d.day_label} className={`pt ${i === activeDay ? 'on' : ''}`} onClick={() => setActiveDay(i)}>
-            <Text className='pt-label'>{d.day_label}</Text>
-            {i > 0 && <Text className='pt-sub'>周{['六', '日'][i - 1] || ''}</Text>}
+            <Text userSelect className='pt-label'>{d.day_label}</Text>
+            {i > 0 && <Text userSelect className='pt-sub'>周{['六', '日'][i - 1] || ''}</Text>}
           </View>
         ))}
       </View>
@@ -170,32 +170,32 @@ function ThreeDayView({
       {day?.meals.map((meal) => (
         <View key={meal.name} className='meal-card'>
           <View className='meal-head'>
-            <View className='m-ic'><Text>{MEAL_ICONS[meal.name] || '🍽'}</Text></View>
-            <Text className='meal-name'>{meal.name}</Text>
-            <Text className='meal-kcal'>约 {meal.total_kcal} 千卡</Text>
+            <View className='m-ic'><Text userSelect>{MEAL_ICONS[meal.name] || '🍽'}</Text></View>
+            <Text userSelect className='meal-name'>{meal.name}</Text>
+            <Text userSelect className='meal-kcal'>约 {meal.total_kcal} 千卡</Text>
           </View>
           {meal.dishes.map((dish, di) => (
             <View key={di} className='meal-row'>
               <View className='done'><View className='ic ic-check ic-xs' /></View>
-              <Text className='dish'>{dish.name}</Text>
+              <Text userSelect className='dish'>{dish.name}</Text>
             </View>
           ))}
         </View>
       ))}
 
       <View className='plan-summary'>
-        <View className='ps'><Text className='ps-num'>{day?.total_kcal}</Text><Text className='ps-label'>今日千卡</Text></View>
-        <View className='ps'><Text className='ps-num'>{day?.protein_g}g</Text><Text className='ps-label'>蛋白质</Text></View>
-        <View className='ps'><Text className='ps-num'>{dishCount} 道</Text><Text className='ps-label'>今日菜品</Text></View>
+        <View className='ps'><Text userSelect className='ps-num'>{day?.total_kcal}</Text><Text userSelect className='ps-label'>今日千卡</Text></View>
+        <View className='ps'><Text userSelect className='ps-num'>{day?.protein_g}g</Text><Text userSelect className='ps-label'>蛋白质</Text></View>
+        <View className='ps'><Text userSelect className='ps-num'>{dishCount} 道</Text><Text userSelect className='ps-label'>今日菜品</Text></View>
       </View>
 
       <View className='sec'>
         <View className={`btn btn--white btn--block btn--sm btn--regen ${generating ? 'btn--disabled' : ''}`} onClick={regenerate}>
-          <Text>{generating ? '…' : '↻ 重新生成'}</Text>
+          <Text userSelect>{generating ? '…' : '↻ 重新生成'}</Text>
         </View>
         <View className={`btn btn--gold btn--block ${generating ? 'btn--disabled' : ''}`} onClick={goShopping}>
           <View className='ic ic-cart ic-sm' />
-          <Text>{generating ? '生成购物清单中…' : '一键生成购物清单'}</Text>
+          <Text userSelect>{generating ? '生成购物清单中…' : '一键生成购物清单'}</Text>
         </View>
       </View>
     </>
@@ -226,21 +226,21 @@ function SevenDayView({
       <View className='week-strip'>
         {days.map((d, i) => (
           <View key={d.day_label} className={`wday ${i === activeDay ? 'on' : ''}`} onClick={() => setActiveDay(i)}>
-            <Text className='wday-label'>{d.day_label}</Text>
+            <Text userSelect className='wday-label'>{d.day_label}</Text>
           </View>
         ))}
       </View>
 
       <View className='today-plan'>
         <View className='tp-head'>
-          <Text className='tp-date'>📅 {day?.day_label}</Text>
-          <Text className='tp-kcal'>目标约 {day?.total_kcal} 千卡</Text>
+          <Text userSelect className='tp-date'>📅 {day?.day_label}</Text>
+          <Text userSelect className='tp-kcal'>目标约 {day?.total_kcal} 千卡</Text>
         </View>
         {day?.meals.map((meal) => (
           <View key={meal.name} className='tp-row'>
-            <View className='tp-ic'><Text>{MEAL_ICONS[meal.name] || '🍽'}</Text></View>
-            <Text className='tp-meal'>{meal.name} · {meal.dishes.map((d) => d.name).join('、')}</Text>
-            <Text className='tp-kcal-num'>{meal.total_kcal}</Text>
+            <View className='tp-ic'><Text userSelect>{MEAL_ICONS[meal.name] || '🍽'}</Text></View>
+            <Text userSelect className='tp-meal'>{meal.name} · {meal.dishes.map((d) => d.name).join('、')}</Text>
+            <Text userSelect className='tp-kcal-num'>{meal.total_kcal}</Text>
           </View>
         ))}
       </View>
@@ -249,14 +249,14 @@ function SevenDayView({
 
       <View className='sec'>
         <View className={`btn btn--white btn--block btn--sm btn--regen ${generating ? 'btn--disabled' : ''}`} onClick={regenerate}>
-          <Text>{generating ? '…' : '↻ 重新生成'}</Text>
+          <Text userSelect>{generating ? '…' : '↻ 重新生成'}</Text>
         </View>
         <View className={`btn btn--red btn--block ${generating ? 'btn--disabled' : ''}`} onClick={goShopping}>
           <View className='ic ic-cart ic-sm' />
-          <Text>{generating ? '生成购物清单中…' : '生成本周购物清单'}</Text>
+          <Text userSelect>{generating ? '生成购物清单中…' : '生成本周购物清单'}</Text>
         </View>
       </View>
-      <Text className='note nutri-note'>营养分析以约 2000 千卡为参考基线，实际请按你的目标调整</Text>
+      <Text userSelect className='note nutri-note'>营养分析以约 2000 千卡为参考基线，实际请按你的目标调整</Text>
     </>
   )
 }
@@ -273,7 +273,7 @@ function NutritionBars({ day }: { day?: PlanDay }) {
 
   return (
     <View className='nutri-block'>
-      <View className='nutri-title'><Text>🍎 营养分析 · 全天合计</Text></View>
+      <View className='nutri-title'><Text userSelect>🍎 营养分析 · 全天合计</Text></View>
       {rows.map((r) => {
         const pct = Math.min(100, Math.round((r.value / r.target) * 100))
         const bg = r.grad
@@ -281,9 +281,9 @@ function NutritionBars({ day }: { day?: PlanDay }) {
           : r.label === '蛋白质' ? 'var(--red)' : r.label === '脂肪' ? 'var(--gold)' : 'var(--green)'
         return (
           <View key={r.label} className='nutri-row'>
-            <Text className='nlabel'>{r.label}</Text>
+            <Text userSelect className='nlabel'>{r.label}</Text>
             <View className='track'><View className='track-fill' style={{ width: `${pct}%`, background: bg }} /></View>
-            <Text className='nval'>{r.value}/{r.target}{r.unit === '千卡' ? '' : 'g'}</Text>
+            <Text userSelect className='nval'>{r.value}/{r.target}{r.unit === '千卡' ? '' : 'g'}</Text>
           </View>
         )
       })}

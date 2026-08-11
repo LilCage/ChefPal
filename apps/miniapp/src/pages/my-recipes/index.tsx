@@ -75,10 +75,10 @@ export default function MyRecipes() {
       {recipes.length === 0 && loaded && (
         <View className='empty'>
           <View className='empty-art'>📝</View>
-          <Text className='empty-title'>还没有自建菜谱</Text>
-          <Text className='empty-desc'>把拿手菜记录下来，还能一键发布到社区</Text>
+          <Text userSelect className='empty-title'>还没有自建菜谱</Text>
+          <Text userSelect className='empty-desc'>把拿手菜记录下来，还能一键发布到社区</Text>
           <View className='btn btn--red btn--block' onClick={goCreate}>
-            <Text>＋ 新建菜谱</Text>
+            <Text userSelect>＋ 新建菜谱</Text>
           </View>
         </View>
       )}
@@ -91,33 +91,33 @@ export default function MyRecipes() {
                 {r.cover_image ? (
                   <Image className='mr-cover-img' src={r.cover_image} mode='aspectFill' />
                 ) : (
-                  <Text className='mr-cover-emoji'>🍽</Text>
+                  <Text userSelect className='mr-cover-emoji'>🍽</Text>
                 )}
               </View>
               <View className='mr-body'>
                 <View className='mr-title'>
-                  <Text>{r.title}</Text>
-                  {r.style && <View className='mini-chip gold'><Text>{r.style}</Text></View>}
+                  <Text userSelect>{r.title}</Text>
+                  {r.style && <View className='mini-chip gold'><Text userSelect>{r.style}</Text></View>}
                 </View>
                 <View className='mr-meta'>
-                  <Text>{r.servings || 2}人份</Text>
-                  <Text>·</Text>
-                  <Text>⏱ {r.time_minutes}分钟</Text>
-                  <Text>·</Text>
-                  <Text>难度 {r.difficulty}</Text>
+                  <Text userSelect>{r.servings || 2}人份</Text>
+                  <Text userSelect>·</Text>
+                  <Text userSelect>⏱ {r.time_minutes}分钟</Text>
+                  <Text userSelect>·</Text>
+                  <Text userSelect>难度 {r.difficulty}</Text>
                 </View>
                 <View className='mr-sub'>
-                  <Text>食材 {r.ingredients?.length || 0} · 调味 {r.seasonings?.length || 0} · 步骤 {(r.cook_steps?.length || 0) + (r.prep_steps?.length || 0)}</Text>
+                  <Text userSelect>食材 {r.ingredients?.length || 0} · 调味 {r.seasonings?.length || 0} · 步骤 {(r.cook_steps?.length || 0) + (r.prep_steps?.length || 0)}</Text>
                 </View>
                 <View className='mr-actions' onClick={(e) => e.stopPropagation()}>
                   <View className='btn btn--white btn--sm' onClick={() => goEdit(r.id)}>
-                    <View className='ic ic-edit ic-sm' /><Text>编辑</Text>
+                    <View className='ic ic-edit ic-sm' /><Text userSelect>编辑</Text>
                   </View>
                   <View className='btn btn--gold btn--sm' onClick={() => goPublish(r.id)}>
-                    <View className='ic ic-share ic-sm' /><Text>发布</Text>
+                    <View className='ic ic-share ic-sm' /><Text userSelect>发布</Text>
                   </View>
                   <View className='btn btn--white btn--sm danger' onClick={() => remove(r.id)}>
-                    <View className='ic ic-trash ic-sm' /><Text>删除</Text>
+                    <View className='ic ic-trash ic-sm' /><Text userSelect>删除</Text>
                   </View>
                 </View>
               </View>
@@ -129,7 +129,7 @@ export default function MyRecipes() {
       {recipes.length > 0 && (
         <View className='save-wrap'>
           <View className='btn btn--red btn--block' onClick={goCreate}>
-            <Text>＋ 新建菜谱</Text>
+            <Text userSelect>＋ 新建菜谱</Text>
           </View>
         </View>
       )}

@@ -108,26 +108,26 @@ export default function UserProfile() {
             {profile?.avatar_url?.startsWith('data:') ? (
               <Image className='pc-avatar-img' src={profile.avatar_url} mode='aspectFill' />
             ) : (
-              <Text>🍳</Text>
+              <Text userSelect>🍳</Text>
             )}
           </View>
           <View className='pc-info'>
-            <View className='pc-name'><Text className='pop'>{profile?.nickname || '美食猎人'}</Text></View>
-            <Text className='pc-sub'>下厨同好 · ChefPal</Text>
+            <View className='pc-name'><Text userSelect className='pop'>{profile?.nickname || '美食猎人'}</Text></View>
+            <Text userSelect className='pc-sub'>下厨同好 · ChefPal</Text>
           </View>
         </View>
 
         <View className='pc-stats'>
-          <View className='ps'><Text className='ps-num'>{profile?.post_count ?? 0}</Text><Text className='ps-label'>作品</Text></View>
-          <View className='ps' onClick={() => goFollowList('following')}><Text className='ps-num'>{profile?.following_count ?? 0}</Text><Text className='ps-label'>关注</Text></View>
-          <View className='ps' onClick={() => goFollowList('followers')}><Text className='ps-num'>{profile?.follower_count ?? 0}</Text><Text className='ps-label'>粉丝</Text></View>
+          <View className='ps'><Text userSelect className='ps-num'>{profile?.post_count ?? 0}</Text><Text userSelect className='ps-label'>作品</Text></View>
+          <View className='ps' onClick={() => goFollowList('following')}><Text userSelect className='ps-num'>{profile?.following_count ?? 0}</Text><Text userSelect className='ps-label'>关注</Text></View>
+          <View className='ps' onClick={() => goFollowList('followers')}><Text userSelect className='ps-num'>{profile?.follower_count ?? 0}</Text><Text userSelect className='ps-label'>粉丝</Text></View>
         </View>
 
         <View
           className={`btn ${following ? 'btn--white' : 'btn--red'} btn--block btn--sm pc-follow`}
           onClick={toggleFollow}
         >
-          <Text>{following ? '✓ 已关注' : '＋ 关注'}</Text>
+          <Text userSelect>{following ? '✓ 已关注' : '＋ 关注'}</Text>
         </View>
       </View>
 
@@ -141,17 +141,17 @@ export default function UserProfile() {
         <View className='wf'>
           {posts.map((p) => (
             <View key={p.id} className='p-card' onClick={() => goDetail(p)}>
-              {p.topic && <View className='p-tag'><Text>{p.topic}</Text></View>}
+              {p.topic && <View className='p-tag'><Text userSelect>{p.topic}</Text></View>}
               {p.images.length > 0 ? (
                 <Image className='p-img' src={p.images[0]} mode='aspectFill' lazyLoad />
               ) : (
-                <View className='p-img p-img--text'><Text>🍳</Text></View>
+                <View className='p-img p-img--text'><Text userSelect>🍳</Text></View>
               )}
               <View className='p-body'>
                 <View className='p-name'>{p.content || '分享了下厨心得'}</View>
                 <View className='p-foot'>
-                  <Text className='p-who'>{profile?.nickname || '美食猎人'}</Text>
-                  <View className='p-like'><View className='ic ic-heart ic-xs' /><Text>{p.like_count}</Text></View>
+                  <Text userSelect className='p-who'>{profile?.nickname || '美食猎人'}</Text>
+                  <View className='p-like'><View className='ic ic-heart ic-xs' /><Text userSelect>{p.like_count}</Text></View>
                 </View>
               </View>
             </View>
@@ -159,7 +159,7 @@ export default function UserProfile() {
         </View>
       )}
 
-      {loading && <View className='load-more'><Text>加载中…</Text></View>}
+      {loading && <View className='load-more'><Text userSelect>加载中…</Text></View>}
     </View>
   )
 }

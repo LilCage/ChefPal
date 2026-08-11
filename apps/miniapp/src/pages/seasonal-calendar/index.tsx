@@ -45,13 +45,13 @@ export default function SeasonalCalendar() {
 
   return (
     <View className='page-content seasonal'>
-      <NavBar title={<Text className='pop'>时令食材</Text>} showBack />
+      <NavBar title={<Text userSelect className='pop'>时令食材</Text>} showBack />
 
       <View className='month-bar'>
         <View className='arrow' onClick={prev}>
           <View className='ic ic-chev-l ic-sm' />
         </View>
-        <Text className='month-label'>{data?.label || `${month} 月`}</Text>
+        <Text userSelect className='month-label'>{data?.label || `${month} 月`}</Text>
         <View className='arrow' onClick={next}>
           <View className='ic ic-chev-r ic-sm' />
         </View>
@@ -60,12 +60,12 @@ export default function SeasonalCalendar() {
       <View className='season-grid'>
         {(data?.items || []).map((item) => (
           <View key={item.name} className='season-item'>
-            <Text className='s-emoji'>{item.emoji}</Text>
-            <Text className='s-name'>{item.name}</Text>
+            <Text userSelect className='s-emoji'>{item.emoji}</Text>
+            <Text userSelect className='s-name'>{item.name}</Text>
             <View className={`s-badge ${item.level === '应季' ? 'best' : 'ok'}`}>
-              <Text>{item.level}</Text>
+              <Text userSelect>{item.level}</Text>
             </View>
-            <Text className='s-note'>{item.note}</Text>
+            <Text userSelect className='s-note'>{item.note}</Text>
           </View>
         ))}
       </View>
@@ -77,19 +77,19 @@ export default function SeasonalCalendar() {
       {data?.pairing && (
         <View className='bubble'>
           <View className='star-burst'>
-            <Text>食材猎人推荐</Text>
+            <Text userSelect>食材猎人推荐</Text>
           </View>
           <View className='pair-title'>
-            <Text>
+            <Text userSelect>
               {data.pairing.ingredients.map((ing) => ` ${ing}`).join(' +')} →{' '}
-              <Text className='pair-dish'>{data.pairing.dish}</Text>
+              <Text userSelect className='pair-dish'>{data.pairing.dish}</Text>
             </Text>
           </View>
-          <Text className='note'>{data.pairing.note}</Text>
+          <Text userSelect className='note'>{data.pairing.note}</Text>
         </View>
       )}
 
-      {loading && <Text className='note season-note'>加载中…</Text>}
+      {loading && <Text userSelect className='note season-note'>加载中…</Text>}
     </View>
   )
 }

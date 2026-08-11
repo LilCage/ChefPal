@@ -135,12 +135,12 @@ export default function VoiceInput() {
 
       {/* 上区：提示 + 识别结果 + 食材 chips（可滚动） */}
       <View className='voice-top'>
-        <Text className='voice-hint'>长按下方麦克风，说出冰箱里的食材</Text>
+        <Text userSelect className='voice-hint'>长按下方麦克风，说出冰箱里的食材</Text>
 
         {liveText ? (
           <View className='bubble voice-bubble'>
-            <View className='star-burst star-burst--sm'><Text>{transcribing ? '识别中' : '录音中'}</Text></View>
-            <Text className='voice-text'>{liveText}</Text>
+            <View className='star-burst star-burst--sm'><Text userSelect>{transcribing ? '识别中' : '录音中'}</Text></View>
+            <Text userSelect className='voice-text'>{liveText}</Text>
           </View>
         ) : null}
 
@@ -148,8 +148,8 @@ export default function VoiceInput() {
           <View className='chips'>
             {ingredients.map((i) => (
               <View key={i} className='chip chip--on'>
-                <Text>{i}</Text>
-                <Text className='x' onClick={() => remove(i)}>×</Text>
+                <Text userSelect>{i}</Text>
+                <Text userSelect className='x' onClick={() => remove(i)}>×</Text>
               </View>
             ))}
             <View className='chip chip-add'>
@@ -164,14 +164,14 @@ export default function VoiceInput() {
               />
             </View>
           </View>
-          <Text className='note note--mt'>识别结果仅供参考 · 点标签可删除，点添加可补充</Text>
+          <Text userSelect className='note note--mt'>识别结果仅供参考 · 点标签可删除，点添加可补充</Text>
         </View>
       </View>
 
       {/* 下区：固定底部操作坞（生成按钮 + 麦克风），拇指区 */}
       <View className='voice-dock'>
         <View className='btn btn--red btn--block voice-go' onClick={goKitchen}>
-          <Text>用这些食材去生成菜谱 →</Text>
+          <Text userSelect>用这些食材去生成菜谱 →</Text>
         </View>
         <View
           className={`mic-big ${recording ? 'recording' : ''} ${transcribing ? 'transcribing' : ''}`}
@@ -181,7 +181,7 @@ export default function VoiceInput() {
         >
           <View className='ic ic-mic' />
         </View>
-        <Text className='dock-hint'>
+        <Text userSelect className='dock-hint'>
           {transcribing ? '小伴识别中…' : recording ? '正在录音… 松开结束' : '长按说话'}
         </Text>
       </View>

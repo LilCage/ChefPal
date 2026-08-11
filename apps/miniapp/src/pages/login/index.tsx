@@ -37,29 +37,29 @@ export default function Login() {
   return (
     <View className='login-bg halftone'>
       <View className='login-content speedlines'>
-        <View className='logo-badge'><Text className='logo-emoji'>🍳</Text></View>
-        <Text className='login-title pop'>ChefPal</Text>
-        <Text className='login-sub'>你的口袋厨师 · 从食材到餐桌</Text>
+        <View className='logo-badge'><Text userSelect className='logo-emoji'>🍳</Text></View>
+        <Text userSelect className='login-title pop'>ChefPal</Text>
+        <Text userSelect className='login-sub'>你的口袋厨师 · 从食材到餐桌</Text>
         <View className='feat-list'>
           <View className='feat'>
             <View className='f-ic'>🍳</View>
             <View className='feat-body'>
-              <Text className='feat-t'>冰箱有什么，就做什么</Text>
-              <Text className='feat-s'>小伴根据你的食材实时生成专属菜谱</Text>
+              <Text userSelect className='feat-t'>冰箱有什么，就做什么</Text>
+              <Text userSelect className='feat-s'>小伴根据你的食材实时生成专属菜谱</Text>
             </View>
           </View>
           <View className='feat'>
             <View className='f-ic'>✨</View>
             <View className='feat-body'>
-              <Text className='feat-t'>怕翻车？小伴手把手教</Text>
-              <Text className='feat-s'>核心秘诀 · 分步火候 · 避坑指南</Text>
+              <Text userSelect className='feat-t'>怕翻车？小伴手把手教</Text>
+              <Text userSelect className='feat-s'>核心秘诀 · 分步火候 · 避坑指南</Text>
             </View>
           </View>
           <View className='feat'>
             <View className='f-ic'>🏆</View>
             <View className='feat-body'>
-              <Text className='feat-t'>越用越懂你的口味</Text>
-              <Text className='feat-s'>忌口 / 辣度 / 咸淡 一键设置</Text>
+              <Text userSelect className='feat-t'>越用越懂你的口味</Text>
+              <Text userSelect className='feat-s'>忌口 / 辣度 / 咸淡 一键设置</Text>
             </View>
           </View>
         </View>
@@ -67,13 +67,13 @@ export default function Login() {
       <View className='login-footer'>
         <View className='btn btn--gold btn--block' onClick={handleLogin}>
           <View className='ic ic-wechat ic-sm' />
-          <Text>{loading ? '登录中…' : '微信一键登录'}</Text>
+          <Text userSelect>{loading ? '登录中…' : '微信一键登录'}</Text>
         </View>
         <View className='agree'>
-          <Text>登录即代表同意</Text>
-          <Text className='agree-link' onClick={() => Taro.navigateTo({ url: '/pages/agreement/index' })}>《用户协议》</Text>
-          <Text>与</Text>
-          <Text className='agree-link' onClick={() => Taro.navigateTo({ url: '/pages/privacy/index' })}>《隐私政策》</Text>
+          <Text userSelect>登录即代表同意</Text>
+          <Text userSelect className='agree-link' onClick={() => Taro.navigateTo({ url: '/pages/agreement/index' })}>《用户协议》</Text>
+          <Text userSelect>与</Text>
+          <Text userSelect className='agree-link' onClick={() => Taro.navigateTo({ url: '/pages/privacy/index' })}>《隐私政策》</Text>
         </View>
       </View>
     </View>

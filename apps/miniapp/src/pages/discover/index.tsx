@@ -107,21 +107,21 @@ export default function Discover() {
   return (
     <View className='page-content discover'>
       <View className='nav' style={{ paddingTop: `${getSafeTop()}px` }}>
-        <View className='nav-title'><Text className='pop'>发现</Text> · 大家的厨房</View>
+        <View className='nav-title'><Text userSelect className='pop'>发现</Text> · 大家的厨房</View>
       </View>
 
       <View className='section chips-row'>
         <View className='chips'>
           {CHIPS.map((t) => (
             <View key={t} className={`chip ${active === t ? 'chip--on' : ''}`} onClick={() => switchChip(t)}>
-              <Text>{t}</Text>
+              <Text userSelect>{t}</Text>
             </View>
           ))}
           <View className='chip chip--hot' onClick={goTopicSquare}>
-            <Text>更多话题 →</Text>
+            <Text userSelect>更多话题 →</Text>
           </View>
           <View className='chip chip--hot' onClick={() => Taro.navigateTo({ url: '/pages/cooking-challenge/index' })}>
-            <Text>🏆 挑战</Text>
+            <Text userSelect>🏆 挑战</Text>
           </View>
         </View>
       </View>
@@ -146,11 +146,11 @@ export default function Discover() {
         <View className='wf'>
           {posts.map((p) => (
             <View key={p.id} className='p-card' onClick={() => goDetail(p)}>
-              {p.topic && <View className='p-tag'><Text>{p.topic}</Text></View>}
+              {p.topic && <View className='p-tag'><Text userSelect>{p.topic}</Text></View>}
               {p.images.length > 0 ? (
                 <Image className='p-img' src={p.images[0]} mode='aspectFill' lazyLoad />
               ) : (
-                <View className='p-img p-img--text'><Text>🍳</Text></View>
+                <View className='p-img p-img--text'><Text userSelect>🍳</Text></View>
               )}
               <View className='p-body'>
                 <View className='p-name'>{p.content || '分享了下厨心得'}</View>
@@ -165,26 +165,26 @@ export default function Discover() {
                     {p.author.avatar_url?.startsWith('data:') ? (
                       <Image className='p-av-img' src={p.author.avatar_url} mode='aspectFill' />
                     ) : (
-                      <Text>{p.author.nickname.slice(0, 1)}</Text>
+                      <Text userSelect>{p.author.nickname.slice(0, 1)}</Text>
                     )}
                   </View>
-                  <Text className='p-who'>{p.author.nickname}</Text>
-                  {p.author.is_following && <View className='mini-chip green'><Text>已关注</Text></View>}
+                  <Text userSelect className='p-who'>{p.author.nickname}</Text>
+                  {p.author.is_following && <View className='mini-chip green'><Text userSelect>已关注</Text></View>}
                   <View className={`p-like ${p.is_liked ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLike(p) }}>
                     <View className='ic ic-heart ic-xs' />
-                    <Text>{p.like_count}</Text>
+                    <Text userSelect>{p.like_count}</Text>
                   </View>
                 </View>
-                <View className='p-time'><Text>{timeText(p.created_at)}</Text></View>
+                <View className='p-time'><Text userSelect>{timeText(p.created_at)}</Text></View>
               </View>
             </View>
           ))}
         </View>
       )}
 
-      {loading && <View className='load-more'><Text>加载中…</Text></View>}
+      {loading && <View className='load-more'><Text userSelect>加载中…</Text></View>}
       {loaded && !hasMore && posts.length > 0 && (
-        <View className='load-more'><Text>到底啦，去看看大家的下厨成果吧</Text></View>
+        <View className='load-more'><Text userSelect>到底啦，去看看大家的下厨成果吧</Text></View>
       )}
 
       <View className='fab' onClick={() => Taro.navigateTo({ url: '/pages/post-create/index' })}>

@@ -15,12 +15,12 @@ interface EmptyStateProps {
 export default function EmptyState({ icon = '🍳', title, desc, btnText, onBtn }: EmptyStateProps) {
   return (
     <View className='empty'>
-      <View className='empty-art'><Text>{icon}</Text></View>
-      <Text className='empty-title'>{title}</Text>
-      {desc && <Text className='empty-desc'>{desc}</Text>}
+      <View className='empty-art'><Text userSelect>{icon}</Text></View>
+      <Text userSelect className='empty-title'>{title}</Text>
+      {desc && <Text userSelect className='empty-desc'>{desc}</Text>}
       {btnText && onBtn && (
         <View className='btn btn--red btn--block' onClick={onBtn}>
-          <Text>{btnText}</Text>
+          <Text userSelect>{btnText}</Text>
         </View>
       )}
     </View>

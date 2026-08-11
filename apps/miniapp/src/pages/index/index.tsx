@@ -160,7 +160,7 @@ export default function Index() {
               <View className='rec-head'>
                 <Text className='rec-no'>{i + 1}</Text>
                 <Text className='rec-name'>{r.name}</Text>
-                {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
+                {r.time_minutes > 0 && <View className='mini-chip'><Text userSelect>⏱ {r.time_minutes}分钟</Text></View>}
               </View>
               <Text className='rec-secret' userSelect>{r.core_secret}</Text>
               {r.ingredients.length > 0 && (
@@ -246,7 +246,7 @@ export default function Index() {
 
       {/* 提示行：与轮播文字区分（小字灰色、独立一行带间距） */}
       <View className='search-tip'>
-        <Text>👆 双击输入框，直接问这道问题</Text>
+        <Text userSelect>👆 双击输入框，直接问这道问题</Text>
       </View>
 
       <View className='section'>
@@ -284,7 +284,7 @@ export default function Index() {
               <View className='qa-ans-actions'>
                 <View className='btn btn--white btn--xs' onClick={(e) => { e.stopPropagation(); saveFavorite(current) }}>
                   <View className='ic ic-star ic-sm' />
-                  <Text>收藏</Text>
+                  <Text userSelect>收藏</Text>
                 </View>
               </View>
             </>
@@ -292,7 +292,7 @@ export default function Index() {
         </View>
       ) : (
         <View className='bubble tip-empty'>
-          <Text>💡 输入一个厨艺问题，小伴会联网搜索并给出核心秘诀、步骤与避坑指南</Text>
+          <Text userSelect>💡 输入一个厨艺问题，小伴会联网搜索并给出核心秘诀、步骤与避坑指南</Text>
         </View>
       )}
 

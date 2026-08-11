@@ -106,8 +106,8 @@ export default function Kitchen() {
           <View className='chips'>
             {ingredients.map((i) => (
               <View key={i} className='chip chip--on'>
-                <Text>{i}</Text>
-                <Text className='x' onClick={() => removeIngredient(i)}>×</Text>
+                <Text userSelect>{i}</Text>
+                <Text userSelect className='x' onClick={() => removeIngredient(i)}>×</Text>
               </View>
             ))}
           </View>
@@ -124,7 +124,7 @@ export default function Kitchen() {
               onBlur={() => setInput('')}
             />
             <View className='btn btn--gold add-btn' onClick={() => { addIngredient(input); setInput('') }}>
-              <Text>添加</Text>
+              <Text userSelect>添加</Text>
             </View>
           </View>
 
@@ -132,21 +132,21 @@ export default function Kitchen() {
           <View className='input-row'>
             <View className='photo-chip' onClick={goPhoto}>
               <View className='ic ic-camera ic-sm' />
-              <Text>拍照识食材</Text>
+              <Text userSelect>拍照识食材</Text>
             </View>
             <View className='photo-chip' onClick={goVoice}>
               <View className='ic ic-mic ic-sm' />
-              <Text>语音输入</Text>
+              <Text userSelect>语音输入</Text>
             </View>
           </View>
 
           <View className='quick-row'>
             {QUICK_INGREDIENTS.filter((q) => !ingredients.includes(q)).map((q) => (
-              <View key={q} className='chip' onClick={() => addIngredient(q)}><Text>+{q}</Text></View>
+              <View key={q} className='chip' onClick={() => addIngredient(q)}><Text userSelect>+{q}</Text></View>
             ))}
           </View>
 
-          <Text className='note'>
+          <Text userSelect className='note'>
             {prefsText ? `已读取你的口味偏好 · ${prefsText}` : '尚未设置口味偏好，可在「我的」中设置'}
           </Text>
         </View>
@@ -155,23 +155,23 @@ export default function Kitchen() {
       <View className='section generate-sec'>
         <View className='btn btn--red generate-btn' onClick={generate}>
           <View className='ic ic-spark--white' />
-          <Text>{loading ? '生成魔法菜谱中…' : '生成魔法菜谱'}</Text>
+          <Text userSelect>{loading ? '生成魔法菜谱中…' : '生成魔法菜谱'}</Text>
         </View>
-        <Text className='note generate-note'>基于 {ingredients.length} 种食材 · 小伴实时生成 TOP3</Text>
+        <Text userSelect className='note generate-note'>基于 {ingredients.length} 种食材 · 小伴实时生成 TOP3</Text>
 
         {/* 趣味工具：移到生成按钮下方 */}
         <View className='fun-row'>
           <View className='fun-chip' onClick={goRescue}>
-            <Text className='fun-emoji'>🥣</Text>
-            <Text>翻车拯救</Text>
+            <Text userSelect className='fun-emoji'>🥣</Text>
+            <Text userSelect>翻车拯救</Text>
           </View>
           <View className='fun-chip' onClick={goAgents}>
-            <Text className='fun-emoji'>🤝</Text>
-            <Text>小伴主厨团</Text>
+            <Text userSelect className='fun-emoji'>🤝</Text>
+            <Text userSelect>小伴主厨团</Text>
           </View>
           <View className='fun-chip' onClick={goFridge}>
-            <Text className='fun-emoji'>🧊</Text>
-            <Text>冰箱管家</Text>
+            <Text userSelect className='fun-emoji'>🧊</Text>
+            <Text userSelect>冰箱管家</Text>
           </View>
         </View>
       </View>

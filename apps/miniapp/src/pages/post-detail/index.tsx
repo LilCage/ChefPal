@@ -113,7 +113,7 @@ export default function PostDetail() {
     return (
       <View className='page-content post-detail'>
         <NavBar title='作品详情' showBack />
-        <View className='loading'><Text>加载中…</Text></View>
+        <View className='loading'><Text userSelect>加载中…</Text></View>
       </View>
     )
   }
@@ -122,7 +122,7 @@ export default function PostDetail() {
     return (
       <View className='page-content post-detail'>
         <NavBar title='作品详情' showBack />
-        <View className='loading'><Text>作品不存在或已删除</Text></View>
+        <View className='loading'><Text userSelect>作品不存在或已删除</Text></View>
       </View>
     )
   }
@@ -138,19 +138,19 @@ export default function PostDetail() {
           {post.author.avatar_url?.startsWith('data:') ? (
             <Image className='p-av-img' src={post.author.avatar_url} mode='aspectFill' />
           ) : (
-            <Text className='p-av-ph'>{post.author.nickname.slice(0, 1)}</Text>
+            <Text userSelect className='p-av-ph'>{post.author.nickname.slice(0, 1)}</Text>
           )}
         </View>
         <View className='ph-body' onClick={goAuthor}>
-          <Text className='ph-name'>{post.author.nickname}</Text>
-          <Text className='ph-time'>{timeText(post.created_at)} · 跟做打卡</Text>
+          <Text userSelect className='ph-name'>{post.author.nickname}</Text>
+          <Text userSelect className='ph-time'>{timeText(post.created_at)} · 跟做打卡</Text>
         </View>
         {post.author.id !== me?.id && (
           <View
             className={`follow-btn ${isFollowing ? 'on' : ''}`}
             onClick={toggleFollow}
           >
-            <Text>{isFollowing ? '已关注' : '关注'}</Text>
+            <Text userSelect>{isFollowing ? '已关注' : '关注'}</Text>
           </View>
         )}
       </View>
@@ -162,12 +162,12 @@ export default function PostDetail() {
       )}
 
       <View className='post-body'>
-        <Text className='ptext'>
+        <Text userSelect className='ptext'>
           {segments.map((seg, i) =>
             typeof seg === 'string' ? (
-              <Text key={i}>{seg}</Text>
+              <Text userSelect key={i}>{seg}</Text>
             ) : (
-              <Text key={i} className='hash'>{seg.text}</Text>
+              <Text userSelect key={i} className='hash'>{seg.text}</Text>
             ),
           )}
         </Text>
@@ -181,10 +181,10 @@ export default function PostDetail() {
                 : `/pages/recipe-detail/index?id=${post.recipe_id}`,
             })}
           >
-            <View className='lc-ic'><Text>🍽</Text></View>
+            <View className='lc-ic'><Text userSelect>🍽</Text></View>
             <View className='lc-body'>
-              <Text className='lc-title'>{post.my_recipe_id ? '查看完整自建菜谱' : '查看完整小伴菜谱'}</Text>
-              <Text className='lc-sub'>点此查看做法步骤</Text>
+              <Text userSelect className='lc-title'>{post.my_recipe_id ? '查看完整自建菜谱' : '查看完整小伴菜谱'}</Text>
+              <Text userSelect className='lc-sub'>点此查看做法步骤</Text>
             </View>
             <View className='ic ic-chev-r ic-sm lc-go' />
           </View>
@@ -194,26 +194,26 @@ export default function PostDetail() {
       <View className='act-row'>
         <View className={`like-btn ${post.is_liked ? 'on' : ''}`} onClick={toggleLike}>
           <View className='ic ic-heart ic-sm' />
-          <Text>{post.like_count}</Text>
+          <Text userSelect>{post.like_count}</Text>
         </View>
         <View className='share-chip' onClick={goComments}>
           <View className='ic ic-comment ic-sm' />
-          <Text>评论 {post.comment_count}</Text>
+          <Text userSelect>评论 {post.comment_count}</Text>
         </View>
         <View className='share-chip' onClick={goShareCard}>
           <View className='ic ic-share ic-sm' />
-          <Text>分享</Text>
+          <Text userSelect>分享</Text>
         </View>
       </View>
 
       <View className='actbar'>
         <View className='cmt-input' onClick={goComments}>
           <View className='ic ic-comment ic-sm' />
-          <Text className='cmt-input-ph'>说点什么…</Text>
+          <Text userSelect className='cmt-input-ph'>说点什么…</Text>
         </View>
         <Button className={`btn btn--red actbar-like ${post.is_liked ? 'liked' : ''}`} onClick={toggleLike}>
           <View className='ic ic-heart ic-sm' />
-          <Text>{post.is_liked ? '已点赞' : '点赞'}</Text>
+          <Text userSelect>{post.is_liked ? '已点赞' : '点赞'}</Text>
         </Button>
       </View>
     </View>

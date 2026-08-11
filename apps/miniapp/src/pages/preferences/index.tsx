@@ -115,13 +115,13 @@ export default function Preferences() {
       <NavBar title='口味设置' showBack />
 
       <View className='set-group'>
-        <View className='set-t'>⚠ 忌口 <Text className='set-tip'>过敏 / 宗教</Text></View>
+        <View className='set-t'>⚠ 忌口 <Text userSelect className='set-tip'>过敏 / 宗教</Text></View>
         <View className='seg allergy-seg'>
           <View className={`seg-item ${!noAllergy ? 'on' : ''}`} onClick={() => switchAllergyMode('have')}>
-            <Text>忌口</Text>
+            <Text userSelect>忌口</Text>
           </View>
           <View className={`seg-item ${noAllergy ? 'on' : ''}`} onClick={() => switchAllergyMode('none')}>
-            <Text>无忌口</Text>
+            <Text userSelect>无忌口</Text>
           </View>
         </View>
 
@@ -130,13 +130,13 @@ export default function Preferences() {
             <View className='chips'>
               {ALLERGIES.map((a) => (
                 <View key={a} className={`chip ${allergies.includes(a) ? 'chip--on' : ''}`} onClick={() => toggleAllergy(a)}>
-                  <Text>{a}</Text>
+                  <Text userSelect>{a}</Text>
                 </View>
               ))}
               {customAllergies.map((a) => (
                 <View key={a} className='chip chip--on' onClick={() => toggleAllergy(a)}>
-                  <Text>{a}</Text>
-                  <Text className='x'>×</Text>
+                  <Text userSelect>{a}</Text>
+                  <Text userSelect className='x'>×</Text>
                 </View>
               ))}
             </View>
@@ -152,10 +152,10 @@ export default function Preferences() {
                 onConfirm={addCustomAllergy}
               />
               <View className='btn btn--sm btn--gold custom-add-btn' onClick={addCustomAllergy}>
-                <Text>添加</Text>
+                <Text userSelect>添加</Text>
               </View>
             </View>
-            <Text className='custom-hint'>可多选，支持自定义；输入后点「添加」，点击标签可移除</Text>
+            <Text userSelect className='custom-hint'>可多选，支持自定义；输入后点「添加」，点击标签可移除</Text>
           </>
         )}
       </View>
@@ -165,7 +165,7 @@ export default function Preferences() {
         <View className='chips'>
           {SPICINESS.map((s) => (
             <View key={s.value} className={`chip ${spiciness === s.value ? 'chip--on' : ''}`} onClick={() => setSpiciness(s.value)}>
-              <Text>{s.label}</Text>
+              <Text userSelect>{s.label}</Text>
             </View>
           ))}
         </View>
@@ -176,7 +176,7 @@ export default function Preferences() {
         <View className='opt-row'>
           {SALTINESS.map((s) => (
             <View key={s} className={`opt ${saltiness === s ? 'on' : ''}`} onClick={() => setSaltiness(s)}>
-              <Text>{s}</Text>
+              <Text userSelect>{s}</Text>
             </View>
           ))}
         </View>
@@ -187,46 +187,46 @@ export default function Preferences() {
         <View className='opt-row'>
           {SKILLS.map((s) => (
             <View key={s} className={`opt ${skill === s ? 'on' : ''}`} onClick={() => setSkill(s)}>
-              <Text>{s}</Text>
+              <Text userSelect>{s}</Text>
             </View>
           ))}
         </View>
-        <Text className='note'>技能越高，步骤讲解越精简、术语越多</Text>
+        <Text userSelect className='note'>技能越高，步骤讲解越精简、术语越多</Text>
       </View>
 
       <View className='set-group'>
-        <View className='set-t'>🧠 小伴口味记忆 <Text className='set-tip'>自动学习 · 注入推荐</Text></View>
+        <View className='set-t'>🧠 小伴口味记忆 <Text userSelect className='set-tip'>自动学习 · 注入推荐</Text></View>
         {taste && taste.total_signals > 0 ? (
           <View className='taste-box'>
             <View className='taste-line'>
-              <Text className='taste-label'>收藏偏好</Text>
-              <Text className='taste-value'>
+              <Text userSelect className='taste-label'>收藏偏好</Text>
+              <Text userSelect className='taste-value'>
                 {taste.preferred_styles.length ? taste.preferred_styles.join(' / ') : '暂未记录'}
               </Text>
             </View>
             <View className='taste-line'>
-              <Text className='taste-label'>关注话题</Text>
-              <Text className='taste-value'>
+              <Text userSelect className='taste-label'>关注话题</Text>
+              <Text userSelect className='taste-value'>
                 {taste.preferred_topics.length ? taste.preferred_topics.join(' / ') : '暂未记录'}
               </Text>
             </View>
-            <Text className='note'>已学习 {taste.total_signals} 次行为 · 生成菜谱时自动按此调整风味</Text>
+            <Text userSelect className='note'>已学习 {taste.total_signals} 次行为 · 生成菜谱时自动按此调整风味</Text>
             <View className='btn btn--sm btn--white taste-reset' onClick={resetTaste}>
-              <Text>清空口味记忆</Text>
+              <Text userSelect>清空口味记忆</Text>
             </View>
           </View>
         ) : (
           <View className='taste-empty'>
-            <Text>收藏菜谱、点赞作品后，小伴会自动记住你的口味偏好</Text>
+            <Text userSelect>收藏菜谱、点赞作品后，小伴会自动记住你的口味偏好</Text>
           </View>
         )}
       </View>
 
       <View className='save-wrap'>
         <View className='btn btn--red btn--block' onClick={save}>
-          <Text>{saving ? '保存中…' : '保存偏好设置'}</Text>
+          <Text userSelect>{saving ? '保存中…' : '保存偏好设置'}</Text>
         </View>
-        <Text className='note note--center'>保存后，小伴生成菜谱将自动注入你的口味偏好</Text>
+        <Text userSelect className='note note--center'>保存后，小伴生成菜谱将自动注入你的口味偏好</Text>
       </View>
     </View>
   )

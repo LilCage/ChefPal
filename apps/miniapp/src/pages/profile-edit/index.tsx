@@ -85,19 +85,19 @@ export default function ProfileEdit() {
           {avatar ? (
             <Image className='avatar-img' src={avatar} mode='aspectFill' />
           ) : (
-            <Text className='avatar-ph'>🍳</Text>
+            <Text userSelect className='avatar-ph'>🍳</Text>
           )}
         </Button>
-        <Text className='avatar-tip'>点击头像，从微信选择</Text>
+        <Text userSelect className='avatar-tip'>点击头像，从微信选择</Text>
         {avatar && (
           <View className='clear-avatar' onClick={clearAvatar}>
-            <Text>移除头像</Text>
+            <Text userSelect>移除头像</Text>
           </View>
         )}
       </View>
 
       <View className='field nick-field'>
-        <Text className='field-label'>昵称</Text>
+        <Text userSelect className='field-label'>昵称</Text>
         <Input
           className='nick-input'
           type='nickname'
@@ -107,12 +107,12 @@ export default function ProfileEdit() {
           placeholderClass='nick-ph'
           onInput={(e) => setNickname(e.detail.value)}
         />
-        <Text className='field-hint'>输入时键盘上方可直接选用微信昵称</Text>
+        <Text userSelect className='field-hint'>输入时键盘上方可直接选用微信昵称</Text>
       </View>
 
       <View className='save-wrap'>
         <View className='btn btn--red btn--block' onClick={save}>
-          <Text>{saving ? '保存中…' : '保存资料'}</Text>
+          <Text userSelect>{saving ? '保存中…' : '保存资料'}</Text>
         </View>
       </View>
     </View>

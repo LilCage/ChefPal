@@ -107,28 +107,28 @@ export default function CookingChallenge() {
 
   return (
     <View className='page-content cooking-challenge'>
-      <NavBar title={<Text className='pop'>烹饪挑战</Text>} showBack />
+      <NavBar title={<Text userSelect className='pop'>烹饪挑战</Text>} showBack />
 
       {active ? (
         <View className='chal-hero'>
           <View className='speedlines' />
-          <Text className='chal-title'>🏆 {active.title}</Text>
-          <Text className='chal-desc'>
+          <Text userSelect className='chal-title'>🏆 {active.title}</Text>
+          <Text userSelect className='chal-desc'>
             {active.description || `${active.budget ? `预算 ${active.budget} 元` : ''} · 挑战进行中`}
           </Text>
           <View className='chal-progress'>
             <View className='chal-progress-fill' style={{ width: `${Math.min(100, (active.participant_count % 101))}%` }} />
           </View>
           <View className='chal-meta'>
-            <Text>预算 ¥{active.budget}</Text>
-            <Text>{active.participant_count} 人参与</Text>
+            <Text userSelect>预算 ¥{active.budget}</Text>
+            <Text userSelect>{active.participant_count} 人参与</Text>
           </View>
         </View>
       ) : (
         <View className='empty'>
-          <Text className='empty-art'>🏆</Text>
-          <Text className='empty-title'>还没有挑战</Text>
-          <Text className='empty-desc'>发起第一个烹饪挑战，和大家一起玩</Text>
+          <Text userSelect className='empty-art'>🏆</Text>
+          <Text userSelect className='empty-title'>还没有挑战</Text>
+          <Text userSelect className='empty-desc'>发起第一个烹饪挑战，和大家一起玩</Text>
         </View>
       )}
 
@@ -139,14 +139,14 @@ export default function CookingChallenge() {
       <View className='rank-list'>
         {board.length === 0 ? (
           <View className='rank-empty'>
-            <Text className='note'>还没有人参与，快来抢占榜首！</Text>
+            <Text userSelect className='note'>还没有人参与，快来抢占榜首！</Text>
           </View>
         ) : (
           board.map((it, idx) => (
             <View key={it.user_id} className={`rank-item ${it.is_me ? 'me' : ''}`}>
-              <View className='r-no'><Text>{idx + 1}</Text></View>
-              <Text className='r-name'>{it.nickname}{it.is_me ? '（我）' : ''}</Text>
-              <Text className='r-days'>{it.meal_count} 餐 · ¥{it.spend}</Text>
+              <View className='r-no'><Text userSelect>{idx + 1}</Text></View>
+              <Text userSelect className='r-name'>{it.nickname}{it.is_me ? '（我）' : ''}</Text>
+              <Text userSelect className='r-days'>{it.meal_count} 餐 · ¥{it.spend}</Text>
             </View>
           ))
         )}
@@ -162,7 +162,7 @@ export default function CookingChallenge() {
                 className={`chip ${active?.id === c.id ? 'chip--on' : ''}`}
                 onClick={() => switchChallenge(c)}
               >
-                <Text>{c.title}</Text>
+                <Text userSelect>{c.title}</Text>
               </View>
             ))}
           </View>
@@ -189,14 +189,14 @@ export default function CookingChallenge() {
             />
           </View>
           <View className={`btn btn--gold btn--block ${!active ? 'btn--disabled' : ''}`} onClick={updateProgress}>
-            <Text>更新进度</Text>
+            <Text userSelect>更新进度</Text>
           </View>
         </View>
       </View>
 
       <View className='sec'>
         <View className={`btn btn--red btn--block ${!active ? 'btn--disabled' : ''}`} onClick={join}>
-          <Text>我要挑战 →</Text>
+          <Text userSelect>我要挑战 →</Text>
         </View>
       </View>
 
@@ -217,7 +217,7 @@ export default function CookingChallenge() {
             onInput={(e) => setNewBudget(e.detail.value)}
           />
           <View className={`btn btn--white btn--block btn--sm ${creating ? 'btn--disabled' : ''}`} onClick={create}>
-            <Text>{creating ? '创建中…' : '＋ 创建挑战'}</Text>
+            <Text userSelect>{creating ? '创建中…' : '＋ 创建挑战'}</Text>
           </View>
         </View>
       </View>

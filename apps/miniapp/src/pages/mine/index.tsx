@@ -151,10 +151,10 @@ export default function Mine() {
         <View className='nav' style={{ paddingTop: `${getSafeTop()}px` }}><View className='nav-title pop'>我的厨房</View></View>
         <View className='empty'>
           <View className='empty-art'>🍳</View>
-          <Text className='empty-title'>还没有登录</Text>
-          <Text className='empty-desc'>登录后同步你的收藏、历史与口味偏好</Text>
+          <Text userSelect className='empty-title'>还没有登录</Text>
+          <Text userSelect className='empty-desc'>登录后同步你的收藏、历史与口味偏好</Text>
           <View className='btn btn--red btn--block' onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}>
-            <Text>微信一键登录</Text>
+            <Text userSelect>微信一键登录</Text>
           </View>
         </View>
       </View>
@@ -172,15 +172,15 @@ export default function Mine() {
           {user.avatar_url?.startsWith('data:') ? (
             <Image className='avatar-img' src={user.avatar_url} mode='aspectFill' />
           ) : (
-            <Text>🍳</Text>
+            <Text userSelect>🍳</Text>
           )}
         </View>
         <View className='profile-info'>
           <View className='pname'>
-            <Text>{user.nickname || '美食猎人'}</Text>
-            <View className='lv-badge'><Text>🏆 Lv.1</Text></View>
+            <Text userSelect>{user.nickname || '美食猎人'}</Text>
+            <View className='lv-badge'><Text userSelect>🏆 Lv.1</Text></View>
           </View>
-          <Text className='ptag'>{prefsTag}</Text>
+          <Text userSelect className='ptag'>{prefsTag}</Text>
         </View>
         <View className='edit-badge'>
           <View className='ic ic-edit ic-sm' />
@@ -188,9 +188,9 @@ export default function Mine() {
       </View>
 
       <View className='stats'>
-        <View className='stat'><Text className='stat-num'>{qaCount}</Text><Text className='stat-label'>收藏问答</Text></View>
-        <View className='stat'><Text className='stat-num'>{recipeCount}</Text><Text className='stat-label'>收藏菜谱</Text></View>
-        <View className='stat'><Text className='stat-num'>{postCount}</Text><Text className='stat-label'>我的作品</Text></View>
+        <View className='stat'><Text userSelect className='stat-num'>{qaCount}</Text><Text userSelect className='stat-label'>收藏问答</Text></View>
+        <View className='stat'><Text userSelect className='stat-num'>{recipeCount}</Text><Text userSelect className='stat-label'>收藏菜谱</Text></View>
+        <View className='stat'><Text userSelect className='stat-num'>{postCount}</Text><Text userSelect className='stat-label'>我的作品</Text></View>
       </View>
 
       <View className='menu'>
@@ -198,8 +198,8 @@ export default function Mine() {
           <View key={m.key} className='menu-item' onClick={() => onMenu(m)}>
             <View className='mi-ic'><View className={`ic ${m.icon} ic-sm`} /></View>
             <View className='mi-body'>
-              <Text className='mi-title'>{m.title}</Text>
-              <Text className='mi-sub'>
+              <Text userSelect className='mi-title'>{m.title}</Text>
+              <Text userSelect className='mi-sub'>
                 {m.key === 'follow' ? `关注 ${followingCount} · 粉丝 ${followerCount}` : m.sub}
               </Text>
             </View>
@@ -209,15 +209,15 @@ export default function Mine() {
       </View>
 
       <View className='fun-title'>
-        <Text className='fun-title-label pop'>趣味探索</Text>
+        <Text userSelect className='fun-title-label pop'>趣味探索</Text>
       </View>
       <View className='menu'>
         {FUN_MENU.map((m) => (
           <View key={m.key} className='menu-item' onClick={() => onMenu(m)}>
             <View className='mi-ic'><View className={`ic ${m.icon} ic-sm`} /></View>
             <View className='mi-body'>
-              <Text className='mi-title'>{m.title}</Text>
-              <Text className='mi-sub'>{m.sub}</Text>
+              <Text userSelect className='mi-title'>{m.title}</Text>
+              <Text userSelect className='mi-sub'>{m.sub}</Text>
             </View>
             <View className='ic ic-chev-r ic-sm' />
           </View>
@@ -227,7 +227,7 @@ export default function Mine() {
       <View className='danger-zone'>
         <View className='btn btn--white btn--block btn--sm danger-btn' onClick={confirmDelete}>
           <View className='ic ic-trash ic-sm' />
-          <Text>注销账号</Text>
+          <Text userSelect>注销账号</Text>
         </View>
       </View>
 
@@ -239,7 +239,7 @@ export default function Mine() {
           success: (r) => { if (r.confirm) { logout(); Taro.reLaunch({ url: '/pages/login/index' }) } },
         })
       }}>
-        <Text>退出登录</Text>
+        <Text userSelect>退出登录</Text>
       </View>
     </View>
   )

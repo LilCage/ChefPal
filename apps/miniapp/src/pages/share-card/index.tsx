@@ -270,14 +270,14 @@ export default function ShareCard() {
       {cardImg ? (
         <Image className='share-preview' src={cardImg} mode='widthFix' />
       ) : (
-        <View className='share-loading'><Text>卡片生成中…</Text></View>
+        <View className='share-loading'><Text userSelect>卡片生成中…</Text></View>
       )}
 
-      <Text className='share-hint'>🎴 长按卡片保存，分享给好友或朋友圈</Text>
+      <Text userSelect className='share-hint'>🎴 长按卡片保存，分享给好友或朋友圈</Text>
 
       <View className='actbar'>
-        <View className='btn btn--white btn--sm' onClick={saveToAlbum}><Text>保存到相册</Text></View>
-        <Button className='share-btn' openType='share'><Text>分享给好友</Text></Button>
+        <View className='btn btn--white btn--sm' onClick={saveToAlbum}><Text userSelect>保存到相册</Text></View>
+        <Button className='share-btn' openType='share'><Text userSelect>分享给好友</Text></Button>
       </View>
     </View>
   )

@@ -105,8 +105,8 @@ export default function FamilyVote() {
           <View className='chips'>
             {ingredients.map((i) => (
               <View key={i} className='chip chip--on'>
-                <Text>{i}</Text>
-                <Text className='x' onClick={() => setIngredients(ingredients.filter((x) => x !== i))}>×</Text>
+                <Text userSelect>{i}</Text>
+                <Text userSelect className='x' onClick={() => setIngredients(ingredients.filter((x) => x !== i))}>×</Text>
               </View>
             ))}
             <View className='chip chip-add'>
@@ -124,7 +124,7 @@ export default function FamilyVote() {
 
         <View className='sec'>
           <View className={`btn btn--red btn--block ${generating ? 'btn--disabled' : ''}`} onClick={generate}>
-            <Text>{generating ? '生成中…' : '🍲 生成 3 道菜投票'}</Text>
+            <Text userSelect>{generating ? '生成中…' : '🍲 生成 3 道菜投票'}</Text>
           </View>
         </View>
       </View>
@@ -138,8 +138,8 @@ export default function FamilyVote() {
       <NavBar title='今晚吃什么？' showBack />
 
       <View className='vote-q'>
-        <Text className='vote-title'>🍲 3 道菜 · 全家投票</Text>
-        <Text className='vote-sub'>小伴已结合冰箱食材生成 · {vote.status === 'closed' ? '投票已结束' : '投票决定今晚吃什么'}</Text>
+        <Text userSelect className='vote-title'>🍲 3 道菜 · 全家投票</Text>
+        <Text userSelect className='vote-sub'>小伴已结合冰箱食材生成 · {vote.status === 'closed' ? '投票已结束' : '投票决定今晚吃什么'}</Text>
       </View>
 
       {vote.options.map((opt, idx) => {
@@ -151,11 +151,11 @@ export default function FamilyVote() {
             className={`vote-opt ${win ? 'win' : ''}`}
             onClick={() => doVote(idx)}
           >
-            {win && <View className='v-tag'><Text>已胜出</Text></View>}
-            <View className='v-letter'><Text>{LETTERS[idx]}</Text></View>
+            {win && <View className='v-tag'><Text userSelect>已胜出</Text></View>}
+            <View className='v-letter'><Text userSelect>{LETTERS[idx]}</Text></View>
             <View className='v-main'>
-              <Text className='v-name'>{opt.name}</Text>
-              <Text className='v-num'>{pct}%</Text>
+              <Text userSelect className='v-name'>{opt.name}</Text>
+              <Text userSelect className='v-num'>{pct}%</Text>
             </View>
             <View className='v-bar' style={{ width: `${pct}%` }} />
           </View>
@@ -163,17 +163,17 @@ export default function FamilyVote() {
       })}
 
       {vote.my_choice !== null && (
-        <Text className='note vote-note'>你投了 {LETTERS[vote.my_choice as number]} · 共 {total} 人参与</Text>
+        <Text userSelect className='note vote-note'>你投了 {LETTERS[vote.my_choice as number]} · 共 {total} 人参与</Text>
       )}
 
       <View className='sec'>
         <Button className='btn btn--red btn--block' openType='share' onClick={shareToGroup}>
-          <Text>分享到家庭群投票</Text>
+          <Text userSelect>分享到家庭群投票</Text>
         </Button>
       </View>
 
       {vote.status === 'active' && (
-        <Text className='note vote-note'>投票结果实时同步 · 分享给家人一起决定</Text>
+        <Text userSelect className='note vote-note'>投票结果实时同步 · 分享给家人一起决定</Text>
       )}
     </View>
   )

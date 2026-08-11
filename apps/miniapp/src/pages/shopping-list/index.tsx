@@ -100,10 +100,10 @@ export default function ShoppingListPage() {
         <NavBar title='购物清单' showBack />
         <View className='empty'>
           <View className='empty-art'>🛒</View>
-          <Text className='empty-title'>还没有购物清单</Text>
-          <Text className='empty-desc'>先生成 3 天膳食计划，再一键汇总采购清单</Text>
+          <Text userSelect className='empty-title'>还没有购物清单</Text>
+          <Text userSelect className='empty-desc'>先生成 3 天膳食计划，再一键汇总采购清单</Text>
           <View className='btn btn--red btn--block' onClick={doGenerate}>
-            <Text>{loading ? '生成中…' : '生成本周购物清单'}</Text>
+            <Text userSelect>{loading ? '生成中…' : '生成本周购物清单'}</Text>
           </View>
         </View>
       </View>
@@ -117,30 +117,30 @@ export default function ShoppingListPage() {
       {list.data.categories.map((cat) => (
         <View key={cat.name} className='cart-cat'>
           <View className='cc-t'>
-            <Text>{catEmoji(cat.name)} {cat.name}</Text>
-            <Text className='cc-count'>{cat.items.length} 项</Text>
+            <Text userSelect>{catEmoji(cat.name)} {cat.name}</Text>
+            <Text userSelect className='cc-count'>{cat.items.length} 项</Text>
           </View>
           {cat.items.map((it) => (
             <View key={it.item_id} className={`check-item ${it.checked ? 'done' : ''}`} onClick={() => toggle(it.item_id, it.checked)}>
               <View className={`check-box ${it.checked ? 'on' : ''}`}>
                 <View className='ic ic-check ic-xs' />
               </View>
-              <Text className='ci-name'>{it.name}</Text>
-              {it.quantity && <Text className='ci-num'>{it.quantity}</Text>}
+              <Text userSelect className='ci-name'>{it.name}</Text>
+              {it.quantity && <Text userSelect className='ci-num'>{it.quantity}</Text>}
             </View>
           ))}
         </View>
       ))}
 
       <View className='cart-total'>
-        <Text className='ct-label'>已选 <Text className='ct-green'>{checkedCount}</Text> / {allItems.length} 项</Text>
-        <Text className='ct-note'>数量为小伴估算，仅供参考</Text>
+        <Text userSelect className='ct-label'>已选 <Text userSelect className='ct-green'>{checkedCount}</Text> / {allItems.length} 项</Text>
+        <Text userSelect className='ct-note'>数量为小伴估算，仅供参考</Text>
       </View>
 
       <View className='sec'>
         <View className='btn btn--red btn--block' onClick={copyList}>
           <View className='ic ic-cart--white ic-sm' />
-          <Text>复制清单</Text>
+          <Text userSelect>复制清单</Text>
         </View>
       </View>
     </View>

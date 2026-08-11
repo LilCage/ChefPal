@@ -38,19 +38,19 @@ export default function Agreement() {
     <View className='page-content legal'>
       <NavBar title='用户协议' showBack />
       <View className='legal-intro'>
-        <Text>欢迎使用 ChefPal！请仔细阅读以下用户协议。</Text>
+        <Text userSelect>欢迎使用 ChefPal！请仔细阅读以下用户协议。</Text>
       </View>
       {SECTIONS.map((s) => (
         <View key={s.t} className='legal-card'>
-          <Text className='legal-h'>{s.t}</Text>
-          <Text className='legal-p'>{s.p}</Text>
+          <Text userSelect className='legal-h'>{s.t}</Text>
+          <Text userSelect className='legal-p'>{s.p}</Text>
         </View>
       ))}
       <View className='legal-footer'>
-        <Text className='legal-link' onClick={() => Taro.navigateTo({ url: '/pages/privacy/index' })}>
+        <Text userSelect className='legal-link' onClick={() => Taro.navigateTo({ url: '/pages/privacy/index' })}>
           查看《隐私政策》›
         </Text>
-        <Text className='legal-date'>更新日期：2026-08-09</Text>
+        <Text userSelect className='legal-date'>更新日期：2026-08-09</Text>
       </View>
     </View>
   )

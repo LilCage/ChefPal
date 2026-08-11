@@ -55,19 +55,19 @@ export default function RecipeTree() {
         {(tree?.versions || []).map((v, idx) => (
           <View key={v.id || `root-${idx}`} className='evo-node'>
             <View className={`dot ${idx === 0 ? 'root' : idx === 1 ? 'mid' : ''}`}>
-              <Text>{v.version_label.replace('v', '').split('.')[0]}</Text>
+              <Text userSelect>{v.version_label.replace('v', '').split('.')[0]}</Text>
             </View>
             <View className='evo-card'>
               <View className='ev-title'>
-                <Text className='ev-ver'>{v.version_label}{v.is_root ? ' 原版' : idx === 1 ? ' 改进' : ' 我的分支'}</Text>
-                <Text className='ev-name'>{v.title}</Text>
+                <Text userSelect className='ev-ver'>{v.version_label}{v.is_root ? ' 原版' : idx === 1 ? ' 改进' : ' 我的分支'}</Text>
+                <Text userSelect className='ev-name'>{v.title}</Text>
               </View>
-              <Text className='ev-desc'>
+              <Text userSelect className='ev-desc'>
                 {v.is_root
                   ? `第一次小伴生成 · 经典家常做法`
                   : v.changes || '基于上一版的改进'}
               </Text>
-              <Text className='ev-tag'>{tagOf(v, idx)}</Text>
+              <Text userSelect className='ev-tag'>{tagOf(v, idx)}</Text>
             </View>
           </View>
         ))}
@@ -75,10 +75,10 @@ export default function RecipeTree() {
 
       <View className='sec'>
         <View className={`btn btn--red btn--block ${loading ? 'btn--disabled' : ''}`} onClick={saveVersion}>
-          <Text>{loading ? '保存中…' : '💾 保存我的版本'}</Text>
+          <Text userSelect>{loading ? '保存中…' : '💾 保存我的版本'}</Text>
         </View>
       </View>
-      <Text className='note evo-note'>每道菜记录修改轨迹 · 社区内容自然生长</Text>
+      <Text userSelect className='note evo-note'>每道菜记录修改轨迹 · 社区内容自然生长</Text>
     </View>
   )
 }

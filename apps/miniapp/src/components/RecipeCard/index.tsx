@@ -31,15 +31,15 @@ export default function RecipeCard({
   return (
     <View className={`r-card ${wide ? 'wide' : ''}`} onClick={onClick}>
       <View className='r-img'>
-        <Text className='r-emoji'>{emoji}</Text>
+        <Text userSelect className='r-emoji'>{emoji}</Text>
         <View className='deg'>{matchScore}%</View>
-        {style && <View className='style-badge'><Text>{style}</Text></View>}
+        {style && <View className='style-badge'><Text userSelect>{style}</Text></View>}
       </View>
       <View className='r-name'>{name}</View>
       <View className='r-meta'>
-        <View className='mini-chip'><Text>⏱ {timeMinutes}分钟</Text></View>
-        <View className='mini-chip'><Text>{difficulty}</Text></View>
-        {missing.length > 0 && <View className='mini-chip red'><Text>缺:{missing[0]}</Text></View>}
+        <View className='mini-chip'><Text userSelect>⏱ {timeMinutes}分钟</Text></View>
+        <View className='mini-chip'><Text userSelect>{difficulty}</Text></View>
+        {missing.length > 0 && <View className='mini-chip red'><Text userSelect>缺:{missing[0]}</Text></View>}
       </View>
       <View className='energy matched'>
         <View className='energy-fill' style={{ width: `${matchScore}%` }} />

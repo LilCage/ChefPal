@@ -55,7 +55,7 @@ export default function QAHistory() {
               <View className='h-rec-head'>
                 <Text className='h-rec-no'>{i + 1}</Text>
                 <Text className='h-rec-name'>{r.name}</Text>
-                {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
+                {r.time_minutes > 0 && <View className='mini-chip'><Text userSelect>⏱ {r.time_minutes}分钟</Text></View>}
               </View>
               <Text className='h-rec-secret' userSelect>{r.core_secret}</Text>
               {r.ingredients.length > 0 && (
@@ -118,7 +118,7 @@ export default function QAHistory() {
         {records.map((r) => (
           <View key={r.id} className='his-block'>
             <View className='his-item' onClick={() => toggle(r.id)}>
-              <View className='q-badge'><Text>Q</Text></View>
+              <View className='q-badge'><Text userSelect>Q</Text></View>
               <View className='htext'>
                 <Text className='hq'>{r.question}</Text>
                 <Text className='htime'>{formatTime(r.created_at)}</Text>
@@ -142,7 +142,7 @@ export default function QAHistory() {
       {records.length > 0 && (
         <View className='clear-wrap'>
           <View className='btn btn--white btn--block' onClick={clearAll}>
-            <Text>清空全部历史</Text>
+            <Text userSelect>清空全部历史</Text>
           </View>
           <Text className='note note--center'>最多保留最近 20 条问答记录</Text>
         </View>

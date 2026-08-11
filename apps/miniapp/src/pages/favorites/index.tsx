@@ -41,10 +41,10 @@ export default function Favorites() {
 
       <View className='seg'>
         <View className={`seg-item ${tab === 0 ? 'on' : ''}`} onClick={() => setTab(0)}>
-          <Text>问答收藏 {qaFavs.length}</Text>
+          <Text userSelect>问答收藏 {qaFavs.length}</Text>
         </View>
         <View className={`seg-item ${tab === 1 ? 'on' : ''}`} onClick={() => setTab(1)}>
-          <Text>菜谱收藏 {recipeFavs.length}</Text>
+          <Text userSelect>菜谱收藏 {recipeFavs.length}</Text>
         </View>
       </View>
 

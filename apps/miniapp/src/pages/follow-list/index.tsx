@@ -86,10 +86,10 @@ export default function FollowList() {
 
       <View className='seg'>
         <View className={`seg-item ${tab === 'following' ? 'on' : ''}`} onClick={() => switchTab('following')}>
-          <Text>关注 {tab === 'following' ? total : ''}</Text>
+          <Text userSelect>关注 {tab === 'following' ? total : ''}</Text>
         </View>
         <View className={`seg-item ${tab === 'followers' ? 'on' : ''}`} onClick={() => switchTab('followers')}>
-          <Text>粉丝 {tab === 'followers' ? total : ''}</Text>
+          <Text userSelect>粉丝 {tab === 'followers' ? total : ''}</Text>
         </View>
       </View>
 
@@ -103,12 +103,12 @@ export default function FollowList() {
                 {u.avatar_url?.startsWith('data:') ? (
                   <Image className='u-av-img' src={u.avatar_url} mode='aspectFill' />
                 ) : (
-                  <Text>{u.nickname.slice(0, 1)}</Text>
+                  <Text userSelect>{u.nickname.slice(0, 1)}</Text>
                 )}
               </View>
               <View className='u-info'>
-                <Text className='u-name'>{u.nickname}</Text>
-                <Text className='u-sub'>{u.follower_count} 粉丝</Text>
+                <Text userSelect className='u-name'>{u.nickname}</Text>
+                <Text userSelect className='u-sub'>{u.follower_count} 粉丝</Text>
               </View>
               <View
                 className={`btn ${u.is_following ? 'btn--white' : 'btn--red'} btn--xs u-follow`}
@@ -117,16 +117,16 @@ export default function FollowList() {
                   toggleFollow(u)
                 }}
               >
-                <Text>{u.is_following ? '已关注' : '关注'}</Text>
+                <Text userSelect>{u.is_following ? '已关注' : '关注'}</Text>
               </View>
             </View>
           ))}
         </View>
       )}
 
-      {loading && <View className='load-more'><Text>加载中…</Text></View>}
+      {loading && <View className='load-more'><Text userSelect>加载中…</Text></View>}
       {loaded && !hasMore && items.length > 0 && (
-        <View className='load-more'><Text>到底啦</Text></View>
+        <View className='load-more'><Text userSelect>到底啦</Text></View>
       )}
     </View>
   )

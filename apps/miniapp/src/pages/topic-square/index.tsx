@@ -101,7 +101,7 @@ export default function TopicSquare() {
 
   return (
     <View className='page-content topic-square'>
-      <NavBar title={<Text className='pop'>话题广场</Text>} showBack />
+      <NavBar title={<Text userSelect className='pop'>话题广场</Text>} showBack />
 
       <View className='section chips-row'>
         <View className='chips'>
@@ -111,8 +111,8 @@ export default function TopicSquare() {
               className={`chip ${active === t.topic ? 'chip--on' : ''}`}
               onClick={() => switchTopic(t.topic)}
             >
-              <Text>{t.topic}</Text>
-              <Text className='chip-count'>{formatCount(t.count)}</Text>
+              <Text userSelect>{t.topic}</Text>
+              <Text userSelect className='chip-count'>{formatCount(t.count)}</Text>
             </View>
           ))}
         </View>
@@ -124,11 +124,11 @@ export default function TopicSquare() {
         <View className='wf'>
           {posts.map((p) => (
             <View key={p.id} className='p-card' onClick={() => goDetail(p)}>
-              {p.topic && <View className='p-tag'><Text>{p.topic}</Text></View>}
+              {p.topic && <View className='p-tag'><Text userSelect>{p.topic}</Text></View>}
               {p.images.length > 0 ? (
                 <Image className='p-img' src={p.images[0]} mode='aspectFill' lazyLoad />
               ) : (
-                <View className='p-img p-img--text'><Text>🍳</Text></View>
+                <View className='p-img p-img--text'><Text userSelect>🍳</Text></View>
               )}
               <View className='p-body'>
                 <View className='p-name'>{p.content || '分享了下厨心得'}</View>
@@ -137,13 +137,13 @@ export default function TopicSquare() {
                     {p.author.avatar_url?.startsWith('data:') ? (
                       <Image className='p-av-img' src={p.author.avatar_url} mode='aspectFill' />
                     ) : (
-                      <Text>{p.author.nickname.slice(0, 1)}</Text>
+                      <Text userSelect>{p.author.nickname.slice(0, 1)}</Text>
                     )}
                   </View>
-                  <Text className='p-who'>{p.author.nickname}</Text>
+                  <Text userSelect className='p-who'>{p.author.nickname}</Text>
                   <View className={`p-like ${p.is_liked ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLike(p) }}>
                     <View className='ic ic-heart ic-xs' />
-                    <Text>{p.like_count}</Text>
+                    <Text userSelect>{p.like_count}</Text>
                   </View>
                 </View>
               </View>
@@ -152,9 +152,9 @@ export default function TopicSquare() {
         </View>
       )}
 
-      {loading && <View className='load-more'><Text>加载中…</Text></View>}
+      {loading && <View className='load-more'><Text userSelect>加载中…</Text></View>}
       {loaded && !hasMore && posts.length > 0 && (
-        <View className='load-more'><Text>到底啦</Text></View>
+        <View className='load-more'><Text userSelect>到底啦</Text></View>
       )}
     </View>
   )

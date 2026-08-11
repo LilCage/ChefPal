@@ -60,8 +60,8 @@ export default function MultiAgent() {
         <View className='chips'>
           {ingredients.map((i) => (
             <View key={i} className='chip chip--on'>
-              <Text>{i}</Text>
-              <Text className='x' onClick={() => setIngredients(ingredients.filter((x) => x !== i))}>×</Text>
+              <Text userSelect>{i}</Text>
+              <Text userSelect className='x' onClick={() => setIngredients(ingredients.filter((x) => x !== i))}>×</Text>
             </View>
           ))}
           <View className='chip chip-add'>
@@ -84,8 +84,8 @@ export default function MultiAgent() {
             className={`ag ${tab === t.key ? 'on' : ''}`}
             onClick={() => setTab(t.key)}
           >
-            <Text className='ag-label'>{t.label}</Text>
-            <Text className='ag-sub'>{t.sub}</Text>
+            <Text userSelect className='ag-label'>{t.label}</Text>
+            <Text userSelect className='ag-sub'>{t.sub}</Text>
           </View>
         ))}
       </View>
@@ -98,13 +98,13 @@ export default function MultiAgent() {
                 <View className={`ic ${TABS.find((t) => t.key === tab)?.icon} ic-sm`} />
               </View>
               <View className='agent-info'>
-                <Text className='a-name'>{TABS.find((t) => t.key === tab)?.label} Agent</Text>
-                <Text className='a-desc'>三个 Agent 并行 · 输出交叉校验</Text>
+                <Text userSelect className='a-name'>{TABS.find((t) => t.key === tab)?.label} Agent</Text>
+                <Text userSelect className='a-desc'>三个 Agent 并行 · 输出交叉校验</Text>
               </View>
-              <View className='a-lv'><Text>待命</Text></View>
+              <View className='a-lv'><Text userSelect>待命</Text></View>
             </View>
             <View className='agent-out'>
-              <Text className='agent-hint'>输入食材，点下方按钮让小伴主厨团同时开工</Text>
+              <Text userSelect className='agent-hint'>输入食材，点下方按钮让小伴主厨团同时开工</Text>
             </View>
           </View>
         </View>
@@ -116,18 +116,18 @@ export default function MultiAgent() {
                 <View className='ic ic-spark ic-sm' />
               </View>
               <View className='agent-info'>
-                <Text className='a-name'>营养师 Agent</Text>
-                <Text className='a-desc'>基于你的健康目标</Text>
+                <Text userSelect className='a-name'>营养师 Agent</Text>
+                <Text userSelect className='a-desc'>基于你的健康目标</Text>
               </View>
-              <View className='a-lv'><Text>协同中</Text></View>
+              <View className='a-lv'><Text userSelect>协同中</Text></View>
             </View>
             <View className='agent-out'>
-              <Text className='tag'>热量</Text>
-              <Text className='out-line'>今日建议 <Text className='out-strong'>{data.nutritionist.calories_kcal} 千卡</Text>，蛋白质 {data.nutritionist.protein_g}g 优先</Text>
-              <Text className='tag'>搭配</Text>
-              <Text className='out-line'>{data.nutritionist.advice}</Text>
-              <Text className='tag'>忌口</Text>
-              <Text className='out-line'>已避开 <Text className='out-strong'>{data.nutritionist.avoided_allergens.join('、') || '无'}</Text></Text>
+              <Text userSelect className='tag'>热量</Text>
+              <Text userSelect className='out-line'>今日建议 <Text userSelect className='out-strong'>{data.nutritionist.calories_kcal} 千卡</Text>，蛋白质 {data.nutritionist.protein_g}g 优先</Text>
+              <Text userSelect className='tag'>搭配</Text>
+              <Text userSelect className='out-line'>{data.nutritionist.advice}</Text>
+              <Text userSelect className='tag'>忌口</Text>
+              <Text userSelect className='out-line'>已避开 <Text userSelect className='out-strong'>{data.nutritionist.avoided_allergens.join('、') || '无'}</Text></Text>
             </View>
           </View>
 
@@ -137,18 +137,18 @@ export default function MultiAgent() {
                 <View className='ic ic-kitchen ic-sm' />
               </View>
               <View className='agent-info'>
-                <Text className='a-name'>大厨 Agent</Text>
-                <Text className='a-desc'>推荐：{data.chef.dish_name}</Text>
+                <Text userSelect className='a-name'>大厨 Agent</Text>
+                <Text userSelect className='a-desc'>推荐：{data.chef.dish_name}</Text>
               </View>
-              <View className='a-lv gold'><Text>协同中</Text></View>
+              <View className='a-lv gold'><Text userSelect>协同中</Text></View>
             </View>
             <View className='agent-out'>
-              <Text className='tag'>技法</Text>
-              <Text className='out-line'>{data.chef.technique}</Text>
+              <Text userSelect className='tag'>技法</Text>
+              <Text userSelect className='out-line'>{data.chef.technique}</Text>
               {data.chef.plating && (
                 <>
-                  <Text className='tag'>摆盘</Text>
-                  <Text className='out-line'>{data.chef.plating}</Text>
+                  <Text userSelect className='tag'>摆盘</Text>
+                  <Text userSelect className='out-line'>{data.chef.plating}</Text>
                 </>
               )}
             </View>
@@ -160,24 +160,24 @@ export default function MultiAgent() {
                 <View className='ic ic-cart ic-sm' />
               </View>
               <View className='agent-info'>
-                <Text className='a-name'>采购 Agent</Text>
-                <Text className='a-desc'>省钱的补买清单</Text>
+                <Text userSelect className='a-name'>采购 Agent</Text>
+                <Text userSelect className='a-desc'>省钱的补买清单</Text>
               </View>
-              <View className='a-lv gold'><Text>协同中</Text></View>
+              <View className='a-lv gold'><Text userSelect>协同中</Text></View>
             </View>
             <View className='agent-out'>
               {data.shopper.categories.map((c, ci) => (
                 <View key={ci} className='shop-cat'>
-                  <Text className='cat-name'>{c.name}</Text>
-                  <Text className='out-line'>
+                  <Text userSelect className='cat-name'>{c.name}</Text>
+                  <Text userSelect className='out-line'>
                     {c.items.map((it) => `${it.name}${it.quantity ? ` ${it.quantity}` : ''}`).join(' · ')}
                   </Text>
                 </View>
               ))}
               {data.shopper.tips && (
                 <>
-                  <Text className='tag'>省钱</Text>
-                  <Text className='out-line'>{data.shopper.tips}</Text>
+                  <Text userSelect className='tag'>省钱</Text>
+                  <Text userSelect className='out-line'>{data.shopper.tips}</Text>
                 </>
               )}
             </View>
@@ -187,10 +187,10 @@ export default function MultiAgent() {
 
       <View className='sec'>
         <View className={`btn btn--red btn--block ${loading ? 'btn--disabled' : ''}`} onClick={run}>
-          <Text>{loading ? '三个 Agent 并行中…' : '🤝 三个 Agent 同时输出'}</Text>
+          <Text userSelect>{loading ? '三个 Agent 并行中…' : '🤝 三个 Agent 同时输出'}</Text>
         </View>
       </View>
-      <Text className='note agent-note'>多智能体并行 · 输出交叉校验 · 更可靠</Text>
+      <Text userSelect className='note agent-note'>多智能体并行 · 输出交叉校验 · 更可靠</Text>
     </View>
   )
 }

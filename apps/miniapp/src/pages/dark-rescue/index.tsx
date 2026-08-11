@@ -75,15 +75,15 @@ export default function DarkRescue() {
           <Image className='fail-photo' src={photo} mode='aspectFill' />
         ) : (
           <>
-            <Text className='emoji'>🥣</Text>
-            <View className='add'><Text>上传翻车现场照片</Text></View>
+            <Text userSelect className='emoji'>🥣</Text>
+            <View className='add'><Text userSelect>上传翻车现场照片</Text></View>
           </>
         )}
       </View>
 
       <View className='sec'>
         <View className={`btn btn--red btn--block ${diagnosing ? 'btn--disabled' : ''}`} onClick={diagnose}>
-          <Text>{diagnosing ? '诊断中…' : '🔍 一键小伴诊断'}</Text>
+          <Text userSelect>{diagnosing ? '诊断中…' : '🔍 一键小伴诊断'}</Text>
         </View>
       </View>
 
@@ -98,19 +98,19 @@ export default function DarkRescue() {
           {issues.map((it, idx) => (
             <View key={`${it.title}-${idx}`} className='diag-row'>
               <View className='d-ic'>
-                <Text>{['⚠', '💧', '🧂'][idx % 3]}</Text>
+                <Text userSelect>{['⚠', '💧', '🧂'][idx % 3]}</Text>
               </View>
               <View className='diag-body'>
-                <Text className='diag-title'>{it.title}</Text>
-                <Text className='diag-detail'>{it.detail}</Text>
-                <Text className='fix'>✅ 补救：{it.fix}</Text>
+                <Text userSelect className='diag-title'>{it.title}</Text>
+                <Text userSelect className='diag-detail'>{it.detail}</Text>
+                <Text userSelect className='fix'>✅ 补救：{it.fix}</Text>
               </View>
             </View>
           ))}
         </View>
       )}
 
-      <Text className='note rescue-note'>小伴补救仅供参考 · 拍照可再次诊断</Text>
+      <Text userSelect className='note rescue-note'>小伴补救仅供参考 · 拍照可再次诊断</Text>
     </View>
   )
 }

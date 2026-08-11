@@ -18,11 +18,11 @@ export default function QACard({ question, summary, time, starred, onClick }: QA
     <View className='qa-card' onClick={onClick}>
       <View className='qa-q'>
         <View className='q-badge'>Q</View>
-        <Text className='qa-question'>{question}</Text>
+        <Text userSelect className='qa-question'>{question}</Text>
         {starred && <View className='ic ic-star--on ic-sm' />}
-        {time && <Text className='qa-time'>{time}</Text>}
+        {time && <Text userSelect className='qa-time'>{time}</Text>}
       </View>
-      {summary && <Text className='qa-a'>{summary}</Text>}
+      {summary && <Text userSelect className='qa-a'>{summary}</Text>}
     </View>
   )
 }

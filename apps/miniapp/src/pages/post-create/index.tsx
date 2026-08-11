@@ -143,7 +143,7 @@ export default function PostCreate() {
 
   return (
     <View className='page-content post-create'>
-      <NavBar title='发布作品' showBack right={<Text className='txtbtn' onClick={publish}>发布</Text>} />
+      <NavBar title='发布作品' showBack right={<Text userSelect className='txtbtn' onClick={publish}>发布</Text>} />
 
       <View className='upload-grid' style={{ marginTop: '28px' }}>
         {cells.map((img, i) =>
@@ -155,7 +155,7 @@ export default function PostCreate() {
           ) : (
             <View key={i} className={`upload-cell add ${i === 0 && images.length === 0 ? '' : 'empty'}`} onClick={pickImages}>
               <View className='ic ic-plus ic-lg' />
-              <Text>{i === 0 ? '添加' : ''}</Text>
+              <Text userSelect>{i === 0 ? '添加' : ''}</Text>
             </View>
           ),
         )}
@@ -171,15 +171,15 @@ export default function PostCreate() {
           onInput={(e) => setContent(e.detail.value)}
         />
         <View className='textarea-foot'>
-          <Text className='note'>{content.length} / {MAX_CONTENT}</Text>
+          <Text userSelect className='note'>{content.length} / {MAX_CONTENT}</Text>
         </View>
       </View>
 
       <View className='link-card' onClick={myRecipeId ? undefined : pickRecipe}>
-        <View className='lc-ic'><Text>{recipe ? '🍽' : '✨'}</Text></View>
+        <View className='lc-ic'><Text userSelect>{recipe ? '🍽' : '✨'}</Text></View>
         <View className='lc-body'>
-          <Text className='lc-title'>{recipe ? recipe.title : '关联小伴菜谱（可选）'}</Text>
-          <Text className='lc-sub'>
+          <Text userSelect className='lc-title'>{recipe ? recipe.title : '关联小伴菜谱（可选）'}</Text>
+          <Text userSelect className='lc-sub'>
             {myRecipeId
               ? '关联我的自建菜谱'
               : recipe
@@ -195,7 +195,7 @@ export default function PostCreate() {
         <View className='chips'>
           {TOPICS.map((t) => (
             <View key={t} className={`chip ${topic === t ? 'chip--on' : ''}`} onClick={() => setTopic(topic === t ? null : t)}>
-              <Text>{t}</Text>
+              <Text userSelect>{t}</Text>
             </View>
           ))}
         </View>
@@ -203,9 +203,9 @@ export default function PostCreate() {
 
       <View className='publish-bar'>
         <Button className='btn btn--red btn--block publish-btn' onClick={publish}>
-          <Text>{publishing ? '发布中…' : '🛡 安全发布'}</Text>
+          <Text userSelect>{publishing ? '发布中…' : '🛡 安全发布'}</Text>
         </Button>
-        <Text className='note publish-note'>发布前将进行内容安全检测</Text>
+        <Text userSelect className='note publish-note'>发布前将进行内容安全检测</Text>
       </View>
     </View>
   )
