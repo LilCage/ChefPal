@@ -293,9 +293,6 @@ export default function Index() {
             <View className='hist-q-row'>
               <View className='q-badge'>Q</View>
               <Text className='hist-q-text'>{h.question}</Text>
-              <View className={`hist-arrow ${expandedId === h.id ? 'up' : ''}`}>
-                <View className='ic ic-chev-r ic-sm' />
-              </View>
             </View>
             <View className='hist-del' onClick={(e) => { e.stopPropagation(); removeHistory(h.id) }}>
               <View className='ic ic-trash ic-sm' />

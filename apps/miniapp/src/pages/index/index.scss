@@ -254,7 +254,7 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      padding-right: 48px; /* 让位右上角箭头 */
+      padding-right: 64px; /* 让位右下角删除键 */
 
       .q-badge {
         background: var(--gold);
@@ -271,27 +271,6 @@
         font-size: 30px;
         font-weight: 900;
         line-height: 1.4;
-      }
-
-      .hist-arrow {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--gray);
-
-        .ic {
-          width: 32px;
-          height: 32px;
-          transition: transform 0.2s;
-          transform: rotate(90deg); /* ic-chev-r 朝右 → 旋转90° 朝下（收起时，点击展开） */
-        }
-
-        &.up .ic { transform: rotate(-90deg); } /* 展开时朝上，指向问题（点击收起） */
       }
     }
 
@@ -314,8 +293,15 @@
     }
   }
 
-  /* 展开的完整问答详情 */
+  /* 展开的完整问答详情：覆盖 .bubble 自带的气泡尾巴，从右下角移到顶部朝上指向问题框 */
   .hist-detail {
-    margin: 16px 0 0;
+    margin: 20px 0 0;
+
+    &::after {
+      top: -11px;       /* 原 bottom → 移到顶部 */
+      bottom: auto;
+      left: 44px;
+      transform: rotate(-135deg); /* 原右下角朝下 → 旋转朝上指向问题 */
+    }
   }
 }
