@@ -42,7 +42,7 @@ export default function Mine() {
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
 
-  /* 漫画风称呼：结合技能身份 + 口味画像（辣度/咸淡/忌口/口味记忆风格） */
+  /* 漫画风称呼：技能定身份 + 取匹配度最高的 2 个口味修饰（口味记忆风格 > 辣度 > 咸淡），忌口不展示 */
   const prefs = user?.preferences || {}
   const [tasteStyle, setTasteStyle] = useState<string>('')
   const skillTitles: Record<string, string> = {
@@ -66,17 +66,14 @@ export default function Mine() {
     '浓香下饭': '浓香', '清爽快手': '清爽', '蒸煮清淡': '鲜蒸', '香辣过瘾': '火辣',
     '甜口绵绵': '甜蜜', '甜口绵密': '甜蜜', '汤羹温润': '温润',
   }
-  const allergyList = Array.isArray(prefs.allergies) ? prefs.allergies.filter((a: string) => a && a !== '无忌口') : []
   const identity = skillTitles[prefs.skill] || '美食猎人'
   const styleMod = tasteStyle && styleAdj[tasteStyle] ? styleAdj[tasteStyle] : ''
   const spicyMod = typeof prefs.spiciness === 'number' ? spicinessAdj[prefs.spiciness] : ''
   const saltMod = saltinessAdj[prefs.saltiness] || ''
-  const mods = [styleMod, spicyMod, saltMod].filter(Boolean)
+  /* 按匹配度排序取前 2 个 */
+  const mods = [styleMod, spicyMod, saltMod].filter(Boolean).slice(0, 2)
   const modText = mods.length ? mods.join(' · ') : ''
-  const allergyText = allergyList.length ? `避开${allergyList.join('/')}` : ''
-  const prefsTag = modText
-    ? `${modText} · ${identity}${allergyText ? ` · ${allergyText}` : ''}`
-    : identity
+  const prefsTag = modText ? `${modText} · ${identity}` : identity
 
   useDidShow(() => {
     setTab(3)
