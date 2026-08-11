@@ -58,7 +58,7 @@
 
 /* 今日 AI 秘技 */
 .qa-answer {
-  margin: 0 28px 24px;
+  margin: 32px 28px 24px; /* 上方留出空间给朝上的气泡尾巴 */
 
   /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与历史展开框一致） */
   &::after {
