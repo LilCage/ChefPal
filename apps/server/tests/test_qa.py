@@ -1,4 +1,6 @@
-"""STEP 3 · 问答闭环 TDD：mock LLM → 结构化落库/历史/删除/限额/降级。"""
+"""STEP 3 · 问答闭环 TDD：mock LLM → 结构化落库/历史/删除/限额/降级/流式SSE。"""
+import json
+
 import pytest
 
 from app.services.agents import qa_agent
@@ -12,6 +14,19 @@ VALID_QA = {
     "avoid_pitfalls": ["不要大火焯水，肉会柴"],
     "sources": ["https://example.com/hongshaorou"],
     "recommendations": None,
+}
+
+RECS_QA = {
+    "core_secret": "",
+    "dish_name": "",
+    "ingredients": [],
+    "steps": [],
+    "avoid_pitfalls": [],
+    "sources": None,
+    "recommendations": [
+        {"name": "凉拌黄瓜", "core_secret": "拍碎后先加盐杀水再拌", "time_minutes": 10, "ingredients": ["黄瓜", "蒜"]},
+        {"name": "凉拌木耳", "core_secret": "木耳焯水后过凉水更脆", "time_minutes": 15, "ingredients": ["木耳", "小米椒"]},
+    ],
 }
 
 
@@ -87,19 +102,90 @@ def test_delete_nonexistent_returns_404(client, auth_headers):
     assert res.status_code == 404
 
 
+# ---------- 流式输出（SSE 打字机 + 结构化卡片） ----------
+def _mock_stream(monkeypatch, full_text, error=None):
+    from app.routers import qa as qa_router
+
+    async def _fake(**kwargs):
+        # 分片 yield，模拟流式
+        for i in range(0, len(full_text), 5):
+            yield full_text[i:i + 5]
+
+    async def _boom(**kwargs):
+        raise LLMError("mock 流式失败")
+
+    monkeypatch.setattr(qa_router, "astream_text", _boom if error else _fake)
+
+
+def _parse_sse(text: str) -> list[dict]:
+    """把 SSE 文本解析成事件列表。"""
+    events = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("data:"):
+            continue
+        payload = line[len("data:"):].strip()
+        events.append(payload)
+    return events
+
+
+def test_ask_stream_single_type(client, auth_headers, monkeypatch):
+    full = json.dumps(VALID_QA, ensure_ascii=False)
+    _mock_stream(monkeypatch, full)
+    res = client.post("/api/qa/stream", json={"question": "红烧肉怎么不腻"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/event-stream")
+
+    events = _parse_sse(res.text)
+    # 最后一个事件是 done，含完整结构化数据
+    done = json.loads(events[-1])
+    assert done["type"] == "done"
+    assert done["data"]["answer"]["dish_name"] == "红烧肉"
+    # 前面有 delta 打字机事件
+    deltas = [e for e in events[:-1] if json.loads(e)["type"] == "delta"]
+    assert len(deltas) > 0
+    typing_text = "".join(json.loads(d)["text"] for d in deltas)
+    assert "红烧肉" in typing_text
+
+    # 已落库
+    hist = client.get("/api/qa/history", headers=auth_headers).json()["data"]
+    assert any(h["question"] == "红烧肉怎么不腻" for h in hist)
+
+
+def test_ask_stream_recommendation_type(client, auth_headers, monkeypatch):
+    full = json.dumps(RECS_QA, ensure_ascii=False)
+    _mock_stream(monkeypatch, full)
+    res = client.post("/api/qa/stream", json={"question": "推荐几道凉拌菜"}, headers=auth_headers)
+    assert res.status_code == 200
+    events = _parse_sse(res.text)
+    done = json.loads(events[-1])
+    assert done["type"] == "done"
+    recs = done["data"]["answer"]["recommendations"]
+    assert len(recs) == 2
+    deltas = [json.loads(e)["text"] for e in events[:-1]]
+    typing_text = "".join(deltas)
+    assert "凉拌黄瓜" in typing_text
+    assert "小伴为你推荐" in typing_text
+
+
+def test_ask_stream_empty_shell_error(client, auth_headers, monkeypatch):
+    _mock_stream(monkeypatch, '{"core_secret":"只有一句话"}')
+    res = client.post("/api/qa/stream", json={"question": "炖肉去腥"}, headers=auth_headers)
+    assert res.status_code == 200
+    events = _parse_sse(res.text)
+    last = json.loads(events[-1])
+    assert last["type"] == "error"
+    # 未落库
+    hist = client.get("/api/qa/history", headers=auth_headers).json()["data"]
+    assert hist == []
+
+
+def test_ask_stream_requires_auth(client):
+    res = client.post("/api/qa/stream", json={"question": "x"})
+    assert res.status_code == 401
+
+
 # ---------- 方案C：多菜推荐型 + 单菜菜名 ----------
-RECS_QA = {
-    "core_secret": "",
-    "dish_name": "",
-    "ingredients": [],
-    "steps": [],
-    "avoid_pitfalls": [],
-    "sources": None,
-    "recommendations": [
-        {"name": "凉拌黄瓜", "core_secret": "拍碎后先加盐杀水再拌", "time_minutes": 10, "ingredients": ["黄瓜", "蒜"]},
-        {"name": "凉拌木耳", "core_secret": "木耳焯水后过凉水更脆", "time_minutes": 15, "ingredients": ["木耳", "小米椒"]},
-    ],
-}
 
 
 def test_ask_recommendation_type_saves(client, auth_headers, monkeypatch):

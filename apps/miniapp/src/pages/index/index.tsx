@@ -3,10 +3,10 @@
  * 搜索框 + 猜你想问 + 今日小伴秘技 + 问答历史 + 收藏问答
  */
 import { Text, Textarea, View } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useUnload } from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 import QACard from '../../components/QACard'
-import { addFavorite, askQA, deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
+import { addFavorite, askQAStream, deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
@@ -45,6 +45,8 @@ export default function Index() {
   const [current, setCurrent] = useState<QARecord | null>(null)
   const [history, setHistory] = useState<QARecord[]>([])
   const [loading, setLoading] = useState(false)
+  const [typing, setTyping] = useState('') // 流式打字机文本
+  const streamAbortRef = useRef<(() => void) | null>(null)
   /* 猜你想问轮播 placeholder */
   const [phIndex, setPhIndex] = useState(0)
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -90,6 +92,11 @@ export default function Index() {
     loadHistory()
   })
 
+  useUnload(() => {
+    if (streamAbortRef.current) streamAbortRef.current()
+    streamAbortRef.current = null
+  })
+
   const loadHistory = async () => {
     try {
       setHistory(await fetchQAHistory())
@@ -98,19 +105,33 @@ export default function Index() {
     }
   }
 
-  const ask = async (q: string) => {
+  const ask = (q: string) => {
     const question = (q || keyword).trim()
     if (!question) return
-    setLoading(true)
-    try {
-      const rec = await askQA(question)
-      setCurrent(rec)
-      await loadHistory()
-    } catch (e: any) {
-      Taro.showToast({ title: e.message || '提问失败', icon: 'none' })
-    } finally {
-      setLoading(false)
+    // 中断上一次未完成的流
+    if (streamAbortRef.current) {
+      streamAbortRef.current()
+      streamAbortRef.current = null
     }
+    setLoading(true)
+    setTyping('')
+    setCurrent(null)
+    streamAbortRef.current = askQAStream(question, {
+      onDelta: (text) => setTyping((prev) => prev + text),
+      onDone: (rec) => {
+        setTyping('')
+        setCurrent(rec)
+        setLoading(false)
+        loadHistory()
+        streamAbortRef.current = null
+      },
+      onError: (msg) => {
+        setTyping('')
+        setLoading(false)
+        Taro.showToast({ title: msg || '提问失败', icon: 'none' })
+        streamAbortRef.current = null
+      },
+    })
   }
 
   const saveFavorite = async (rec: QARecord) => {
@@ -174,7 +195,12 @@ export default function Index() {
       </View>
 
       {loading ? (
-        <View className='thinking bubble'><Text>🤖 小伴正在联网搜索并思考…</Text></View>
+        <View className='bubble qa-answer typing-wrap'>
+          <View className='qa-ans-head'>
+            <Text className='qa-ans-q'>{typing || '小伴正在思考…'}</Text>
+            <View className='typing-caret' />
+          </View>
+        </View>
       ) : current ? (
         <View className='bubble qa-answer'>
           <View className='qa-ans-head'>

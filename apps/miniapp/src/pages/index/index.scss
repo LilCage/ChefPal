@@ -190,6 +190,27 @@
   }
 }
 
+.typing-wrap {
+  .qa-ans-q {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.6;
+  }
+}
+
+.typing-caret {
+  width: 8px;
+  height: 36px;
+  background: var(--red);
+  flex: none;
+  animation: caret-blink 0.8s infinite;
+}
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .tip-empty {
   font-size: 25px;
   color: var(--brown);

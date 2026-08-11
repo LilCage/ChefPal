@@ -6,6 +6,7 @@
 """
 import json
 import re
+from collections.abc import AsyncIterator
 from typing import Any
 
 from openai import AsyncOpenAI
@@ -81,3 +82,48 @@ async def ainvoke_json(
         return json.loads(content)
     except json.JSONDecodeError:
         return json.loads(_extract_json(content))
+
+
+async def astream_text(
+    *,
+    model: str,
+    system: str,
+    user: str,
+    enable_search: bool = False,
+    search_options: dict[str, Any] | None = None,
+) -> AsyncIterator[str]:
+    """流式调用 DeepSeek，逐个 yield 文本增量（供 SSE 打字机）。
+
+    未配置 DASHSCOPE_API_KEY 时抛 LLMError。调用方负责累积完整文本。
+    """
+    if not settings.DASHSCOPE_API_KEY:
+        raise LLMError("未配置 DASHSCOPE_API_KEY，请先在 apps/server/.env 中填入")
+
+    client = _client()
+    extra_body: dict[str, Any] = {}
+    if enable_search:
+        extra_body["enable_search"] = True
+        if search_options:
+            extra_body["search_options"] = search_options
+
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
+    ]
+
+    try:
+        stream = await client.chat.completions.create(
+            model=model,
+            messages=messages,
+            stream=True,
+            extra_body=extra_body if extra_body else None,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise LLMError(f"LLM 调用失败: {exc}") from exc
+
+    async for chunk in stream:
+        if not chunk.choices:
+            continue
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield delta

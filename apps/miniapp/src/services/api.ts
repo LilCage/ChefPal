@@ -66,6 +66,79 @@ export interface QARecord {
 
 export const askQA = (question: string) =>
   http.post<QARecord>('/qa/ask', { question })
+
+/* 流式问答：SSE 打字机。onDelta 逐字回调，onDone 收到完整结构化数据，onError 出错。 */
+export function askQAStream(
+  question: string,
+  handlers: {
+    onDelta: (text: string) => void
+    onDone: (data: QARecord) => void
+    onError: (msg: string) => void
+  },
+): () => void {
+  const token = useAuthStore.getState().token
+  const requestTask = Taro.request({
+    url: `${API_BASE_URL}/qa/stream`,
+    method: 'POST',
+    data: { question },
+    header: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    enableChunked: true,
+    responseType: 'arraybuffer',
+    success: () => { /* 流式通过 onChunkReceived 处理 */ },
+    fail: (err) => handlers.onError(err.errMsg || '连接失败'),
+  })
+
+  let buffer = ''
+  const decode = (buf: ArrayBuffer): string => {
+    // 优先 TextDecoder（基础库 2.20.2+）；不支持时用 base64 + escape/unescape 经典解码
+    try {
+      const td = new (globalThis as any).TextDecoder('utf-8')
+      return td.decode(buf)
+    } catch {
+      const b64 = Taro.arrayBufferToBase64(buf)
+      try {
+        return decodeURIComponent(escape(atob(b64)))
+      } catch {
+        return ''
+      }
+    }
+  }
+
+  requestTask.onChunkReceived((res: any) => {
+    const chunk = decode(res.data)
+    buffer += chunk
+    // 按 SSE 行（data: ...\n\n）切分完整事件
+    let idx: number
+    while ((idx = buffer.indexOf('\n\n')) !== -1) {
+      const rawEvent = buffer.slice(0, idx)
+      buffer = buffer.slice(idx + 2)
+      for (const line of rawEvent.split('\n')) {
+        const t = line.trim()
+        if (!t.startsWith('data:')) continue
+        const payload = t.slice(5).trim()
+        let ev: any
+        try {
+          ev = JSON.parse(payload)
+        } catch {
+          continue
+        }
+        if (ev.type === 'delta') handlers.onDelta(ev.text || '')
+        else if (ev.type === 'done') {
+          handlers.onDone(ev.data)
+          requestTask.abort()
+        } else if (ev.type === 'error') {
+          handlers.onError(ev.message || '生成失败')
+          requestTask.abort()
+        }
+      }
+    }
+  })
+
+  return () => requestTask.abort()
+}
 export const fetchQAHistory = () => http.get<QARecord[]>('/qa/history')
 export const deleteQARecord = (id: string) => http.del(`/qa/${id}`)
 
