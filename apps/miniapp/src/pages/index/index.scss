@@ -288,9 +288,10 @@
           width: 32px;
           height: 32px;
           transition: transform 0.2s;
+          transform: rotate(90deg); /* ic-chev-r 朝右 → 旋转90° 朝下（收起时，点击展开） */
         }
 
-        &.up .ic { transform: rotate(180deg); } /* 展开时箭头朝上指向问题 */
+        &.up .ic { transform: rotate(-90deg); } /* 展开时朝上，指向问题（点击收起） */
       }
     }
 

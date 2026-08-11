@@ -304,7 +304,6 @@ export default function Index() {
           {/* 点击历史问题 → 下方展开完整问答 */}
           {expandedId === h.id && (
             <View className='bubble qa-answer hist-detail'>
-              <Text className='qa-ans-q'>{h.question}</Text>
               {renderAnswerBody(h)}
             </View>
           )}
