@@ -224,7 +224,15 @@
   font-size: 25px;
   color: var(--brown);
   line-height: 1.7;
-  margin: 0 28px 24px; /* 与 qa-answer 一致，避免框顶到屏幕边缘 */
+  margin: 32px 28px 24px; /* 上方留出空间给朝上的气泡尾巴 */
+
+  /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与其他回答框统一） */
+  &.bubble::after {
+    top: -11px;
+    bottom: auto;
+    left: 44px;
+    transform: rotate(-135deg);
+  }
 }
 
 .thinking {
