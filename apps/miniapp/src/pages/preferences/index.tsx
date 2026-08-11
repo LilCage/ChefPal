@@ -10,7 +10,7 @@ import { clearTasteMemory, fetchTasteMemory, updatePreferences, type TasteMemory
 import { useAuthStore } from '../../stores/auth'
 import './index.scss'
 
-const ALLERGIES = ['花生', '海鲜', '乳制品', '香菜', '无忌口']
+const ALLERGIES = ['花生', '海鲜', '乳制品', '香菜']
 const SPICINESS = [
   { label: '不吃辣', value: 0 },
   { label: '微辣', value: 1 },
@@ -112,10 +112,15 @@ export default function Preferences() {
       <NavBar title='口味设置' showBack />
 
       <View className='set-group'>
-        <View className='set-t'>⚠ 忌口 <Text className='set-tip'>过敏 / 宗教 · 可多选，支持自定义</Text></View>
+        <View className='set-t allergy-head'>
+          <View className='allergy-title'>⚠ 忌口 <Text className='set-tip'>过敏 / 宗教 · 可多选</Text></View>
+          <View className={`chip allergy-none ${allergies.length === 0 ? 'chip--hot' : ''}`} onClick={() => toggleAllergy('无忌口')}>
+            <Text>无忌口</Text>
+          </View>
+        </View>
         <View className='chips'>
           {ALLERGIES.map((a) => (
-            <View key={a} className={`chip ${a === '无忌口' ? (allergies.length === 0 ? 'chip--hot' : '') : allergies.includes(a) ? 'chip--on' : ''}`} onClick={() => toggleAllergy(a)}>
+            <View key={a} className={`chip ${allergies.includes(a) ? 'chip--on' : ''}`} onClick={() => toggleAllergy(a)}>
               <Text>{a}</Text>
             </View>
           ))}
