@@ -143,6 +143,15 @@ export default function Index() {
     }
   }
 
+  const showHistory = (h: QARecord) => {
+    // 点击历史问题 → 展示该条完整问答结果
+    setCurrent(h)
+    setTyping('')
+    setLoading(false)
+    // 滚动到答案区
+    Taro.pageScrollTo({ scrollTop: 200, duration: 300 })
+  }
+
   const removeHistory = (id: string) => {
     Taro.showModal({
       title: '删除这条问答',
@@ -274,7 +283,7 @@ export default function Index() {
       </View>
       {history.slice(0, 3).map((h) => (
         <View key={h.id} className='hist-row'>
-          <QACard question={h.question} summary={`核心秘诀：${h.answer.core_secret}`} />
+          <QACard question={h.question} onClick={() => showHistory(h)} />
           <View className='hist-del' onClick={() => removeHistory(h.id)}>
             <View className='ic ic-trash ic-sm' />
           </View>
