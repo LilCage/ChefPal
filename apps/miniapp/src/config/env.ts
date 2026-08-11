@@ -4,7 +4,7 @@
  * 不能写 process.env.*（会报 "process is not defined"）。
  * 这里使用编译期常量或硬编码。本地开发默认连 http://127.0.0.1:8000。
  */
-const BASE_URL = 'http://127.0.0.1:8000'
+const BASE_URL = 'http://127.0.0.1:8001'
 
 export const API_BASE_URL = `${BASE_URL}/api`
 
