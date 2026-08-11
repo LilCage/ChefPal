@@ -17,7 +17,7 @@ const QUICK_INGREDIENTS = ['西红柿', '鸡蛋', '面条', '土豆', '鸡翅']
 export default function Kitchen() {
   const setTab = useTabStore((s) => s.setIndex)
   const preferences = useAuthStore((s) => s.user?.preferences)
-  const [ingredients, setIngredients] = useState<string[]>(['西红柿', '鸡蛋', '面条'])
+  const [ingredients, setIngredients] = useState<string[]>([])
   const [input, setInput] = useState('')
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(false)
@@ -110,23 +110,25 @@ export default function Kitchen() {
                 <Text className='x' onClick={() => removeIngredient(i)}>×</Text>
               </View>
             ))}
-            <View className='chip chip-add'>
-              <Input
-                className='chip-input'
-                value={input}
-                placeholder='＋ 添加食材'
-                confirmType='done'
-                onInput={(e) => setInput(e.detail.value)}
-                onConfirm={() => { addIngredient(input); setInput('') }}
-                onBlur={() => setInput('')}
-              />
+          </View>
+
+          {/* 大输入框 + 添加按钮 */}
+          <View className='add-row'>
+            <Input
+              className='add-input'
+              value={input}
+              placeholder='输入食材名，如：西红柿'
+              confirmType='done'
+              onInput={(e) => setInput(e.detail.value)}
+              onConfirm={() => { addIngredient(input); setInput('') }}
+              onBlur={() => setInput('')}
+            />
+            <View className='btn btn--gold add-btn' onClick={() => { addIngredient(input); setInput('') }}>
+              <Text>添加</Text>
             </View>
           </View>
-          <View className='quick-row'>
-            {QUICK_INGREDIENTS.filter((q) => !ingredients.includes(q)).map((q) => (
-              <View key={q} className='chip' onClick={() => addIngredient(q)}><Text>+{q}</Text></View>
-            ))}
-          </View>
+
+          {/* 输入方式：拍照 / 语音，贴着输入框 */}
           <View className='input-row'>
             <View className='photo-chip' onClick={goPhoto}>
               <View className='ic ic-camera ic-sm' />
@@ -137,20 +139,13 @@ export default function Kitchen() {
               <Text>语音输入</Text>
             </View>
           </View>
-          <View className='fun-row'>
-            <View className='fun-chip' onClick={goRescue}>
-              <Text className='fun-emoji'>🥣</Text>
-              <Text>翻车拯救</Text>
-            </View>
-            <View className='fun-chip' onClick={goAgents}>
-              <Text className='fun-emoji'>🤝</Text>
-              <Text>AI 主厨团</Text>
-            </View>
-            <View className='fun-chip' onClick={goFridge}>
-              <Text className='fun-emoji'>🧊</Text>
-              <Text>冰箱管家</Text>
-            </View>
+
+          <View className='quick-row'>
+            {QUICK_INGREDIENTS.filter((q) => !ingredients.includes(q)).map((q) => (
+              <View key={q} className='chip' onClick={() => addIngredient(q)}><Text>+{q}</Text></View>
+            ))}
           </View>
+
           <Text className='note'>
             {prefsText ? `已读取你的口味偏好 · ${prefsText}` : '尚未设置口味偏好，可在「我的」中设置'}
           </Text>
@@ -163,6 +158,22 @@ export default function Kitchen() {
           <Text>{loading ? '生成魔法菜谱中…' : '生成魔法菜谱'}</Text>
         </View>
         <Text className='note generate-note'>基于 {ingredients.length} 种食材 · AI 实时生成 TOP3</Text>
+
+        {/* 趣味工具：移到生成按钮下方 */}
+        <View className='fun-row'>
+          <View className='fun-chip' onClick={goRescue}>
+            <Text className='fun-emoji'>🥣</Text>
+            <Text>翻车拯救</Text>
+          </View>
+          <View className='fun-chip' onClick={goAgents}>
+            <Text className='fun-emoji'>🤝</Text>
+            <Text>AI 主厨团</Text>
+          </View>
+          <View className='fun-chip' onClick={goFridge}>
+            <Text className='fun-emoji'>🧊</Text>
+            <Text>冰箱管家</Text>
+          </View>
+        </View>
       </View>
 
       {recipes.length > 0 && (
