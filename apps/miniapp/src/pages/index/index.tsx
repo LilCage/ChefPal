@@ -23,8 +23,8 @@ export default function Index() {
   /* 猜你想问轮播 placeholder */
   const [phIndex, setPhIndex] = useState(0)
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  /* 双击输入框填入当前轮播问题（连点两次计数） */
-  const tapCountRef = useRef(0)
+  /* 双击输入框填入当前轮播问题：记录上次点击时间，600ms 内再点一次视为双击 */
+  const lastTapRef = useRef(0)
 
   useEffect(() => {
     phTimerRef.current = setInterval(() => {
@@ -36,15 +36,17 @@ export default function Index() {
   }, [])
 
   const onSearchTap = () => {
-    // 已有输入则重置计数（用户手输时不触发）
+    // 已有输入则重置（用户手输时不触发）
     if (keyword.trim()) {
-      tapCountRef.current = 0
+      lastTapRef.current = 0
       return
     }
-    tapCountRef.current += 1
-    if (tapCountRef.current >= 2) {
-      tapCountRef.current = 0
+    const now = Date.now()
+    if (lastTapRef.current && now - lastTapRef.current < 600) {
+      lastTapRef.current = 0
       setKeyword(HOT_QUESTIONS[phIndex]) // 双击 → 填入当前轮播问题
+    } else {
+      lastTapRef.current = now
     }
   }
 
@@ -128,7 +130,7 @@ export default function Index() {
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
-          onTouchEnd={onSearchTap}
+          onClick={onSearchTap}
           onInput={(e) => onSearchInput(e.detail.value)}
           onConfirm={() => ask(keyword)}
         />
