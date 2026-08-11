@@ -51,14 +51,35 @@
     }
   }
 
-  /* 连点两次提示 */
-  .search-hint {
-    display: block;
-    text-align: center;
-    font-size: 22px;
-    color: var(--gray);
-    font-weight: 600;
-    margin: 8px 28px 0;
+  /* 猜你想问浮层：点击输入框弹出 */
+  .suggest {
+    background: #fff;
+    border: 2.5px solid var(--ink);
+    border-radius: 28px;
+    box-shadow: 4px 4px 0 var(--ink);
+    margin: 12px 28px 8px;
+    padding: 24px;
+
+    .suggest-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+
+      .suggest-title { font-size: 28px; font-weight: 900; color: var(--red); }
+
+      .suggest-close {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gray);
+      }
+    }
+
+    .suggest-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
   }
 }
 
