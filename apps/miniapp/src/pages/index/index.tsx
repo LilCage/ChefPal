@@ -230,7 +230,7 @@ export default function Index() {
         <Textarea
           className='search-input'
           value={keyword}
-          placeholder={`问小伴：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
+          placeholder={`问小伴：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}\n双击输入框，直接问这道问题`}
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
