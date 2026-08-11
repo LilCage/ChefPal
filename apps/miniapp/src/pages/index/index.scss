@@ -237,30 +237,38 @@
   font-weight: 600;
 }
 
-.hist-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.hist-block {
   margin: 0 28px 20px;
 
-  .qa-card {
-    flex: 1;
-    min-width: 0;
-    margin: 0;
-  }
-
-  .hist-del {
-    width: 60px;
-    height: 60px;
-    border-radius: 18px;
-    background: #fff;
-    border: 2px solid var(--ink);
-    box-shadow: 2px 2px 0 var(--ink);
+  .hist-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex: none;
+    gap: 16px;
 
-    .ic { color: var(--red-dark); }
+    .qa-card {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+    }
+
+    .hist-del {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: #fff;
+      border: 2px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+
+      .ic { color: var(--red-dark); }
+    }
+  }
+
+  /* 展开的完整问答详情 */
+  .hist-detail {
+    margin: 16px 0 0;
   }
 }

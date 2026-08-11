@@ -46,6 +46,7 @@ export default function Index() {
   const [history, setHistory] = useState<QARecord[]>([])
   const [loading, setLoading] = useState(false)
   const [typing, setTyping] = useState('') // 流式打字机文本
+  const [expandedId, setExpandedId] = useState<string | null>(null) // 当前展开的历史问答 id
   const streamAbortRef = useRef<(() => void) | null>(null)
   /* 猜你想问轮播 placeholder */
   const [phIndex, setPhIndex] = useState(0)
@@ -143,13 +144,62 @@ export default function Index() {
     }
   }
 
-  const showHistory = (h: QARecord) => {
-    // 点击历史问题 → 展示该条完整问答结果
-    setCurrent(h)
-    setTyping('')
-    setLoading(false)
-    // 滚动到答案区
-    Taro.pageScrollTo({ scrollTop: 200, duration: 300 })
+  const toggleHistory = (h: QARecord) => {
+    // 点击历史问题 → 在该条下方展开/收起完整问答结果
+    setExpandedId((prev) => (prev === h.id ? null : h.id))
+  }
+
+  /* 完整答案正文（多菜推荐 或 单菜秘诀/食材/步骤/避坑），供当前答案区与历史展开区复用 */
+  const renderAnswerBody = (rec: QARecord) => {
+    const ans = rec.answer
+    if (ans.recommendations) {
+      return (
+        <View className='qa-recs'>
+          {ans.recommendations.map((r, i) => (
+            <View key={i} className='rec-card'>
+              <View className='rec-head'>
+                <Text className='rec-no'>{i + 1}</Text>
+                <Text className='rec-name'>{r.name}</Text>
+                {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
+              </View>
+              <Text className='rec-secret'>{r.core_secret}</Text>
+              {r.ingredients.length > 0 && (
+                <Text className='rec-ings'>食材：{r.ingredients.join('、')}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      )
+    }
+    return (
+      <>
+        <Text className='qa-ans-secret'>{ans.core_secret}</Text>
+        {ans.ingredients.length > 0 && (
+          <>
+            <Text className='qa-ans-label'>食材清单</Text>
+            <Text className='qa-ans-ings'>{ans.ingredients.join('、')}</Text>
+          </>
+        )}
+        {ans.steps.length > 0 && (
+          <>
+            <Text className='qa-ans-label'>烹饪步骤</Text>
+            <View className='qa-ans-steps'>
+              {ans.steps.map((s, i) => (
+                <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text>{s}</Text></View>
+              ))}
+            </View>
+          </>
+        )}
+        {ans.avoid_pitfalls.length > 0 && (
+          <>
+            <Text className='qa-ans-label'>避坑指南</Text>
+            {ans.avoid_pitfalls.map((p, i) => (
+              <View key={i} className='qa-pit'>⚠ {p}</View>
+            ))}
+          </>
+        )}
+      </>
+    )
   }
 
   const removeHistory = (id: string) => {
@@ -219,52 +269,8 @@ export default function Index() {
             )}
           </View>
 
-          {/* 类型二 · 多菜推荐 */}
-          {current.answer.recommendations ? (
-            <View className='qa-recs'>
-              {current.answer.recommendations.map((r, i) => (
-                <View key={i} className='rec-card'>
-                  <View className='rec-head'>
-                    <Text className='rec-no'>{i + 1}</Text>
-                    <Text className='rec-name'>{r.name}</Text>
-                    {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
-                  </View>
-                  <Text className='rec-secret'>{r.core_secret}</Text>
-                  {r.ingredients.length > 0 && (
-                    <Text className='rec-ings'>食材：{r.ingredients.join('、')}</Text>
-                  )}
-                </View>
-              ))}
-            </View>
-          ) : (
-            <>
-              <Text className='qa-ans-secret'>{current.answer.core_secret}</Text>
-              {current.answer.ingredients.length > 0 && (
-                <>
-                  <Text className='qa-ans-label'>食材清单</Text>
-                  <Text className='qa-ans-ings'>{current.answer.ingredients.join('、')}</Text>
-                </>
-              )}
-              {current.answer.steps.length > 0 && (
-                <>
-                  <Text className='qa-ans-label'>烹饪步骤</Text>
-                  <View className='qa-ans-steps'>
-                    {current.answer.steps.map((s, i) => (
-                      <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text>{s}</Text></View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {current.answer.avoid_pitfalls.length > 0 && (
-                <>
-                  <Text className='qa-ans-label'>避坑指南</Text>
-                  {current.answer.avoid_pitfalls.map((p, i) => (
-                    <View key={i} className='qa-pit'>⚠ {p}</View>
-                  ))}
-                </>
-              )}
-            </>
-          )}
+          {renderAnswerBody(current)}
+
           <View className='qa-ans-actions'>
             <View className='btn btn--white btn--xs' onClick={() => saveFavorite(current)}>
               <View className='ic ic-star ic-sm' />
@@ -282,11 +288,20 @@ export default function Index() {
         <View className='sec-title'>📚 我的问答历史 <Text className='sec-note'>最近 3 条</Text></View>
       </View>
       {history.slice(0, 3).map((h) => (
-        <View key={h.id} className='hist-row'>
-          <QACard question={h.question} onClick={() => showHistory(h)} />
-          <View className='hist-del' onClick={() => removeHistory(h.id)}>
-            <View className='ic ic-trash ic-sm' />
+        <View key={h.id} className='hist-block'>
+          <View className='hist-row'>
+            <QACard question={h.question} onClick={() => toggleHistory(h)} />
+            <View className='hist-del' onClick={() => removeHistory(h.id)}>
+              <View className='ic ic-trash ic-sm' />
+            </View>
           </View>
+          {/* 点击历史问题 → 下方展开完整问答 */}
+          {expandedId === h.id && (
+            <View className='bubble qa-answer hist-detail'>
+              <Text className='qa-ans-q'>{h.question}</Text>
+              {renderAnswerBody(h)}
+            </View>
+          )}
         </View>
       ))}
       {history.length === 0 && !loading && (
