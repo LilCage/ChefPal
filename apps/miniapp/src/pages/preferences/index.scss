@@ -18,20 +18,9 @@
       }
     }
 
-    /* 忌口标题行：左侧标题 + 右侧无忌口开关 */
-    .allergy-head {
-      justify-content: space-between;
-
-      .allergy-title {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .allergy-none {
-        flex: none;
-        margin-bottom: 0;
-      }
+    /* 忌口/无忌口 分段切换：覆盖全局 seg 的外边距，紧贴区块内 */
+    .allergy-seg {
+      margin: 0 0 24px;
     }
 
     .custom-add {

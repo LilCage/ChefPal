@@ -26,6 +26,7 @@ export default function Preferences() {
 
   const prefs = user?.preferences || {}
   const [allergies, setAllergies] = useState<string[]>(prefs.allergies || [])
+  const [noAllergy, setNoAllergy] = useState<boolean>(!(prefs.allergies?.length))
   const [newAllergy, setNewAllergy] = useState('')
   const [spiciness, setSpiciness] = useState<number>(prefs.spiciness ?? 1)
   const [saltiness, setSaltiness] = useState<string>(prefs.saltiness || '适中')
@@ -60,11 +61,13 @@ export default function Preferences() {
   // 自定义忌口（非预设项）
   const customAllergies = allergies.filter((a) => !ALLERGIES.includes(a))
 
+  /* 「忌口 / 无忌口」互斥切换 */
+  const switchAllergyMode = (mode: 'have' | 'none') => {
+    setNoAllergy(mode === 'none')
+    if (mode === 'none') setAllergies([])
+  }
+
   const toggleAllergy = (a: string) => {
-    if (a === '无忌口') {
-      setAllergies([])
-      return
-    }
     setAllergies((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]))
   }
 
@@ -112,41 +115,49 @@ export default function Preferences() {
       <NavBar title='口味设置' showBack />
 
       <View className='set-group'>
-        <View className='set-t allergy-head'>
-          <View className='allergy-title'>⚠ 忌口 <Text className='set-tip'>过敏 / 宗教 · 可多选</Text></View>
-          <View className={`chip allergy-none ${allergies.length === 0 ? 'chip--hot' : ''}`} onClick={() => toggleAllergy('无忌口')}>
+        <View className='set-t'>⚠ 忌口 <Text className='set-tip'>过敏 / 宗教</Text></View>
+        <View className='seg allergy-seg'>
+          <View className={`seg-item ${!noAllergy ? 'on' : ''}`} onClick={() => switchAllergyMode('have')}>
+            <Text>忌口</Text>
+          </View>
+          <View className={`seg-item ${noAllergy ? 'on' : ''}`} onClick={() => switchAllergyMode('none')}>
             <Text>无忌口</Text>
           </View>
         </View>
-        <View className='chips'>
-          {ALLERGIES.map((a) => (
-            <View key={a} className={`chip ${allergies.includes(a) ? 'chip--on' : ''}`} onClick={() => toggleAllergy(a)}>
-              <Text>{a}</Text>
-            </View>
-          ))}
-          {customAllergies.map((a) => (
-            <View key={a} className='chip chip--on' onClick={() => toggleAllergy(a)}>
-              <Text>{a}</Text>
-              <Text className='x'>×</Text>
-            </View>
-          ))}
-        </View>
 
-        <View className='custom-add'>
-          <Input
-            className='custom-input'
-            value={newAllergy}
-            maxlength={20}
-            placeholder='自定义忌口，如：蘑菇'
-            placeholderClass='custom-ph'
-            onInput={(e) => setNewAllergy(e.detail.value)}
-            onConfirm={addCustomAllergy}
-          />
-          <View className='btn btn--sm btn--gold custom-add-btn' onClick={addCustomAllergy}>
-            <Text>添加</Text>
-          </View>
-        </View>
-        <Text className='custom-hint'>输入忌口后点「添加」，点击标签可移除</Text>
+        {!noAllergy && (
+          <>
+            <View className='chips'>
+              {ALLERGIES.map((a) => (
+                <View key={a} className={`chip ${allergies.includes(a) ? 'chip--on' : ''}`} onClick={() => toggleAllergy(a)}>
+                  <Text>{a}</Text>
+                </View>
+              ))}
+              {customAllergies.map((a) => (
+                <View key={a} className='chip chip--on' onClick={() => toggleAllergy(a)}>
+                  <Text>{a}</Text>
+                  <Text className='x'>×</Text>
+                </View>
+              ))}
+            </View>
+
+            <View className='custom-add'>
+              <Input
+                className='custom-input'
+                value={newAllergy}
+                maxlength={20}
+                placeholder='自定义忌口，如：蘑菇'
+                placeholderClass='custom-ph'
+                onInput={(e) => setNewAllergy(e.detail.value)}
+                onConfirm={addCustomAllergy}
+              />
+              <View className='btn btn--sm btn--gold custom-add-btn' onClick={addCustomAllergy}>
+                <Text>添加</Text>
+              </View>
+            </View>
+            <Text className='custom-hint'>可多选，支持自定义；输入后点「添加」，点击标签可移除</Text>
+          </>
+        )}
       </View>
 
       <View className='set-group'>
