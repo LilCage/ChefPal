@@ -134,7 +134,7 @@ export default function ShoppingListPage() {
 
       <View className='cart-total'>
         <Text className='ct-label'>已选 <Text className='ct-green'>{checkedCount}</Text> / {allItems.length} 项</Text>
-        <Text className='ct-note'>数量为 AI 估算，仅供参考</Text>
+        <Text className='ct-note'>数量为小伴估算，仅供参考</Text>
       </View>
 
       <View className='sec'>

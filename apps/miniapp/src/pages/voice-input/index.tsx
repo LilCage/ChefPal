@@ -182,7 +182,7 @@ export default function VoiceInput() {
           <View className='ic ic-mic' />
         </View>
         <Text className='dock-hint'>
-          {transcribing ? 'AI 识别中…' : recording ? '正在录音… 松开结束' : '长按说话'}
+          {transcribing ? '小伴识别中…' : recording ? '正在录音… 松开结束' : '长按说话'}
         </Text>
       </View>
     </View>

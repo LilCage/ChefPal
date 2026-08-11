@@ -1,4 +1,4 @@
 export default definePageConfig({
-  navigationBarTitleText: 'AI 主厨团',
+  navigationBarTitleText: '小伴主厨团',
   usingComponents: {},
 })

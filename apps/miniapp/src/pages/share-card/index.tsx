@@ -31,7 +31,7 @@ export default function ShareCard() {
   const [empty, setEmpty] = useState(false)
 
   useShareAppMessage(() => ({
-    title: `ChefPal · ${recipe?.title || '口袋 AI 厨师'}`,
+    title: `ChefPal · ${recipe?.title || '口袋厨师'}`,
     path: recipe ? `/pages/recipe-detail/index?id=${recipe.id}` : '/pages/index/index',
     imageUrl: cardImg || undefined,
   }))
@@ -205,7 +205,7 @@ export default function ShareCard() {
     ctx.fillText('ChefPal', 48, H - 90)
     ctx.fillStyle = BROWN
     ctx.font = '600 24px sans-serif'
-    ctx.fillText('口袋 AI 厨师 · 从食材到餐桌', 48, H - 52)
+    ctx.fillText('口袋厨师 · 从食材到餐桌', 48, H - 52)
 
     // 导出临时文件
     const tmp = await new Promise<string | null>((resolve) => {

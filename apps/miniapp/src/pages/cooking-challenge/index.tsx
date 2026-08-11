@@ -1,6 +1,6 @@
 /**
  * 烹饪挑战（原型 05 屏4）：挑战 hero 卡（速度线+进度）+ 排行榜 + 我要挑战/创建挑战
- * 数据源 /challenges 系列（无 AI）
+ * 数据源 /challenges 系列（无 AI 调用）
  */
 import { Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'

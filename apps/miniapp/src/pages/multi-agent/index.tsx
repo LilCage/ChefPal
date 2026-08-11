@@ -53,7 +53,7 @@ export default function MultiAgent() {
 
   return (
     <View className='page-content multi-agent'>
-      <NavBar title='AI 主厨团' showBack />
+      <NavBar title='小伴主厨团' showBack />
 
       <View className='field'>
         <View className='field-label'>✨ 冰箱里有什么</View>
@@ -104,7 +104,7 @@ export default function MultiAgent() {
               <View className='a-lv'><Text>待命</Text></View>
             </View>
             <View className='agent-out'>
-              <Text className='agent-hint'>输入食材，点下方按钮让 AI 主厨团同时开工</Text>
+              <Text className='agent-hint'>输入食材，点下方按钮让小伴主厨团同时开工</Text>
             </View>
           </View>
         </View>

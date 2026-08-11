@@ -53,7 +53,7 @@ def test_vote_generate_injects_prefs(client, auth_headers, monkeypatch):
 
 
 def test_vote_generate_agent_failure_502(client, auth_headers, monkeypatch):
-    """AI 生成失败 → 502。"""
+    """生成失败 → 502。"""
 
     async def _fake(ingredients: list[str], prefs: dict | None = None) -> dict:
         return {"result": None, "error": "mock 生成失败"}
@@ -209,7 +209,7 @@ def test_vote_generate_rate_limit(client, auth_headers, monkeypatch):
     _mock_vote_agent(monkeypatch)
 
     async def _over(db, user_id, limit):
-        raise AppError("今日 AI 调用已达上限，明日再来吧", code=429, status_code=429)
+        raise AppError("今日调用已达上限，明日再来吧", code=429, status_code=429)
 
     monkeypatch.setattr(votes_router, "ensure_within_limit", _over)
     res = client.post(

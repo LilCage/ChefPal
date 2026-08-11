@@ -9,8 +9,8 @@ import './index.scss'
 const ONBOARDED_KEY = 'chefpal_onboarded'
 
 const CARDS = [
-  { icon: 'ic-search', title: '学 · 问 AI 学厨艺', sub: '核心秘诀 + 避坑指南，结构化讲解' },
-  { icon: 'ic-kitchen', title: '做 · 食材魔方变好菜', sub: '冰箱有什么就做什么，AI 实时生成' },
+  { icon: 'ic-search', title: '学 · 问小伴学厨艺', sub: '核心秘诀 + 避坑指南，结构化讲解' },
+  { icon: 'ic-kitchen', title: '做 · 食材魔方变好菜', sub: '冰箱有什么就做什么，小伴实时生成' },
   { icon: 'ic-discover', title: '晒 · 社区分享作品', sub: '跟做打卡，收获点赞与鼓励' },
 ]
 

@@ -25,7 +25,7 @@ async def ensure_within_limit(db: AsyncSession, user_id: UUID, limit: int) -> No
     if limit <= 0:
         return
     if await count_today_calls(db, user_id) >= limit:
-        raise AppError("今日 AI 调用已达上限，明日再来吧", code=429, status_code=429)
+        raise AppError("今日调用已达上限，明日再来吧", code=429, status_code=429)
 
 
 async def record_ai_call(db: AsyncSession, user_id: UUID, call_type: str, model: str) -> None:

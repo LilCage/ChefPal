@@ -1,6 +1,6 @@
 /**
  * 屏3 · 厨房 食材魔方（核心差异化，原型 01）
- * 标签式食材输入 → AI 生成 TOP3 菜谱
+ * 标签式食材输入 → 小伴生成 TOP3 菜谱
  */
 import { Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -157,7 +157,7 @@ export default function Kitchen() {
           <View className='ic ic-spark--white' />
           <Text>{loading ? '生成魔法菜谱中…' : '生成魔法菜谱'}</Text>
         </View>
-        <Text className='note generate-note'>基于 {ingredients.length} 种食材 · AI 实时生成 TOP3</Text>
+        <Text className='note generate-note'>基于 {ingredients.length} 种食材 · 小伴实时生成 TOP3</Text>
 
         {/* 趣味工具：移到生成按钮下方 */}
         <View className='fun-row'>
@@ -167,7 +167,7 @@ export default function Kitchen() {
           </View>
           <View className='fun-chip' onClick={goAgents}>
             <Text className='fun-emoji'>🤝</Text>
-            <Text>AI 主厨团</Text>
+            <Text>小伴主厨团</Text>
           </View>
           <View className='fun-chip' onClick={goFridge}>
             <Text className='fun-emoji'>🧊</Text>

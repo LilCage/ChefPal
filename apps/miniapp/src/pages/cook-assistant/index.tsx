@@ -187,9 +187,9 @@ export default function CookAssistant() {
           <View className='ic ic-mic' />
         </View>
         <Text className='dock-hint'>
-          {processing ? 'AI 回答中…' : recording ? '正在录音… 松开结束' : '长按说话提问'}
+          {processing ? '小伴回答中…' : recording ? '正在录音… 松开结束' : '长按说话提问'}
         </Text>
-        <Text className='dock-note'>双手不便？直接问就行，AI 结合当前步骤回答</Text>
+        <Text className='dock-note'>双手不便？直接问就行，小伴结合当前步骤回答</Text>
       </View>
     </View>
   )

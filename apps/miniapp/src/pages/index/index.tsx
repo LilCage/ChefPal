@@ -1,6 +1,6 @@
 /**
- * 屏2 · 首页 AI 烹饪百科（原型 01）
- * 搜索框 + 猜你想问 + 今日AI秘技 + 问答历史 + 收藏问答
+ * 屏2 · 首页 小伴烹饪百科（原型 01）
+ * 搜索框 + 猜你想问 + 今日小伴秘技 + 问答历史 + 收藏问答
  */
 import { Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -151,7 +151,7 @@ export default function Index() {
         <Textarea
           className='search-input'
           value={keyword}
-          placeholder={`问 AI：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
+          placeholder={`问小伴：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
@@ -166,7 +166,7 @@ export default function Index() {
 
       <View className='section'>
         <View className='sec-title'>
-          🔥 今日 AI 秘技
+          🔥 今日小伴秘技
           {current && (
             <View className='more' onClick={() => ask(current.question)}>重新生成</View>
           )}
@@ -174,7 +174,7 @@ export default function Index() {
       </View>
 
       {loading ? (
-        <View className='thinking bubble'><Text>🤖 AI 正在联网搜索并思考…</Text></View>
+        <View className='thinking bubble'><Text>🤖 小伴正在联网搜索并思考…</Text></View>
       ) : current ? (
         <View className='bubble qa-answer'>
           <View className='qa-ans-head'>
@@ -239,7 +239,7 @@ export default function Index() {
         </View>
       ) : (
         <View className='bubble tip-empty'>
-          <Text>💡 输入一个厨艺问题，AI 会联网搜索并给出核心秘诀、步骤与避坑指南</Text>
+          <Text>💡 输入一个厨艺问题，小伴会联网搜索并给出核心秘诀、步骤与避坑指南</Text>
         </View>
       )}
 
@@ -255,7 +255,7 @@ export default function Index() {
         </View>
       ))}
       {history.length === 0 && !loading && (
-        <View className='note note--center'>还没有提问，问 AI 一个问题吧</View>
+        <View className='note note--center'>还没有提问，问小伴一个问题吧</View>
       )}
     </View>
   )

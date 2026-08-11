@@ -1,6 +1,6 @@
 /**
  * 冰箱管家 · 食材过期预警（原型 04 屏6）：
- * 过期横幅 + 即将过期列表（做掉删除）+ AI 组合推荐 + 状态良好 + 添加食材
+ * 过期横幅 + 即将过期列表（做掉删除）+ 小伴组合推荐 + 状态良好 + 添加食材
  */
 import { Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -128,7 +128,7 @@ export default function FridgePage() {
         <View className='empty'>
           <View className='empty-art'>🧊</View>
           <Text className='empty-title'>冰箱空空如也</Text>
-          <Text className='empty-desc'>把放进冰箱的食材记下来，AI 帮你盯着保质期</Text>
+          <Text className='empty-desc'>把放进冰箱的食材记下来，小伴帮你盯着保质期</Text>
           <View className='btn btn--red btn--block' onClick={addItem}>
             <Text>＋ 添加食材</Text>
           </View>
@@ -179,9 +179,9 @@ export default function FridgePage() {
       )}
 
       <View className='section'>
-        <View className='sec-title'><Text>💡 AI 建议</Text></View>
+        <View className='sec-title'><Text>💡 小伴建议</Text></View>
         {adviceLoading ? (
-          <View className='advice-loading'><Text>AI 分析临期食材中…</Text></View>
+          <View className='advice-loading'><Text>小伴分析临期食材中…</Text></View>
         ) : advice ? (
           <View className='bubble advice-bubble'>
             <View className='star-burst star-burst--sm'><Text>组合推荐</Text></View>

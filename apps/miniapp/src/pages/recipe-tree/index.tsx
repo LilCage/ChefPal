@@ -64,7 +64,7 @@ export default function RecipeTree() {
               </View>
               <Text className='ev-desc'>
                 {v.is_root
-                  ? `第一次 AI 生成 · 经典家常做法`
+                  ? `第一次小伴生成 · 经典家常做法`
                   : v.changes || '基于上一版的改进'}
               </Text>
               <Text className='ev-tag'>{tagOf(v, idx)}</Text>

@@ -135,7 +135,7 @@ def test_generate_plan_rate_limit(client, auth_headers, monkeypatch, make_header
     _mock_planner(monkeypatch)
 
     async def _over(db, user_id, limit):
-        raise AppError("今日 AI 调用已达上限，明日再来吧", code=429, status_code=429)
+        raise AppError("今日调用已达上限，明日再来吧", code=429, status_code=429)
 
     monkeypatch.setattr(plans_router, "ensure_within_limit", _over)
     res = client.post("/api/plans/generate", json={}, headers=auth_headers)

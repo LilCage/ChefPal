@@ -219,7 +219,7 @@ def test_advice_rate_limit(client, auth_headers, monkeypatch):
     _mock_advice(monkeypatch)
 
     async def _over(db, user_id, limit):
-        raise AppError("今日 AI 调用已达上限，明日再来吧", code=429, status_code=429)
+        raise AppError("今日调用已达上限，明日再来吧", code=429, status_code=429)
 
     monkeypatch.setattr(fridge_router, "ensure_within_limit", _over)
     res = client.post("/api/fridge/advice", headers=auth_headers)

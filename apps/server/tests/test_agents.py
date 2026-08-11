@@ -103,7 +103,7 @@ def test_collaborate_rate_limit(client, auth_headers, monkeypatch):
     _mock_collab(monkeypatch)
 
     async def _over(db, user_id, limit):
-        raise AppError("今日 AI 调用已达上限，明日再来吧", code=429, status_code=429)
+        raise AppError("今日调用已达上限，明日再来吧", code=429, status_code=429)
 
     monkeypatch.setattr(agents_router, "ensure_within_limit", _over)
     res = client.post(

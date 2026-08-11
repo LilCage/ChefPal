@@ -19,16 +19,16 @@ const MENU = [
   { key: 'history', icon: 'ic-comment', title: '我的问答历史', sub: '最近 20 条', url: '/pages/qa-history/index' },
   { key: 'share', icon: 'ic-share', title: '我的分享卡片', sub: '生成精美卡片' },
   { key: 'agreement', icon: 'ic-lock', title: '用户协议与隐私政策', sub: '服务条款 · 隐私说明', url: '/pages/agreement/index' },
-  { key: 'disclaimer', icon: 'ic-info', title: '免责声明与帮助', sub: 'AI 结果仅供参考' },
+  { key: 'disclaimer', icon: 'ic-info', title: '免责声明与帮助', sub: '小伴结果仅供参考' },
 ]
 
 /* 趣味探索（原型 05）入口：右上角约束 → 全部放内容区 */
 const FUN_MENU = [
   { key: 'seasonal', icon: 'ic-cal', title: '时令食材日历', sub: '吃当季 · 最新鲜', url: '/pages/seasonal-calendar/index' },
-  { key: 'rescue', icon: 'ic-camera', title: '黑暗料理拯救', sub: '翻车现场 AI 诊断', url: '/pages/dark-rescue/index' },
+  { key: 'rescue', icon: 'ic-camera', title: '黑暗料理拯救', sub: '翻车现场 小伴诊断', url: '/pages/dark-rescue/index' },
   { key: 'vote', icon: 'ic-heart', title: '家庭口味投票', sub: '全家决定吃什么', url: '/pages/family-vote/index' },
   { key: 'challenge', icon: 'ic-award', title: '烹饪挑战', sub: '一周只花 50 元', url: '/pages/cooking-challenge/index' },
-  { key: 'agents', icon: 'ic-spark', title: 'AI 主厨团', sub: '营养师+大厨+采购', url: '/pages/multi-agent/index' },
+  { key: 'agents', icon: 'ic-spark', title: '小伴主厨团', sub: '营养师+大厨+采购', url: '/pages/multi-agent/index' },
   { key: 'fridge', icon: 'ic-bell', title: '冰箱管家', sub: '食材过期预警', url: '/pages/fridge/index' },
 ]
 
@@ -115,7 +115,7 @@ export default function Mine() {
     if (item.key === 'disclaimer') {
       Taro.showModal({
         title: '免责声明',
-        content: 'ChefPal 输出的菜谱与问答由 AI 生成，仅供参考，不构成医疗/营养处方；对过敏原请保持谨慎，实际烹饪请以食材新鲜与安全为准。',
+        content: 'ChefPal 输出的菜谱与问答由小伴生成，仅供参考，不构成医疗/营养处方；对过敏原请保持谨慎，实际烹饪请以食材新鲜与安全为准。',
         showCancel: false,
         confirmText: '知道了',
       })

@@ -19,7 +19,7 @@ export const updateProfile = (data: { nickname?: string; avatar_url?: string }) 
   http.put<User>('/users/me/profile', data)
 export const deleteAccount = () => http.del('/users/me')
 
-/* ---------- AI 口味记忆（EXT-13.1/13.2） ---------- */
+/* ---------- 小伴口味记忆（EXT-13.1/13.2） ---------- */
 export interface TasteMemory {
   preferred_styles: string[]
   preferred_topics: string[]

@@ -1,6 +1,6 @@
 /**
- * 口味设置（原型 02 屏2）：忌口 / 辣度 / 咸淡 / 技能 → 注入 AI 推荐偏好
- * + AI 口味记忆（EXT-13.1/13.2）：展示学习到的偏好画像，可一键清空
+ * 口味设置（原型 02 屏2）：忌口 / 辣度 / 咸淡 / 技能 → 注入小伴推荐偏好
+ * + 小伴口味记忆（EXT-13.1/13.2）：展示学习到的偏好画像，可一键清空
  */
 import { Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -43,7 +43,7 @@ export default function Preferences() {
   const resetTaste = () => {
     Taro.showModal({
       title: '清空口味记忆',
-      content: '清空后 AI 将不再根据你的历史收藏/点赞调整推荐。确定清空吗？',
+      content: '清空后小伴将不再根据你的历史收藏/点赞调整推荐。确定清空吗？',
       confirmColor: '#E8482A',
       success: async (r) => {
         if (!r.confirm) return
@@ -101,7 +101,7 @@ export default function Preferences() {
         skill,
       })
       setUser(updated)
-      Taro.showToast({ title: '保存成功，AI 将按此偏好推荐', icon: 'none' })
+      Taro.showToast({ title: '保存成功，小伴将按此偏好推荐', icon: 'none' })
       setTimeout(() => Taro.navigateBack(), 600)
     } catch (e: any) {
       Taro.showToast({ title: e.message || '保存失败', icon: 'none' })
@@ -195,7 +195,7 @@ export default function Preferences() {
       </View>
 
       <View className='set-group'>
-        <View className='set-t'>🧠 AI 口味记忆 <Text className='set-tip'>自动学习 · 注入推荐</Text></View>
+        <View className='set-t'>🧠 小伴口味记忆 <Text className='set-tip'>自动学习 · 注入推荐</Text></View>
         {taste && taste.total_signals > 0 ? (
           <View className='taste-box'>
             <View className='taste-line'>
@@ -217,7 +217,7 @@ export default function Preferences() {
           </View>
         ) : (
           <View className='taste-empty'>
-            <Text>收藏菜谱、点赞作品后，AI 会自动记住你的口味偏好</Text>
+            <Text>收藏菜谱、点赞作品后，小伴会自动记住你的口味偏好</Text>
           </View>
         )}
       </View>
@@ -226,7 +226,7 @@ export default function Preferences() {
         <View className='btn btn--red btn--block' onClick={save}>
           <Text>{saving ? '保存中…' : '保存偏好设置'}</Text>
         </View>
-        <Text className='note note--center'>保存后，AI 生成菜谱将自动注入你的口味偏好</Text>
+        <Text className='note note--center'>保存后，小伴生成菜谱将自动注入你的口味偏好</Text>
       </View>
     </View>
   )

@@ -52,8 +52,8 @@ export default function Favorites() {
         <EmptyState
           icon={tab === 0 ? '💬' : '🍜'}
           title={tab === 0 ? '还没有收藏的问答' : '还没有收藏的菜谱'}
-          desc={tab === 0 ? '问 AI 一个问题，把「核心秘诀」收藏起来\n下次下厨随时翻看' : '去「厨房」生成菜谱，点亮星标收藏'}
-          btnText={tab === 0 ? '去 AI 百科逛逛' : '去厨房生成'}
+          desc={tab === 0 ? '问小伴一个问题，把「核心秘诀」收藏起来\n下次下厨随时翻看' : '去「厨房」生成菜谱，点亮星标收藏'}
+          btnText={tab === 0 ? '去小伴百科逛逛' : '去厨房生成'}
           onBtn={() => Taro.switchTab({ url: tab === 0 ? '/pages/index/index' : '/pages/kitchen/index' })}
         />
       ) : (

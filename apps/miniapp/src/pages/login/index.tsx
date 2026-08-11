@@ -39,19 +39,19 @@ export default function Login() {
       <View className='login-content speedlines'>
         <View className='logo-badge'><Text className='logo-emoji'>🍳</Text></View>
         <Text className='login-title pop'>ChefPal</Text>
-        <Text className='login-sub'>你的口袋 AI 厨师 · 从食材到餐桌</Text>
+        <Text className='login-sub'>你的口袋厨师 · 从食材到餐桌</Text>
         <View className='feat-list'>
           <View className='feat'>
             <View className='f-ic'>🍳</View>
             <View className='feat-body'>
               <Text className='feat-t'>冰箱有什么，就做什么</Text>
-              <Text className='feat-s'>AI 根据你的食材实时生成专属菜谱</Text>
+              <Text className='feat-s'>小伴根据你的食材实时生成专属菜谱</Text>
             </View>
           </View>
           <View className='feat'>
             <View className='f-ic'>✨</View>
             <View className='feat-body'>
-              <Text className='feat-t'>怕翻车？AI 手把手教</Text>
+              <Text className='feat-t'>怕翻车？小伴手把手教</Text>
               <Text className='feat-s'>核心秘诀 · 分步火候 · 避坑指南</Text>
             </View>
           </View>

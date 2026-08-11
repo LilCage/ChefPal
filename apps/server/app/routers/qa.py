@@ -43,7 +43,7 @@ async def ask(
     await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
     out = await qa_agent.run_qa(body.question)
     if out["error"] or out["result"] is None:
-        raise AppError(out["error"] or "AI 生成失败，请稍后重试", code=502, status_code=502)
+        raise AppError(out["error"] or "生成失败，请稍后重试", code=502, status_code=502)
 
     answer = out["result"]
     record = QA_Record(

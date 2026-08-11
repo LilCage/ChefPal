@@ -1,5 +1,5 @@
 /**
- * 拍照识食材（原型 04 屏1）：取景框 + 快门/相册 → AI 识别 → 食材 chips → 去厨房生成菜谱
+ * 拍照识食材（原型 04 屏1）：取景框 + 快门/相册 → 小伴识别 → 食材 chips → 去厨房生成菜谱
  */
 import { Image, Input, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
@@ -95,7 +95,7 @@ export default function PhotoCapture() {
             <View className='cam-ghost'><Text>🍅🥚🥬</Text></View>
           </>
         )}
-        <View className='cam-hint'><Text>{recognizing ? 'AI 识别中…' : '对准冰箱里的食材 · 自动识别'}</Text></View>
+        <View className='cam-hint'><Text>{recognizing ? '小伴识别中…' : '对准冰箱里的食材 · 自动识别'}</Text></View>
       </View>
 
       <View className='shutter-zone'>

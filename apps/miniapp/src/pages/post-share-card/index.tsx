@@ -25,7 +25,7 @@ export default function PostShareCard() {
   const [failed, setFailed] = useState(false)
 
   useShareAppMessage(() => ({
-    title: data ? `ChefPal · ${data.nickname} 的跟做作品` : 'ChefPal 口袋 AI 厨师',
+    title: data ? `ChefPal · ${data.nickname} 的跟做作品` : 'ChefPal 口袋厨师',
     path: data ? `/pages/post-detail/index?id=${data.id}` : '/pages/index/index',
     imageUrl: cardImg || undefined,
   }))
@@ -203,7 +203,7 @@ export default function PostShareCard() {
     ctx.fillText('ChefPal', 48, H - 90)
     ctx.fillStyle = BROWN
     ctx.font = '600 24px sans-serif'
-    ctx.fillText('口袋 AI 厨师 · 从食材到餐桌', 48, H - 52)
+    ctx.fillText('口袋厨师 · 从食材到餐桌', 48, H - 52)
 
     // 导出临时文件
     const tmp = await new Promise<string | null>((resolve) => {

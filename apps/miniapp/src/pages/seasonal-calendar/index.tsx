@@ -1,6 +1,6 @@
 /**
  * 时令食材日历（原型 05 屏3）：月份切换 + 当季食材网格 + 当季推荐
- * 数据源 GET /seasonal?month=N（纯静态，无 AI）
+ * 数据源 GET /seasonal?month=N（纯静态，无 AI 调用）
  */
 import { Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'

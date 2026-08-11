@@ -106,8 +106,8 @@ export default function MealPlanPage() {
           <Text className='empty-title'>还没有{mode === 3 ? '3 天' : '7 天'}膳食计划</Text>
           <Text className='empty-desc'>
             {mode === 3
-              ? '基于你的口味偏好，AI 生成 3 天 × 早中晚三餐'
-              : '基于你的口味偏好，AI 生成 7 天计划 + 每天营养分析（热量/蛋白/脂肪/碳水）'}
+              ? '基于你的口味偏好，小伴生成 3 天 × 早中晚三餐'
+              : '基于你的口味偏好，小伴生成 7 天计划 + 每天营养分析（热量/蛋白/脂肪/碳水）'}
           </Text>
           <View className='btn btn--red btn--block' onClick={regenerate}>
             <Text>{generating ? '生成中…' : `生成我的${mode === 3 ? '3 天' : '7 天'}膳食计划`}</Text>

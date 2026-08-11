@@ -183,7 +183,7 @@ export default function PostDetail() {
           >
             <View className='lc-ic'><Text>🍽</Text></View>
             <View className='lc-body'>
-              <Text className='lc-title'>{post.my_recipe_id ? '查看完整自建菜谱' : '查看完整 AI 菜谱'}</Text>
+              <Text className='lc-title'>{post.my_recipe_id ? '查看完整自建菜谱' : '查看完整小伴菜谱'}</Text>
               <Text className='lc-sub'>点此查看做法步骤</Text>
             </View>
             <View className='ic ic-chev-r ic-sm lc-go' />

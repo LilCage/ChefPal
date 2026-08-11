@@ -1,5 +1,5 @@
 /**
- * 黑暗料理拯救（原型 05 屏1）：上传翻车现场照 → AI 诊断问题 + 补救方案
+ * 黑暗料理拯救（原型 05 屏1）：上传翻车现场照 → 小伴诊断问题 + 补救方案
  * 数据源 POST /rescue/diagnose（复用智谱 GLM 视觉，原型 faile-img / diag-card）
  */
 import { Image, Text, View } from '@tarojs/components'
@@ -83,7 +83,7 @@ export default function DarkRescue() {
 
       <View className='sec'>
         <View className={`btn btn--red btn--block ${diagnosing ? 'btn--disabled' : ''}`} onClick={diagnose}>
-          <Text>{diagnosing ? '诊断中…' : '🔍 一键 AI 诊断'}</Text>
+          <Text>{diagnosing ? '诊断中…' : '🔍 一键小伴诊断'}</Text>
         </View>
       </View>
 
@@ -110,7 +110,7 @@ export default function DarkRescue() {
         </View>
       )}
 
-      <Text className='note rescue-note'>AI 补救仅供参考 · 拍照可再次诊断</Text>
+      <Text className='note rescue-note'>小伴补救仅供参考 · 拍照可再次诊断</Text>
     </View>
   )
 }

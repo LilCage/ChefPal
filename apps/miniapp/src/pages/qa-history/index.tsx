@@ -71,7 +71,7 @@ export default function QAHistory() {
       </View>
 
       {records.length === 0 && (
-        <View className='note note--center'>暂无问答记录，去首页问 AI 一个问题吧</View>
+        <View className='note note--center'>暂无问答记录，去首页问小伴一个问题吧</View>
       )}
 
       {records.length > 0 && (

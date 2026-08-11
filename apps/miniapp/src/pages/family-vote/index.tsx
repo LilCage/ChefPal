@@ -1,5 +1,5 @@
 /**
- * 家庭口味投票（原型 05 屏2）：AI 生成 3 道菜 → 全家投票决定今晚吃什么
+ * 家庭口味投票（原型 05 屏2）：小伴生成 3 道菜 → 全家投票决定今晚吃什么
  * - 创建模式：输入冰箱食材 → 生成 3 选项
  * - 受邀模式：分享链接带 ?id= → 直接查看并投票
  * 数据源 POST /votes/generate、GET/POST /votes/{id}、GET /votes/{id}/share-card
@@ -57,7 +57,7 @@ export default function FamilyVote() {
 
   const generate = async () => {
     if (ingredients.length === 0) {
-      Taro.showToast({ title: '先告诉 AI 冰箱里有什么', icon: 'none' })
+      Taro.showToast({ title: '先告诉小伴冰箱里有什么', icon: 'none' })
       return
     }
     if (generating) return
@@ -101,7 +101,7 @@ export default function FamilyVote() {
         <NavBar title='家庭口味投票' showBack />
 
         <View className='field'>
-          <View className='field-label'>✨ 冰箱里有什么（AI 生成 3 道菜）</View>
+          <View className='field-label'>✨ 冰箱里有什么（小伴生成 3 道菜）</View>
           <View className='chips'>
             {ingredients.map((i) => (
               <View key={i} className='chip chip--on'>
@@ -139,7 +139,7 @@ export default function FamilyVote() {
 
       <View className='vote-q'>
         <Text className='vote-title'>🍲 3 道菜 · 全家投票</Text>
-        <Text className='vote-sub'>AI 已结合冰箱食材生成 · {vote.status === 'closed' ? '投票已结束' : '投票决定今晚吃什么'}</Text>
+        <Text className='vote-sub'>小伴已结合冰箱食材生成 · {vote.status === 'closed' ? '投票已结束' : '投票决定今晚吃什么'}</Text>
       </View>
 
       {vote.options.map((opt, idx) => {

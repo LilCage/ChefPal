@@ -1,6 +1,6 @@
 /**
  * 屏1 · 作品发布（原型 03）
- * 图片上传网格(≤3张) + 心得(200字) + 关联菜谱(收藏AI菜谱 或 我的自建菜谱) + 话题选择 → 发布
+ * 图片上传网格(≤3张) + 心得(200字) + 关联菜谱(收藏小伴菜谱 或 我的自建菜谱) + 话题选择 → 发布
  */
 import { Button, Image, Text, Textarea, View } from '@tarojs/components'
 import Taro, { useLoad } from '@tarojs/taro'
@@ -178,12 +178,12 @@ export default function PostCreate() {
       <View className='link-card' onClick={myRecipeId ? undefined : pickRecipe}>
         <View className='lc-ic'><Text>{recipe ? '🍽' : '✨'}</Text></View>
         <View className='lc-body'>
-          <Text className='lc-title'>{recipe ? recipe.title : '关联 AI 菜谱（可选）'}</Text>
+          <Text className='lc-title'>{recipe ? recipe.title : '关联小伴菜谱（可选）'}</Text>
           <Text className='lc-sub'>
             {myRecipeId
               ? '关联我的自建菜谱'
               : recipe
-                ? `关联的 AI 菜谱 · 匹配 ${recipe.match_score}%`
+                ? `关联的小伴菜谱 · 匹配 ${recipe.match_score}%`
                 : '从我的收藏菜谱中选择'}
           </Text>
         </View>
