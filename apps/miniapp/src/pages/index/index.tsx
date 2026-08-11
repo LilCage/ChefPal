@@ -5,7 +5,7 @@
 import { Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow, useUnload } from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
-import { addFavorite, askQAStream, deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
+import { addFavorite, askQAStream, deleteQARecord, fetchQAHistory, type QARecord, type QARecommendation } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
@@ -149,6 +149,14 @@ export default function Index() {
     setExpandedId((prev) => (prev === h.id ? null : h.id))
   }
 
+  /* 多菜推荐"菜名点详情" → 知识库菜谱详情页。
+   * 命中知识库的推荐项带 kb_id（UUID 纯 ASCII），直接用 id 导航避免中文编码坑；
+   * 无 kb_id（AI 生成未入库）才用菜名。 */
+  const openDish = (r: QARecommendation) => {
+    const q = r.kb_id ? `id=${r.kb_id}` : `title=${encodeURIComponent(r.name)}`
+    Taro.navigateTo({ url: `/pages/kb-detail/index?${q}` })
+  }
+
   /* 完整答案正文（多菜推荐 或 单菜秘诀/食材/步骤/避坑），供当前答案区与历史展开区复用 */
   const renderAnswerBody = (rec: QARecord) => {
     const ans = rec.answer
@@ -159,8 +167,11 @@ export default function Index() {
             <View key={i} className='rec-card'>
               <View className='rec-head'>
                 <Text className='rec-no'>{i + 1}</Text>
-                <Text className='rec-name'>{r.name}</Text>
+                <Text className='rec-name' onClick={() => openDish(r)}>{r.name}</Text>
                 {r.time_minutes > 0 && <View className='mini-chip'><Text userSelect>⏱ {r.time_minutes}分钟</Text></View>}
+                <View className='mini-chip kb' onClick={() => openDish(r)}>
+                  <Text userSelect>做法 ›</Text>
+                </View>
               </View>
               <Text className='rec-secret' userSelect>{r.core_secret}</Text>
               {r.ingredients.length > 0 && (
@@ -171,6 +182,12 @@ export default function Index() {
         </View>
       )
     }
+    const hasSplit = (ans.prep_steps?.length || 0) > 0
+    /* 步骤文本去掉行首序号（"1. "），由前端统一编号，避免双编号 */
+    const stepText = (s: string) => s.replace(/^\s*\d+[.、)]\s*/, '')
+    const renderStep = (s: string, i: number) => (
+      <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text userSelect>{stepText(s)}</Text></View>
+    )
     return (
       <>
         <Text className='qa-ans-secret' userSelect>{ans.core_secret}</Text>
@@ -180,15 +197,30 @@ export default function Index() {
             <Text className='qa-ans-ings' userSelect>{ans.ingredients.join('、')}</Text>
           </>
         )}
-        {ans.steps.length > 0 && (
+        {hasSplit ? (
           <>
+            {ans.prep_steps!.length > 0 && (
+              <>
+                <Text className='qa-ans-label'>食材处理</Text>
+                <View className='qa-ans-steps'>
+                  {ans.prep_steps!.map(renderStep)}
+                </View>
+              </>
+            )}
             <Text className='qa-ans-label'>烹饪步骤</Text>
             <View className='qa-ans-steps'>
-              {ans.steps.map((s, i) => (
-                <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text userSelect>{s}</Text></View>
-              ))}
+              {ans.cook_steps!.map(renderStep)}
             </View>
           </>
+        ) : (
+          ans.steps.length > 0 && (
+            <>
+              <Text className='qa-ans-label'>烹饪步骤</Text>
+              <View className='qa-ans-steps'>
+                {ans.steps.map(renderStep)}
+              </View>
+            </>
+          )
         )}
         {ans.avoid_pitfalls.length > 0 && (
           <>
@@ -277,11 +309,25 @@ export default function Index() {
             </View>
           </View>
 
+          {current.kb_hit && (
+            <View className='kb-badge'>
+              <Text userSelect>📚 知识库命中 · {current.answer.dish_name || '已有菜谱'}</Text>
+            </View>
+          )}
+
           {!answerCollapsed && (
             <>
               {renderAnswerBody(current)}
 
               <View className='qa-ans-actions'>
+                {current.kb_hit && current.kb_id && !current.answer.recommendations && (
+                  <View className='btn btn--red btn--xs' onClick={(e) => {
+                    e.stopPropagation()
+                    Taro.navigateTo({ url: `/pages/kb-detail/index?id=${current.kb_id}` })
+                  }}>
+                    <Text userSelect>查看完整菜谱 ›</Text>
+                  </View>
+                )}
                 <View className='btn btn--white btn--xs' onClick={(e) => { e.stopPropagation(); saveFavorite(current) }}>
                   <View className='ic ic-star ic-sm' />
                   <Text userSelect>收藏</Text>

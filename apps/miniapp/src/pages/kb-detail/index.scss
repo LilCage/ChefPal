@@ -1,0 +1,97 @@
+/* 菜谱知识库详情（RAG）：复用菜谱详情的漫画风视觉 */
+.detail {
+  .center-load {
+    display: block;
+    text-align: center;
+    padding-top: 200px;
+  }
+
+  .hero {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2.5px solid var(--ink);
+    background: linear-gradient(135deg, #d9f2d6, #7ec8a0);
+
+    .hero-emoji { font-size: 144px; }
+  }
+
+  /* HowToCook 成品图画廊（顶部横向滑动） */
+  .img-gallery {
+    width: 100%;
+    white-space: nowrap;
+    border-bottom: 2.5px solid var(--ink);
+    background: #fff;
+
+    .gallery-img {
+      width: 100%;
+      max-height: 480px;
+      vertical-align: top;
+    }
+  }
+
+  /* 分段式详情（食材清单/食材处理/烹饪步骤/避坑指南）：seg 样式来自 theme.scss */
+
+  .head {
+    padding: 28px 28px 0;
+
+    .head-title {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      .head-name { font-size: 40px; font-weight: 900; flex: 1; }
+    }
+
+    .head-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .core {
+      margin-top: 28px;
+
+      .core-text {
+        font-size: 26px;
+        font-weight: 700;
+        margin-top: 16px;
+        display: block;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  .seg { margin-top: 28px; }
+
+  /* 未收录空状态：引导 AI 现生成 */
+  .kb-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 160px 48px 0;
+    text-align: center;
+
+    .kb-empty-emoji { font-size: 120px; }
+    .kb-empty-title { font-size: 36px; font-weight: 900; margin-top: 24px; }
+    .kb-empty-desc { font-size: 24px; color: var(--brown); line-height: 1.6; margin-top: 16px; }
+
+    .kb-gen-btn { margin-top: 48px; min-width: 360px; justify-content: center; }
+  }
+
+  /* 技巧条目：正文全文 */
+  .tip-content {
+    margin: 32px 28px 0;
+
+    .tip-body {
+      display: block;
+      font-size: 26px;
+      color: var(--brown);
+      line-height: 1.7;
+      margin-top: 16px;
+      white-space: pre-wrap;
+    }
+  }
+}

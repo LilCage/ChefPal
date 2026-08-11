@@ -7,6 +7,8 @@
 const BASE_URL = 'http://127.0.0.1:8001'
 
 export const API_BASE_URL = `${BASE_URL}/api`
+/** 静态资源根（不带 /api）：菜谱知识库成品图走 /kb-data/<相对路径> */
+export const STATIC_BASE_URL = BASE_URL
 
 /** 是否使用 mock 数据（后端未就绪时可开；接真实后端时改为 false） */
 export const USE_MOCK = false

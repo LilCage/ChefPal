@@ -35,6 +35,7 @@ export default defineAppConfig({
     'pages/voice-input/index',
     'pages/cook-assistant/index',
     'pages/fridge/index',
+    'pages/kb-detail/index',
   ],
   window: {
     // 所有页面都用自定义漫画风导航，隐藏微信原生导航栏（避免重复 title）

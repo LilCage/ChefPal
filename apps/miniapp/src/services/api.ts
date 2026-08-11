@@ -47,6 +47,7 @@ export interface QARecommendation {
   core_secret: string
   time_minutes: number
   ingredients: string[]
+  kb_id?: string | null
 }
 export interface QARecord {
   id: string
@@ -56,13 +57,47 @@ export interface QARecord {
     dish_name?: string
     ingredients: string[]
     steps: string[]
+    prep_steps?: string[]
+    cook_steps?: string[]
     avoid_pitfalls: string[]
     sources?: string[]
     recommendations?: QARecommendation[]
   }
   sources: string[] | null
+  kb_hit?: boolean
+  kb_id?: string | null
   created_at: string | null
 }
+
+/* ---------- 菜谱知识库（RAG：HowToCook 种子 + AI 沉淀） ---------- */
+export interface KBEntry {
+  id: string
+  kind: 'recipe' | 'tip'
+  title: string
+  summary: string
+  content: string
+  ingredients: string[]
+  steps: string[]
+  prep_steps: string[]
+  cook_steps: string[]
+  tips: string[]
+  time_minutes: number
+  difficulty: string
+  style: string
+  category: string
+  source_type: string
+  source_id: string
+  hit_count: number
+  similarity: number | null
+  created_at: string | null
+}
+/** 按菜名查知识库菜谱（多菜推荐点详情用）；未收录抛 404 */
+export const fetchKBRecipeByTitle = (title: string) =>
+  http.get<KBEntry>(`/kb/recipes?q=${encodeURIComponent(title)}`)
+export const fetchKBEntry = (id: string) => http.get<KBEntry>(`/kb/${id}`)
+/** 菜名未收录时 AI 现生成完整做法并入库 */
+export const generateKBRecipe = (title: string) =>
+  http.post<KBEntry & { from_kb: boolean }>('/kb/generate', { title })
 
 export const askQA = (question: string) =>
   http.post<QARecord>('/qa/ask', { question })

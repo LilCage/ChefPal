@@ -115,6 +115,20 @@
     line-height: 1.6;
   }
 
+  /* 知识库命中标识 */
+  .kb-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #DFF3EA;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    color: var(--green-dark);
+    font-size: 20px;
+    font-weight: 800;
+    padding: 4px 14px;
+    margin-top: 12px;
+  }
+
   .qa-ans-ings {
     font-size: 25px;
     color: var(--brown);
@@ -155,7 +169,23 @@
         flex: none;
       }
 
-      .rec-name { font-size: 28px; font-weight: 900; flex: 1; }
+      .rec-name {
+        font-size: 28px;
+        font-weight: 900;
+        flex: 1;
+        color: var(--red);
+        text-decoration: underline;
+        text-decoration-color: rgba(232, 72, 42, 0.4);
+        text-underline-offset: 4px;
+      }
+    }
+
+    /* 菜名点详情的"做法"入口 chip */
+    .mini-chip.kb {
+      background: #FFF1C9;
+      color: #A9741B;
+      border-color: var(--ink);
+      flex: none;
     }
 
     .rec-secret {
