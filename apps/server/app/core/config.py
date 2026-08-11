@@ -39,6 +39,14 @@ class Settings(BaseSettings):
     AI_TIMEOUT_SECONDS: float = 60.0
     AI_MAX_RETRIES: int = 1
 
+    # ---- 百炼文本向量（菜谱知识库 RAG）----
+    EMBEDDING_MODEL: str = "text-embedding-v3"
+    EMBEDDING_DIM: int = 1024
+    # 命中判定：相似度(1 - cosine_distance) ≥ 该值才算知识库命中
+    KB_MIN_SIMILARITY: float = 0.55
+    # 一次检索返回候选条数
+    KB_TOP_K: int = 8
+
     # ---- 百炼语音识别（语音输入 ASR）----
     # 走 OpenAI 兼容接口，同步返回文字；qwen3-asr-flash 便宜快速
     BAILIAN_ASR_MODEL: str = "qwen3-asr-flash"

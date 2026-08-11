@@ -2,7 +2,8 @@
 # 用法: docker compose up -d postgres
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector 官方镜像（PG16 + vector 扩展），供菜谱知识库 RAG 向量检索
+    image: pgvector/pgvector:pg16
     container_name: chefpal-postgres
     environment:
       POSTGRES_USER: chefpal

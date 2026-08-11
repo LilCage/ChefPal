@@ -1,8 +1,13 @@
-"""STEP 3 · 问答闭环 TDD：mock LLM → 结构化落库/历史/删除/限额/降级/流式SSE。"""
+"""STEP 3 · 问答闭环 TDD：mock LLM → 结构化落库/历史/删除/限额/降级/流式SSE。
+
+RAG 说明：本文件只测 AI 生成路径，默认 mock 掉知识库检索（未命中）与入库，
+避免真实 embedding API 调用；知识库命中路径在 test_qa_rag.py 单独覆盖。
+"""
 import json
 
 import pytest
 
+from app.services import kb as kb_service
 from app.services.agents import qa_agent
 from app.services.llm.client import LLMError
 
@@ -35,6 +40,19 @@ def _mock_ainvoke(monkeypatch, payload):
         return payload(kwargs) if callable(payload) else payload
 
     monkeypatch.setattr(qa_agent, "ainvoke_json", _fake)
+
+
+@pytest.fixture(autouse=True)
+def _kb_off(monkeypatch):
+    """本文件只测 AI 路径：KB 检索恒未命中，AI 结果不入库（免真实 embedding）。"""
+    async def _miss(db, query, **kw):
+        return []
+
+    async def _no_store(db, **kw):
+        return None
+
+    monkeypatch.setattr(kb_service, "search_kb", _miss)
+    monkeypatch.setattr(kb_service, "upsert_kb_entry", _no_store)
 
 
 def test_ask_success_saves_and_lists(client, auth_headers, monkeypatch):

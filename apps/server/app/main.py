@@ -19,6 +19,7 @@ from app.routers import (
     favorites,
     follows,
     fridge,
+    kb,
     my_recipes,
     plans,
     posts,
@@ -40,6 +41,11 @@ app = FastAPI(title=settings.APP_NAME, version="0.1.0")
 # 本地回落模式（COS 未配置时）静态图片目录；COS 配置后仍挂载，不影响测试
 Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=settings.UPLOAD_DIR), name="static")
+
+# 菜谱知识库 HowToCook 数据（成品图等）静态托管，/kb-data/<相对路径>
+_KB_DATA_DIR = Path(__file__).resolve().parent.parent / "kb_data" / "howtocook"
+if _KB_DATA_DIR.exists():
+    app.mount("/kb-data", StaticFiles(directory=_KB_DATA_DIR), name="kb-data")
 
 app.add_middleware(
     CORSMiddleware,
@@ -69,6 +75,7 @@ for router in (
     auth.router,
     users.router,
     qa.router,
+    kb.router,
     recipes.router,
     favorites.router,
     my_recipes.router,

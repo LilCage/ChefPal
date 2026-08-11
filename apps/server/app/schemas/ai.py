@@ -9,6 +9,7 @@ class QARecommendation(BaseModel):
     core_secret: str                             # 这道菜的核心秘诀/做法一句话
     time_minutes: int = Field(default=0, ge=0, le=1440)  # 预计耗时（可 0=未知）
     ingredients: list[str] = Field(default_factory=list)  # 该菜主要食材（可空）
+    kb_id: str | None = None                     # 命中知识库的条目 id（菜名点详情用）
 
 
 class QASchema(BaseModel):
@@ -22,10 +23,14 @@ class QASchema(BaseModel):
     core_secret: str = ""                          # 核心秘诀（一句话；推荐型可为空串）
     dish_name: str = ""                            # 菜名（单菜做法型必填）
     ingredients: list[str] = Field(default_factory=list)   # 食材清单
-    steps: list[str] = Field(default_factory=list)         # 步骤（序号化，含火候/时长）
+    steps: list[str] = Field(default_factory=list)         # 步骤（序号化，含火候/时长；无切分时全量）
+    prep_steps: list[str] = Field(default_factory=list)    # 食材处理（切/洗/腌/焯等，可空）
+    cook_steps: list[str] = Field(default_factory=list)    # 烹饪步骤（下锅/调味/出锅等，可空）
     avoid_pitfalls: list[str] = Field(default_factory=list)  # 避坑指南
     sources: list[str] | None = None               # 联网搜索来源 URL
     recommendations: list[QARecommendation] | None = None   # 多菜推荐清单（推荐型用）
+    kb_hit: bool = False                           # 是否直接命中菜谱知识库（免 AI）
+    kb_id: str | None = None                       # 命中的知识库条目 id（单菜命中时）
 
 
 class RecipeStep(BaseModel):

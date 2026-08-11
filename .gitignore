@@ -24,6 +24,9 @@ build/
 # 社区图片本地回落存储（COS 未配置时）
 apps/server/uploads/
 
+# HowToCook 菜谱数据（脚本从 GitHub 拉取，不入库）
+apps/server/kb_data/
+
 # 已修复 bug 的截图（临时调试产物）
 bug/
 

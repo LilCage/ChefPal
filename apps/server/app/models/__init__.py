@@ -15,6 +15,7 @@ from app.models.my_recipe import MyRecipe
 from app.models.post import Post
 from app.models.qa_record import QA_Record
 from app.models.recipe import Recipe
+from app.models.recipe_kb import RecipeKB
 from app.models.recipe_version import RecipeVersion
 from app.models.shopping_list import ShoppingList
 from app.models.taste_signal import TasteSignal
@@ -24,6 +25,7 @@ __all__ = [
     "User",
     "QA_Record",
     "Recipe",
+    "RecipeKB",
     "RecipeVersion",
     "Favorite",
     "AICall",

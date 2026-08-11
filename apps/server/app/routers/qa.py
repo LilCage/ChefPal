@@ -1,4 +1,10 @@
-"""问答路由：POST /api/qa/ask、POST /api/qa/stream（SSE流式）、GET /api/qa/history、DELETE /api/qa/{id}。"""
+"""问答路由：POST /api/qa/ask、POST /api/qa/stream（SSE流式）、GET /api/qa/history、DELETE /api/qa/{id}。
+
+RAG 集成（菜谱知识库）：
+- 先向量检索 recipe_kb（HowToCook 种子 + AI 沉淀）
+- 命中 → 直接返回知识库答案（免 AI 调用、不计入每日限额），响应带 kb_hit/kb_id
+- 未命中 → 走 AI 联网生成，并把结果按菜名自动入库（best-effort，失败不阻断）
+"""
 import asyncio
 import json
 import re
@@ -17,12 +23,17 @@ from app.db.session import get_db
 from app.models.qa_record import QA_Record
 from app.models.user import User
 from app.schemas.ai import QASchema
+from app.services import kb as kb_service
 from app.services.agents import qa_agent
 from app.services.llm.client import LLMError, astream_text
+from app.services.llm.embedding import EmbeddingError
 from app.services.rate_limit import ensure_within_limit, record_ai_call
 
 router = APIRouter(prefix="/qa", tags=["qa"])
 settings = get_settings()
+
+# 多菜推荐意图的关键词：命中则优先返回多道菜，否则返回单道最佳命中
+MULTI_HINT_KEYWORDS = ("推荐", "哪几道", "换换口味", "有什么好做", "来几道", "几道菜", "想吃")
 
 
 class QAAskRequest(BaseModel):
@@ -30,14 +41,147 @@ class QAAskRequest(BaseModel):
 
 
 def _qa_record_out(rec: QA_Record) -> dict:
+    answer = rec.answer or {}
     return {
         "id": str(rec.id),
         "question": rec.question,
-        "answer": rec.answer,
+        "answer": answer,
         "sources": rec.sources,
+        "kb_hit": bool(answer.get("kb_hit", False)),
+        "kb_id": answer.get("kb_id"),
         "created_at": rec.created_at.isoformat() if rec.created_at else None,
     }
 
+
+# ---------- 知识库命中 → 结构化答案 ----------
+
+def _single_recipe_answer(entry) -> dict:
+    return {
+        "core_secret": entry.summary or (entry.tips[0] if entry.tips else ""),
+        "dish_name": entry.title,
+        "ingredients": entry.ingredients,
+        "steps": entry.steps,
+        "prep_steps": entry.prep_steps,
+        "cook_steps": entry.cook_steps,
+        "avoid_pitfalls": entry.tips,
+        "sources": [],
+        "recommendations": None,
+        "kb_hit": True,
+        "kb_id": str(entry.id),
+    }
+
+
+def _single_tip_answer(entry) -> dict:
+    return {
+        "core_secret": (entry.summary or entry.content or entry.title)[:300],
+        "dish_name": entry.title,
+        "ingredients": [],
+        "steps": [],
+        "avoid_pitfalls": [],
+        "sources": [],
+        "recommendations": None,
+        "kb_hit": True,
+        "kb_id": str(entry.id),
+    }
+
+
+def _multi_recipe_answer(recipes: list[dict]) -> dict:
+    return {
+        "core_secret": "",
+        "dish_name": "",
+        "ingredients": [],
+        "steps": [],
+        "avoid_pitfalls": [],
+        "sources": [],
+        "recommendations": [
+            {
+                "name": e.title,
+                "core_secret": e.summary or (e.tips[0] if e.tips else ""),
+                "time_minutes": e.time_minutes,
+                "ingredients": e.ingredients,
+                "kb_id": str(e.id),
+            }
+            for h in recipes
+            for e in [h["entry"]]
+        ],
+        "kb_hit": True,
+        "kb_id": None,
+    }
+
+
+def _kb_to_qa_answer(question: str, hits: list[dict]) -> dict | None:
+    """知识库命中列表 → QASchema 字典。
+
+    规则：多菜推荐意图且 ≥2 道菜 → 多菜；否则返回总体最高相似度条目
+    （tip 命中回答技巧，recipe 命中回答单菜）。避免"怎么去腥"这类技巧问题
+    被菜谱条目抢占。
+    """
+    if not hits:
+        return None
+    recipes = [h for h in hits if h["entry"].kind == "recipe"]
+    if any(k in question for k in MULTI_HINT_KEYWORDS) and len(recipes) >= 2:
+        return _multi_recipe_answer(recipes[:3])
+    top = hits[0]
+    entry = top["entry"]
+    if entry.kind == "tip":
+        return _single_tip_answer(entry)
+    return _single_recipe_answer(entry)
+
+
+async def _store_generated_to_kb(db: AsyncSession, answer: dict, record_id: UUID) -> None:
+    """AI 生成结果按菜名入库（best-effort，向量服务失败静默，不阻断主流程）。"""
+    try:
+        if answer.get("dish_name"):
+            await kb_service.upsert_kb_entry(
+                db,
+                kind="recipe",
+                title=answer["dish_name"],
+                summary=answer.get("core_secret", ""),
+                ingredients=answer.get("ingredients", []),
+                steps=answer.get("steps", []),
+                prep_steps=answer.get("prep_steps", []),
+                cook_steps=answer.get("cook_steps", []),
+                tips=answer.get("avoid_pitfalls", []),
+                source_type=kb_service.SOURCE_QA_ANSWER,
+                source_id=str(record_id),
+            )
+        for r in (answer.get("recommendations") or []):
+            name = (r or {}).get("name")
+            if not name:
+                continue
+            await kb_service.upsert_kb_entry(
+                db,
+                kind="recipe",
+                title=name,
+                summary=r.get("core_secret", ""),
+                ingredients=r.get("ingredients", []),
+                source_type=kb_service.SOURCE_QA_ANSWER,
+                source_id=str(record_id),
+            )
+        await db.flush()
+    except EmbeddingError:
+        pass  # 知识库不可用不影响问答主流程
+
+
+async def _bump_hits(db: AsyncSession, hits: list[dict]) -> None:
+    for h in hits:
+        await kb_service.increment_hit(db, h["entry"])
+
+
+async def _search_or_generate(db: AsyncSession, question: str, user_id: UUID):
+    """先检索知识库；命中返回 (answer, is_kb_hit)，未命中返回 None。"""
+    try:
+        hits = await kb_service.search_kb(db, question)
+    except EmbeddingError:
+        hits = []
+    answer = _kb_to_qa_answer(question, hits) if hits else None
+    if answer is not None:
+        await _bump_hits(db, hits[:3])
+        return answer, True
+    return None, False
+
+
+# ---------- 接口 ----------
 
 @router.post("/ask")
 async def ask(
@@ -45,7 +189,20 @@ async def ask(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """提问 → AI 联网搜索 + 结构化回答 → 落库。"""
+    """提问 → 先查知识库，命中直接返回；未命中 AI 联网生成并入库。"""
+    answer, is_kb = await _search_or_generate(db, body.question, user.id)
+    if is_kb:
+        record = QA_Record(
+            user_id=user.id,
+            question=body.question,
+            answer=answer,
+            sources=None,
+        )
+        db.add(record)
+        await db.commit()
+        await db.refresh(record)
+        return ok(_qa_record_out(record))
+
     await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
     out = await qa_agent.run_qa(body.question)
     if out["error"] or out["result"] is None:
@@ -59,6 +216,8 @@ async def ask(
         sources=answer.get("sources"),
     )
     db.add(record)
+    await db.flush()  # 先拿到 record.id（source_id 溯源用）
+    await _store_generated_to_kb(db, answer, record.id)
     await record_ai_call(db, user.id, "qa", settings.DEEPSEEK_MODEL)
     await db.commit()
     await db.refresh(record)
@@ -96,16 +255,36 @@ async def ask_stream(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """流式问答：模型逐字输出 → SSE。打字机显示核心秘诀，完成后渲染结构化卡片。
+    """流式问答：知识库命中直接 done；未命中模型逐字输出 → SSE。
 
-    流程：流式收集完整 JSON → 语义校验 → 落库 → SSE 返回。
     SSE 事件：
       {"type":"delta","text":"核心秘诀的逐字片段"}
       {"type":"done","data":{...结构化回答...}}
+      {"type":"error","message":"..."}
     """
-    await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
+    # 先查知识库（命中不占每日 AI 限额）
+    try:
+        kb_hits = await kb_service.search_kb(db, body.question)
+    except EmbeddingError:
+        kb_hits = []
+    kb_answer = _kb_to_qa_answer(body.question, kb_hits) if kb_hits else None
 
     async def event_stream():
+        if kb_answer is not None:
+            await _bump_hits(db, kb_hits[:3])
+            record = QA_Record(
+                user_id=user.id,
+                question=body.question,
+                answer=kb_answer,
+                sources=None,
+            )
+            db.add(record)
+            await db.commit()
+            await db.refresh(record)
+            yield f"data: {json.dumps({'type': 'done', 'data': _qa_record_out(record)}, ensure_ascii=False)}\n\n"
+            return
+
+        await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
         # 流式收集完整模型输出
         buf = ""
         try:
@@ -126,7 +305,7 @@ async def ask_stream(
             yield f"data: {json.dumps({'type': 'error', 'message': 'AI 回答生成失败，请稍后重试'})}\n\n"
             return
 
-        # 落库
+        # 落库 + AI 生成结果入库
         record = QA_Record(
             user_id=user.id,
             question=body.question,
@@ -134,6 +313,8 @@ async def ask_stream(
             sources=data.get("sources"),
         )
         db.add(record)
+        await db.flush()  # 先拿到 record.id
+        await _store_generated_to_kb(db, data, record.id)
         await record_ai_call(db, user.id, "qa", settings.DEEPSEEK_MODEL)
         await db.commit()
         await db.refresh(record)

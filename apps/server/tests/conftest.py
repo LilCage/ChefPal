@@ -6,12 +6,14 @@ os.environ.setdefault("APP_ENV", "test")
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app import models  # noqa: F401  确保所有 ORM 注册到 metadata
 from app.core.config import get_settings
 from app.db.base import Base
+from app.db.pgvector import make_pgvector_creator
 from app.db.session import get_db
 from app.main import app
 
@@ -19,7 +21,13 @@ settings = get_settings()
 
 # NullPool：每条连接在其使用的事件循环内新建即用即弃，
 # 规避 asyncpg 连接与 loop 绑定导致的"Event loop is closed / InterfaceError"
-test_engine = create_async_engine(settings.TEST_DATABASE_URL, echo=False, poolclass=NullPool)
+# async_creator：每个连接注册 pgvector vector 类型（recipe_kb 依赖）
+test_engine = create_async_engine(
+    settings.TEST_DATABASE_URL,
+    echo=False,
+    poolclass=NullPool,
+    async_creator=make_pgvector_creator(settings.TEST_DATABASE_URL),
+)
 TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -38,6 +46,8 @@ def _reset_test_db():
 
     async def reset():
         async with test_engine.begin() as conn:
+            # 确保 pgvector 扩展可用（recipe_kb 的 VECTOR 列依赖；幂等）
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
 
@@ -49,6 +59,13 @@ def _reset_test_db():
 def client():
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture()
+async def db():
+    """直接访问测试库会话（服务层单测用，如 recipe_kb 向量检索）。"""
+    async with TestSessionLocal() as session:
+        yield session
 
 
 @pytest.fixture()
