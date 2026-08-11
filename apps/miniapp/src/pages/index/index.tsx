@@ -12,7 +12,20 @@ import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
 import './index.scss'
 
-const HOT_QUESTIONS = ['红烧肉不腻', '蒸蛋怎么才嫩', '炖肉去腥', '剩菜大变身', '煎鱼不破皮', '青菜不变色']
+const HOT_QUESTIONS = [
+  '红烧肉怎么做才能肥而不腻、入口即化',
+  '蒸蛋怎么蒸才嫩滑没有蜂窝',
+  '炖肉怎么去腥增香，肉质更软烂',
+  '冰箱里的剩菜怎么变身新花样',
+  '煎鱼怎么才能不破皮不粘锅',
+  '青菜怎么炒才翠绿不变色',
+  '天气太热了，推荐几道爽口的凉拌菜',
+  '下班太累，推荐几道15分钟快手晚餐',
+  '想吃辣，推荐几道香辣过瘾的下饭菜',
+  '一个人住，一周的省事晚餐怎么安排',
+  '减脂期晚餐吃什么，有肉有菜又不胖',
+  '周末招待朋友，推荐一桌有面子的家常菜',
+]
 
 export default function Index() {
   const setTab = useTabStore((s) => s.setIndex)
@@ -126,7 +139,7 @@ export default function Index() {
         <Textarea
           className='search-input'
           value={keyword}
-          placeholder={`问 AI：${HOT_QUESTIONS[phIndex]}？`}
+          placeholder={`问 AI：${HOT_QUESTIONS[phIndex]}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
