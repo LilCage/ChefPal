@@ -6,7 +6,7 @@ import { Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 import QACard from '../../components/QACard'
-import { addFavorite, askQA, fetchQAHistory, type QARecord } from '../../services/api'
+import { addFavorite, askQA, deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useTabStore } from '../../stores/tab'
 import { getSafeTop } from '../../utils/safeArea'
@@ -75,6 +75,24 @@ export default function Index() {
     }
   }
 
+  const removeHistory = (id: string) => {
+    Taro.showModal({
+      title: '删除这条问答',
+      content: '确定删除这条问答历史吗？',
+      confirmColor: '#E8482A',
+      success: async (r) => {
+        if (!r.confirm) return
+        try {
+          await deleteQARecord(id)
+          setHistory((prev) => prev.filter((h) => h.id !== id))
+          Taro.showToast({ title: '已删除', icon: 'none' })
+        } catch (e: any) {
+          Taro.showToast({ title: e.message || '删除失败', icon: 'none' })
+        }
+      },
+    })
+  }
+
   return (
     <View className='page-content home'>
       {/* 顶部导航 */}
@@ -83,7 +101,6 @@ export default function Index() {
       </View>
 
       <View className='searchbar'>
-        <View className='ic ic-search' />
         <Textarea
           className='search-input'
           value={keyword}
@@ -94,17 +111,12 @@ export default function Index() {
           onInput={(e) => setKeyword(e.detail.value)}
           onConfirm={() => ask(keyword)}
         />
-        <View className='sbtn' onClick={() => ask(keyword)}><View className='ic ic-search--white ic-sm' /></View>
-      </View>
-
-      <View className='section'>
-        <View className='sec-title'>⚡ 猜你想问</View>
-        <View className='chips'>
-          {HOT_QUESTIONS.map((q, i) => (
-            <View key={q} className={`chip ${i === 0 ? 'chip--hot' : ''}`} onClick={() => ask(q)}>
-              <Text>{q}</Text>
-            </View>
-          ))}
+        <View className={`sbtn ${keyword.trim() ? '' : 'sbtn--idle'}`} onClick={() => ask(keyword)}>
+          {keyword.trim() ? (
+            <View className='ic ic-search--white ic-sm' />
+          ) : (
+            <Text className='sbtn-hint'>输入问题</Text>
+          )}
         </View>
       </View>
 
@@ -188,10 +200,15 @@ export default function Index() {
       )}
 
       <View className='section'>
-        <View className='sec-title'>📚 我的问答历史</View>
+        <View className='sec-title'>📚 我的问答历史 <Text className='sec-note'>最近 3 条</Text></View>
       </View>
-      {history.map((h) => (
-        <QACard key={h.id} question={h.question} summary={`核心秘诀：${h.answer.core_secret}`} />
+      {history.slice(0, 3).map((h) => (
+        <View key={h.id} className='hist-row'>
+          <QACard question={h.question} summary={`核心秘诀：${h.answer.core_secret}`} />
+          <View className='hist-del' onClick={() => removeHistory(h.id)}>
+            <View className='ic ic-trash ic-sm' />
+          </View>
+        </View>
       ))}
       {history.length === 0 && !loading && (
         <View className='note note--center'>还没有提问，问 AI 一个问题吧</View>

@@ -1,6 +1,6 @@
 /* 首页右上角已无功能按钮，无需额外导航调整 */
 
-/* 搜索栏（主对话框：加大加高，留足空白；Textarea 支持多行自动换行） */
+/* 搜索栏（主对话框：加大加高，留足空白；Textarea 支持多行自动换行；无放大镜） */
 .searchbar {
   display: flex;
   align-items: flex-start;
@@ -11,13 +11,6 @@
   box-shadow: 5px 5px 0 var(--ink);
   padding: 38px 32px;
   margin: 28px 28px 8px;
-
-  > .ic {
-    width: 48px;
-    height: 48px;
-    margin-top: 10px;
-    flex: none;
-  }
 
   .search-input {
     flex: 1;
@@ -43,11 +36,27 @@
     justify-content: center;
     box-shadow: 3px 3px 0 var(--ink);
     flex: none;
+    flex-direction: column;
+    gap: 4px;
 
     .ic {
       width: 44px;
       height: 44px;
       color: #fff;
+    }
+
+    .sbtn-hint {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    /* 无输入时：置灰 + 不可点 */
+    &.sbtn--idle {
+      background: #d9cdbf;
+      border-color: #b8a898;
+      box-shadow: 3px 3px 0 #b8a898;
     }
   }
 }
@@ -203,4 +212,39 @@
   display: block;
   text-align: center;
   padding: 24px 0 40px;
+}
+
+/* 问答历史：最近 3 条 + 删除按钮 */
+.sec-note {
+  font-size: 22px;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+.hist-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 28px 20px;
+
+  .qa-card {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .hist-del {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: #fff;
+    border: 2px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+
+    .ic { color: var(--red-dark); }
+  }
 }
