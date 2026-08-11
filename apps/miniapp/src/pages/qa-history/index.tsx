@@ -1,5 +1,5 @@
 /**
- * 问答历史（原型 02 屏3）：最近 20 条 · 可删除
+ * 问答历史（原型 02 屏3）：最近 20 条 · 可删除 · 点击展开详情（气泡在左上角指向问题）
  */
 import { Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -20,6 +20,7 @@ function formatTime(iso: string | null): string {
 
 export default function QAHistory() {
   const [records, setRecords] = useState<QARecord[]>([])
+  const [expandedId, setExpandedId] = useState<string | null>(null) // 当前展开的记录 id
 
   useDidShow(() => load())
 
@@ -35,9 +36,65 @@ export default function QAHistory() {
     try {
       await deleteQARecord(id)
       setRecords(records.filter((r) => r.id !== id))
+      if (expandedId === id) setExpandedId(null)
     } catch (e: any) {
       Taro.showToast({ title: e.message, icon: 'none' })
     }
+  }
+
+  const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id))
+
+  /* 完整答案正文（多菜推荐 或 单菜秘诀/食材/步骤/避坑） */
+  const renderAnswerBody = (rec: QARecord) => {
+    const ans = rec.answer
+    if (ans.recommendations) {
+      return (
+        <View className='h-rec'>
+          {ans.recommendations.map((r, i) => (
+            <View key={i} className='h-rec-item'>
+              <View className='h-rec-head'>
+                <Text className='h-rec-no'>{i + 1}</Text>
+                <Text className='h-rec-name'>{r.name}</Text>
+                {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
+              </View>
+              <Text className='h-rec-secret'>{r.core_secret}</Text>
+              {r.ingredients.length > 0 && (
+                <Text className='h-rec-ings'>食材：{r.ingredients.join('、')}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      )
+    }
+    return (
+      <View className='h-ans'>
+        <Text className='h-secret'>{ans.core_secret}</Text>
+        {ans.ingredients.length > 0 && (
+          <>
+            <Text className='h-label'>食材清单</Text>
+            <Text className='h-ings'>{ans.ingredients.join('、')}</Text>
+          </>
+        )}
+        {ans.steps.length > 0 && (
+          <>
+            <Text className='h-label'>烹饪步骤</Text>
+            <View className='h-steps'>
+              {ans.steps.map((s, i) => (
+                <View key={i} className='h-step'><Text className='h-step-no'>{i + 1}</Text><Text>{s}</Text></View>
+              ))}
+            </View>
+          </>
+        )}
+        {ans.avoid_pitfalls.length > 0 && (
+          <>
+            <Text className='h-label'>避坑指南</Text>
+            {ans.avoid_pitfalls.map((p, i) => (
+              <View key={i} className='h-pit'>⚠ {p}</View>
+            ))}
+          </>
+        )}
+      </View>
+    )
   }
 
   const clearAll = () => {
@@ -59,13 +116,21 @@ export default function QAHistory() {
 
       <View className='his-list'>
         {records.map((r) => (
-          <View key={r.id} className='his-item'>
-            <View className='q-badge'><Text>Q</Text></View>
-            <View className='htext'>
-              <Text className='hq'>{r.question}</Text>
-              <Text className='htime'>{formatTime(r.created_at)}</Text>
+          <View key={r.id} className='his-block'>
+            <View className='his-item' onClick={() => toggle(r.id)}>
+              <View className='q-badge'><Text>Q</Text></View>
+              <View className='htext'>
+                <Text className='hq'>{r.question}</Text>
+                <Text className='htime'>{formatTime(r.created_at)}</Text>
+              </View>
+              <View className='ic ic-trash ic-sm' onClick={(e) => { e.stopPropagation(); remove(r.id) }} />
             </View>
-            <View className='ic ic-trash ic-sm' onClick={() => remove(r.id)} />
+            {/* 点击问题 → 展开完整问答（气泡在左上角指向问题） */}
+            {expandedId === r.id && (
+              <View className='his-detail'>
+                {renderAnswerBody(r)}
+              </View>
+            )}
           </View>
         ))}
       </View>

@@ -9,6 +9,10 @@
     padding-top: 20px;
   }
 
+  .his-block {
+    margin: 0 28px 20px;
+  }
+
   .his-item {
     display: flex;
     align-items: center;
@@ -18,7 +22,6 @@
     border-radius: 28px;
     box-shadow: 2px 2px 0 var(--ink);
     padding: 22px 24px;
-    margin: 0 28px 20px;
 
     .q-badge {
       background: var(--gold);
@@ -50,6 +53,137 @@
       color: var(--gray);
       font-weight: 600;
       margin-top: 4px;
+    }
+  }
+
+  /* 展开详情：气泡尾巴在左上角，朝上指向问题 */
+  .his-detail {
+    position: relative;
+    background: #fff;
+    border: 2.5px solid var(--ink);
+    border-radius: 24px;
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 24px;
+    margin-top: 20px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -11px;
+      left: 28px;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-left: 2.5px solid var(--ink);
+      border-top: 2.5px solid var(--ink);
+      transform: rotate(45deg);
+    }
+
+    /* 多菜推荐 */
+    .h-rec-item {
+      background: var(--soft);
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+
+      .h-rec-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .h-rec-no {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: var(--red);
+          border: 2px solid var(--ink);
+          color: #fff;
+          font-size: 18px;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+        }
+
+        .h-rec-name { font-size: 26px; font-weight: 900; flex: 1; }
+      }
+
+      .h-rec-secret {
+        display: block;
+        font-size: 22px;
+        color: var(--brown);
+        font-weight: 600;
+        margin-top: 8px;
+        line-height: 1.5;
+      }
+
+      .h-rec-ings {
+        display: block;
+        font-size: 20px;
+        color: var(--gray);
+        font-weight: 600;
+        margin-top: 6px;
+      }
+    }
+
+    /* 单菜 */
+    .h-secret {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.6;
+      display: block;
+    }
+
+    .h-label {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gray);
+      margin-top: 16px;
+      display: block;
+    }
+
+    .h-ings {
+      font-size: 22px;
+      color: var(--brown);
+      font-weight: 600;
+      margin-top: 6px;
+      display: block;
+    }
+
+    .h-step {
+      display: flex;
+      gap: 12px;
+      font-size: 22px;
+      color: var(--brown);
+      line-height: 1.5;
+      margin-top: 6px;
+
+      .h-step-no {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--gold);
+        border: 2px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 900;
+        flex: none;
+      }
+    }
+
+    .h-pit {
+      background: #ffe9d9;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-top: 8px;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.5;
     }
   }
 
