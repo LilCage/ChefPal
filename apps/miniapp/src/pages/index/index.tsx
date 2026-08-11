@@ -111,11 +111,11 @@ export default function Index() {
           onInput={(e) => setKeyword(e.detail.value)}
           onConfirm={() => ask(keyword)}
         />
-        <View className={`sbtn ${keyword.trim() ? '' : 'sbtn--idle'}`} onClick={() => ask(keyword)}>
+        <View className={`sbtn ${keyword.trim() ? '' : 'sbtn--idle'}`} onClick={() => (keyword.trim() ? ask(keyword) : ask(HOT_QUESTIONS[phIndex]))}>
           {keyword.trim() ? (
             <View className='ic ic-search--white ic-sm' />
           ) : (
-            <Text className='sbtn-hint'>输入问题</Text>
+            <Text className='sbtn-hint'>{HOT_QUESTIONS[phIndex]}</Text>
           )}
         </View>
       </View>
