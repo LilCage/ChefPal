@@ -162,9 +162,9 @@ export default function Index() {
                 <Text className='rec-name'>{r.name}</Text>
                 {r.time_minutes > 0 && <View className='mini-chip'><Text>⏱ {r.time_minutes}分钟</Text></View>}
               </View>
-              <Text className='rec-secret'>{r.core_secret}</Text>
+              <Text className='rec-secret' userSelect>{r.core_secret}</Text>
               {r.ingredients.length > 0 && (
-                <Text className='rec-ings'>食材：{r.ingredients.join('、')}</Text>
+                <Text className='rec-ings' userSelect>食材：{r.ingredients.join('、')}</Text>
               )}
             </View>
           ))}
@@ -173,11 +173,11 @@ export default function Index() {
     }
     return (
       <>
-        <Text className='qa-ans-secret'>{ans.core_secret}</Text>
+        <Text className='qa-ans-secret' userSelect>{ans.core_secret}</Text>
         {ans.ingredients.length > 0 && (
           <>
             <Text className='qa-ans-label'>食材清单</Text>
-            <Text className='qa-ans-ings'>{ans.ingredients.join('、')}</Text>
+            <Text className='qa-ans-ings' userSelect>{ans.ingredients.join('、')}</Text>
           </>
         )}
         {ans.steps.length > 0 && (
@@ -185,7 +185,7 @@ export default function Index() {
             <Text className='qa-ans-label'>烹饪步骤</Text>
             <View className='qa-ans-steps'>
               {ans.steps.map((s, i) => (
-                <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text>{s}</Text></View>
+                <View key={i} className='qa-step'><Text className='qa-step-no'>{i + 1}</Text><Text userSelect>{s}</Text></View>
               ))}
             </View>
           </>
@@ -194,7 +194,7 @@ export default function Index() {
           <>
             <Text className='qa-ans-label'>避坑指南</Text>
             {ans.avoid_pitfalls.map((p, i) => (
-              <View key={i} className='qa-pit'>⚠ {p}</View>
+              <View key={i} className='qa-pit'>⚠ <Text userSelect>{p}</Text></View>
             ))}
           </>
         )}
