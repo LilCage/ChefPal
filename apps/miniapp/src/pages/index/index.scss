@@ -13,7 +13,7 @@
   .search-input {
     width: 100%;
     box-sizing: border-box;
-    min-height: 160px;
+    min-height: 120px;
     font-size: 32px;
     font-weight: 700;
     color: var(--ink);
@@ -54,6 +54,16 @@
     }
   }
 
+}
+
+/* 双击提示行：小字灰色、与轮播文字区分、独立一行带间距 */
+.search-tip {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gray);
+  margin: 8px 28px 0;
+  letter-spacing: 1px;
 }
 
 /* 今日 AI 秘技 */

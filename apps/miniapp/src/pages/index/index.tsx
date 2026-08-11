@@ -230,7 +230,7 @@ export default function Index() {
         <Textarea
           className='search-input'
           value={keyword}
-          placeholder={`问小伴：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}\n双击输入框，直接问这道问题`}
+          placeholder={`问小伴：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
@@ -241,6 +241,11 @@ export default function Index() {
         <View className={`sbtn ${keyword.trim() ? '' : 'sbtn--idle'}`} onClick={() => ask(keyword)}>
           <View className='ic ic-search--white ic-sm' />
         </View>
+      </View>
+
+      {/* 提示行：与轮播文字区分（小字灰色、独立一行带间距） */}
+      <View className='search-tip'>
+        <Text>👆 双击输入框，直接问这道问题</Text>
       </View>
 
       <View className='section'>
