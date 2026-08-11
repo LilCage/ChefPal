@@ -42,6 +42,19 @@ export default function Mine() {
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
 
+  /* 口味偏好小字：按真实设置动态拼接（辣度 0-3 映射 / 咸淡 / 忌口 / 技能） */
+  const prefs = user?.preferences || {}
+  const spicinessMap: Record<number, string> = { 0: '不吃辣', 1: '微辣', 2: '中辣', 3: '特辣' }
+  const tags: string[] = []
+  if (typeof prefs.spiciness === 'number') {
+    tags.push(spicinessMap[prefs.spiciness] || `辣度${prefs.spiciness}`)
+  }
+  if (prefs.saltiness) tags.push(prefs.saltiness)
+  const allergyList = Array.isArray(prefs.allergies) ? prefs.allergies.filter((a: string) => a && a !== '无忌口') : []
+  if (allergyList.length) tags.push(`忌口:${allergyList.join('/')}`)
+  if (prefs.skill) tags.push(prefs.skill)
+  const prefsTag = tags.length ? tags.join(' · ') : '口味随缘 · 去设置你的偏好'
+
   useDidShow(() => {
     setTab(3)
     loadCounts()
@@ -145,10 +158,7 @@ export default function Mine() {
             <Text>{user.nickname || '美食猎人'}</Text>
             <View className='lv-badge'><Text>🏆 Lv.1</Text></View>
           </View>
-          <Text className='ptag'>
-            {user.preferences?.spiciness ? '微辣派 · ' : ''}
-            {user.preferences?.saltiness || '咸淡适中'}
-          </Text>
+          <Text className='ptag'>{prefsTag}</Text>
         </View>
         <View className='edit-badge'>
           <View className='ic ic-edit ic-sm' />

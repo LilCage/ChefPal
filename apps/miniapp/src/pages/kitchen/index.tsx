@@ -75,8 +75,17 @@ export default function Kitchen() {
     }
   }
 
+  const spicinessMap: Record<number, string> = { 0: '不吃辣', 1: '微辣', 2: '中辣', 3: '特辣' }
   const prefsText = preferences
-    ? `${preferences.spiciness === 1 ? '微辣' : ''}${preferences.saltiness ? ` · ${preferences.saltiness}` : ''}${preferences.allergies?.length ? ` · 忌口:${preferences.allergies.join('/')}` : ''}`.replace(/^ · /, '')
+    ? [
+        typeof preferences.spiciness === 'number' ? spicinessMap[preferences.spiciness] || `辣度${preferences.spiciness}` : '',
+        preferences.saltiness || '',
+        Array.isArray(preferences.allergies) && preferences.allergies.filter((a: string) => a && a !== '无忌口').length
+          ? `忌口:${preferences.allergies.filter((a: string) => a && a !== '无忌口').join('/')}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' · ')
     : ''
 
   const goPhoto = () => Taro.navigateTo({ url: '/pages/photo-capture/index' })
