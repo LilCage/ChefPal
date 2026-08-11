@@ -2,6 +2,7 @@
 from app.services.agents import qa_agent, recipe_agent
 
 VALID_QA = {
+    "dish_name": "红烧肉",  # 方案C起语义校验要求单菜必须 dish_name+steps
     "core_secret": "先焯透再煸油。",
     "ingredients": ["五花肉"],
     "steps": ["冷水下锅焯透"],

@@ -41,7 +41,8 @@ def compute_status(added_at: datetime, best_before_days: int) -> dict:
     """计算临期状态：已放天数 / 剩余天数 / now|warn|ok。"""
     if added_at.tzinfo is None:
         added_at = added_at.replace(tzinfo=timezone.utc)
-    days_stored = (datetime.now(timezone.utc) - added_at).days
+    # 钳制非负：刚添加的食材在微小时钟偏差下可能算出 -1 天
+    days_stored = max(0, (datetime.now(timezone.utc) - added_at).days)
     days_left = best_before_days - days_stored
     if days_left <= 1:
         status = "now"
