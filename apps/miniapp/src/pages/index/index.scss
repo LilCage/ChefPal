@@ -240,28 +240,74 @@
 .hist-block {
   margin: 0 28px 20px;
 
-  .hist-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  /* 问题框：右上角展开箭头 + 右下角删除键 */
+  .hist-q {
+    position: relative;
+    background: #fff;
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 28px;
+    cursor: pointer;
 
-    .qa-card {
-      flex: 1;
-      min-width: 0;
-      margin: 0;
+    .hist-q-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-right: 48px; /* 让位右上角箭头 */
+
+      .q-badge {
+        background: var(--gold);
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        font-size: 22px;
+        padding: 2px 14px;
+        flex: none;
+      }
+
+      .hist-q-text {
+        flex: 1;
+        min-width: 0;
+        font-size: 30px;
+        font-weight: 900;
+        line-height: 1.4;
+      }
+
+      .hist-arrow {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray);
+
+        .ic {
+          width: 32px;
+          height: 32px;
+          transition: transform 0.2s;
+        }
+
+        &.up .ic { transform: rotate(180deg); } /* 展开时箭头朝上指向问题 */
+      }
     }
 
+    /* 右下角删除键（框内） */
     .hist-del {
-      width: 60px;
-      height: 60px;
-      border-radius: 18px;
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
       background: #fff;
       border: 2px solid var(--ink);
       box-shadow: 2px 2px 0 var(--ink);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex: none;
 
       .ic { color: var(--red-dark); }
     }

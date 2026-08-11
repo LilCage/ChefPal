@@ -5,7 +5,6 @@
 import { Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow, useUnload } from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
-import QACard from '../../components/QACard'
 import { addFavorite, askQAStream, deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useTabStore } from '../../stores/tab'
@@ -289,9 +288,16 @@ export default function Index() {
       </View>
       {history.slice(0, 3).map((h) => (
         <View key={h.id} className='hist-block'>
-          <View className='hist-row'>
-            <QACard question={h.question} onClick={() => toggleHistory(h)} />
-            <View className='hist-del' onClick={() => removeHistory(h.id)}>
+          {/* 问题框：右上角展开/收起箭头，右下角删除键 */}
+          <View className='hist-q' onClick={() => toggleHistory(h)}>
+            <View className='hist-q-row'>
+              <View className='q-badge'>Q</View>
+              <Text className='hist-q-text'>{h.question}</Text>
+              <View className={`hist-arrow ${expandedId === h.id ? 'up' : ''}`}>
+                <View className='ic ic-chev-r ic-sm' />
+              </View>
+            </View>
+            <View className='hist-del' onClick={(e) => { e.stopPropagation(); removeHistory(h.id) }}>
               <View className='ic ic-trash ic-sm' />
             </View>
           </View>
