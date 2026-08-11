@@ -52,7 +52,7 @@ export default function Index() {
 
   const onSearchInput = (v: string) => {
     setKeyword(v)
-    tapCountRef.current = 0
+    lastTapRef.current = 0 // 用户手输时重置双击计时
   }
 
   useDidShow(() => {
