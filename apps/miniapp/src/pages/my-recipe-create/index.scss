@@ -47,10 +47,11 @@
     border: 2.5px solid var(--ink);
     border-radius: 20px;
     box-shadow: 3px 3px 0 var(--ink);
-    padding: 20px 24px;
-    font-size: 28px;
+    padding: 22px 28px;
+    font-size: 30px;
     font-weight: 700;
     color: var(--ink);
+    min-width: 0;
   }
 
   .mrc-ph { color: #cbb8a3; font-weight: 500; }
@@ -59,22 +60,22 @@
     display: flex;
     gap: 16px;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 
-    .ing-name { flex: 2; }
-    .ing-amount { flex: 1; }
+    .ing-name { flex: 3; }
+    .ing-amount { flex: 2; }
   }
 
   .row-del {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     background: #fff;
     border: 2px solid var(--ink);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 30px;
     font-weight: 900;
     color: var(--red-dark);
     flex: none;
@@ -90,8 +91,8 @@
     border: 2.5px solid var(--ink);
     border-radius: 24px;
     box-shadow: 3px 3px 0 var(--ink);
-    padding: 20px;
-    margin-bottom: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
 
     .step-head {
       display: flex;
@@ -99,12 +100,12 @@
       align-items: center;
 
       .sno {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         border-radius: 14px;
         background: var(--red);
         color: #fff;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 900;
         display: flex;
         align-items: center;
@@ -119,16 +120,17 @@
 
     .mrc-textarea {
       width: 100%;
-      min-height: 100px;
-      margin-top: 16px;
+      min-height: 120px;
+      margin-top: 20px;
       background: var(--soft);
       border: 2px solid var(--ink);
       border-radius: 16px;
-      padding: 16px 20px;
-      font-size: 26px;
+      padding: 20px 24px;
+      font-size: 28px;
       font-weight: 600;
       color: var(--ink);
       box-sizing: border-box;
+      line-height: 1.5;
     }
   }
 
@@ -136,7 +138,7 @@
     display: flex;
     gap: 16px;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 
     .mrc-input { flex: 1; }
   }
@@ -145,11 +147,11 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    margin: 20px 0;
+    margin: 24px 0;
 
-    .time-label { font-size: 26px; font-weight: 900; }
-    .time-input { width: 140px; text-align: center; }
-    .time-unit { font-size: 24px; color: var(--gray); font-weight: 700; }
+    .time-label { font-size: 28px; font-weight: 900; flex: none; }
+    .time-input { width: 180px; text-align: center; font-size: 30px; }
+    .time-unit { font-size: 26px; color: var(--gray); font-weight: 700; flex: none; }
   }
 
   .save-wrap {
