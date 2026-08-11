@@ -4,7 +4,7 @@
  */
 import { Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import QACard from '../../components/QACard'
 import { addFavorite, askQA, deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
@@ -20,8 +20,33 @@ export default function Index() {
   const [current, setCurrent] = useState<QARecord | null>(null)
   const [history, setHistory] = useState<QARecord[]>([])
   const [loading, setLoading] = useState(false)
-  /* 猜你想问浮层（点击输入框弹出） */
-  const [showSuggest, setShowSuggest] = useState(false)
+  /* 猜你想问轮播 placeholder */
+  const [phIndex, setPhIndex] = useState(0)
+  const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  /* 点击两下选中当前推荐：第一次聚焦只聚焦，失焦后再聚焦且为空时填入当前轮播问题 */
+  const focusedOnceRef = useRef(false)
+
+  useEffect(() => {
+    phTimerRef.current = setInterval(() => {
+      setPhIndex((i) => (i + 1) % HOT_QUESTIONS.length)
+    }, 3000)
+    return () => {
+      if (phTimerRef.current) clearInterval(phTimerRef.current)
+    }
+  }, [])
+
+  const onSearchFocus = () => {
+    // 第二次聚焦且无输入 → 填入当前轮播问题（"点击两下选中当前推荐"）
+    if (focusedOnceRef.current && !keyword.trim()) {
+      setKeyword(HOT_QUESTIONS[phIndex])
+    }
+    focusedOnceRef.current = true
+  }
+
+  const onSearchBlur = () => {
+    // 清空后仍算已聚焦过，便于下次再点两下；键盘收起后轮播继续
+    if (!keyword.trim()) focusedOnceRef.current = true
+  }
 
   useDidShow(() => {
     setTab(0)
@@ -94,39 +119,20 @@ export default function Index() {
         <Textarea
           className='search-input'
           value={keyword}
-          placeholder='问 AI：输入你的厨艺问题'
+          placeholder={`问 AI：${HOT_QUESTIONS[phIndex]}？`}
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
-          onFocus={() => { if (!keyword.trim()) setShowSuggest(true) }}
-          onInput={(e) => {
-            setKeyword(e.detail.value)
-            if (e.detail.value.trim()) setShowSuggest(false)
-          }}
-          onBlur={() => setTimeout(() => setShowSuggest(false), 200)}
+          onFocus={onSearchFocus}
+          onInput={(e) => setKeyword(e.detail.value)}
+          onBlur={onSearchBlur}
           onConfirm={() => ask(keyword)}
         />
         <View className={`sbtn ${keyword.trim() ? '' : 'sbtn--idle'}`} onClick={() => ask(keyword)}>
           <View className='ic ic-search--white ic-sm' />
         </View>
       </View>
-
-      {/* 猜你想问浮层：点击输入框弹出，点某条直接问 */}
-      {showSuggest && (
-        <View className='suggest'>
-          <View className='suggest-head'>
-            <Text className='suggest-title'>⚡ 猜你想问</Text>
-            <View className='suggest-close' onClick={() => setShowSuggest(false)}><Text>收起 ×</Text></View>
-          </View>
-          <View className='suggest-chips'>
-            {HOT_QUESTIONS.map((q) => (
-              <View key={q} className='chip' onClick={() => { setShowSuggest(false); ask(q) }}>
-                <Text>{q}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
+      <Text className='search-hint'>连点输入框两次，可选用当前推荐的问法</Text>
 
       <View className='section'>
         <View className='sec-title'>
