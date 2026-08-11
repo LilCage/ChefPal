@@ -20,6 +20,9 @@
     color: var(--ink);
     line-height: 1.5;
     max-height: 240px;
+    /* placeholder 换行生效：配合 \n 断行符 */
+    white-space: pre-line;
+    word-wrap: break-word;
   }
 
   .search-ph { color: #cbb8a3; font-weight: 600; }

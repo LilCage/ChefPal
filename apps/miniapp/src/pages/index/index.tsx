@@ -27,6 +27,18 @@ const HOT_QUESTIONS = [
   '周末招待朋友，推荐一桌有面子的家常菜',
 ]
 
+/* placeholder 断行：单行可显示约 14 字，长文案在逗号或 ~14 字处断成两行，避免截断 */
+function wrapQuestion(q: string): string {
+  if (q.length <= 14) return q
+  const commaIdx = q.indexOf('，')
+  // 有逗号且逗号在中间位置附近，在逗号后断行
+  if (commaIdx > 4 && commaIdx < q.length - 4) {
+    return `${q.slice(0, commaIdx + 1)}\n${q.slice(commaIdx + 1)}`
+  }
+  // 无合适逗号，按 14 字硬断
+  return `${q.slice(0, 14)}\n${q.slice(14)}`
+}
+
 export default function Index() {
   const setTab = useTabStore((s) => s.setIndex)
   const [keyword, setKeyword] = useState('')
@@ -139,7 +151,7 @@ export default function Index() {
         <Textarea
           className='search-input'
           value={keyword}
-          placeholder={`问 AI：${HOT_QUESTIONS[phIndex]}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
+          placeholder={`问 AI：${wrapQuestion(HOT_QUESTIONS[phIndex])}${HOT_QUESTIONS[phIndex].endsWith('？') ? '' : '？'}`}
           placeholderClass='search-ph'
           autoHeight
           maxlength={500}
