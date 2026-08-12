@@ -168,7 +168,7 @@ def test_favorite_recipe_records_style_signal(client, auth_headers, monkeypatch)
 def test_favorite_qa_records_signal(client, auth_headers, monkeypatch):
     from app.routers import qa as qa_router
 
-    async def _fake_qa(question):
+    async def _fake_qa(question, history=None):
         return {
             "result": {
                 "core_secret": "小火慢炖",

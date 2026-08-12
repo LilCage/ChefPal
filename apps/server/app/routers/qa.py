@@ -38,6 +38,8 @@ MULTI_HINT_KEYWORDS = ("推荐", "哪几道", "换换口味", "有什么好做",
 
 class QAAskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
+    # 多轮对话会话 id（前端生成 UUID；可空=单轮/旧客户端）
+    session_id: UUID | None = None
 
 
 def _qa_record_out(rec: QA_Record) -> dict:
@@ -49,8 +51,47 @@ def _qa_record_out(rec: QA_Record) -> dict:
         "sources": rec.sources,
         "kb_hit": bool(answer.get("kb_hit", False)),
         "kb_id": answer.get("kb_id"),
+        "session_id": str(rec.session_id) if rec.session_id else None,
         "created_at": rec.created_at.isoformat() if rec.created_at else None,
     }
+
+
+def _answer_to_context(answer: dict) -> str:
+    """把结构化回答压缩成一句话，作为多轮上下文的 assistant 内容。"""
+    recs = answer.get("recommendations") or []
+    if recs:
+        items = []
+        for r in recs:
+            name = (r or {}).get("name") or ""
+            mins = (r or {}).get("time_minutes") or 0
+            items.append(f"{name}（{mins}分钟）" if mins else name)
+        return "我推荐了：" + "、".join(items)
+    dish = answer.get("dish_name") or ""
+    secret = answer.get("core_secret") or ""
+    return (f"{dish}：" if dish else "") + secret
+
+
+async def _load_session_context(
+    db: AsyncSession, user_id: UUID, session_id: UUID | None, limit: int = 8
+) -> list[dict]:
+    """读取会话最近 N 条消息，构造多轮上下文 [{"role","content"}, ...]。
+
+    只取最近 limit 条（=limit/2 轮问答），控制 token；按时间升序返回。
+    """
+    if session_id is None:
+        return []
+    result = await db.execute(
+        select(QA_Record)
+        .where(QA_Record.user_id == user_id, QA_Record.session_id == session_id)
+        .order_by(QA_Record.created_at.desc())
+        .limit(limit)
+    )
+    records = list(reversed(result.scalars().all()))
+    messages: list[dict] = []
+    for rec in records:
+        messages.append({"role": "user", "content": rec.question})
+        messages.append({"role": "assistant", "content": _answer_to_context(rec.answer or {})})
+    return messages
 
 
 # ---------- 知识库命中 → 结构化答案 ----------
@@ -130,37 +171,7 @@ def _kb_to_qa_answer(question: str, hits: list[dict]) -> dict | None:
 
 async def _store_generated_to_kb(db: AsyncSession, answer: dict, record_id: UUID) -> None:
     """AI 生成结果按菜名入库（best-effort，向量服务失败静默，不阻断主流程）。"""
-    try:
-        if answer.get("dish_name"):
-            await kb_service.upsert_kb_entry(
-                db,
-                kind="recipe",
-                title=answer["dish_name"],
-                summary=answer.get("core_secret", ""),
-                ingredients=answer.get("ingredients", []),
-                steps=answer.get("steps", []),
-                prep_steps=answer.get("prep_steps", []),
-                cook_steps=answer.get("cook_steps", []),
-                tips=answer.get("avoid_pitfalls", []),
-                source_type=kb_service.SOURCE_QA_ANSWER,
-                source_id=str(record_id),
-            )
-        for r in (answer.get("recommendations") or []):
-            name = (r or {}).get("name")
-            if not name:
-                continue
-            await kb_service.upsert_kb_entry(
-                db,
-                kind="recipe",
-                title=name,
-                summary=r.get("core_secret", ""),
-                ingredients=r.get("ingredients", []),
-                source_type=kb_service.SOURCE_QA_ANSWER,
-                source_id=str(record_id),
-            )
-        await db.flush()
-    except EmbeddingError:
-        pass  # 知识库不可用不影响问答主流程
+    await kb_service.store_generated_answer_to_kb(db, answer, record_id)
 
 
 async def _bump_hits(db: AsyncSession, hits: list[dict]) -> None:
@@ -189,11 +200,15 @@ async def ask(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """提问 → 先查知识库，命中直接返回；未命中 AI 联网生成并入库。"""
+    """提问 → 先查知识库，命中直接返回；未命中 AI 联网生成并入库。
+
+    多轮：携带 session_id 时注入最近几轮上下文（run_qa history），并落库到该会话。
+    """
     answer, is_kb = await _search_or_generate(db, body.question, user.id)
     if is_kb:
         record = QA_Record(
             user_id=user.id,
+            session_id=body.session_id,
             question=body.question,
             answer=answer,
             sources=None,
@@ -204,13 +219,15 @@ async def ask(
         return ok(_qa_record_out(record))
 
     await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
-    out = await qa_agent.run_qa(body.question)
+    history = await _load_session_context(db, user.id, body.session_id)
+    out = await qa_agent.run_qa(body.question, history=history)
     if out["error"] or out["result"] is None:
         raise AppError(out["error"] or "生成失败，请稍后重试", code=502, status_code=502)
 
     answer = out["result"]
     record = QA_Record(
         user_id=user.id,
+        session_id=body.session_id,
         question=body.question,
         answer=answer,
         sources=answer.get("sources"),
@@ -274,6 +291,7 @@ async def ask_stream(
             await _bump_hits(db, kb_hits[:3])
             record = QA_Record(
                 user_id=user.id,
+                session_id=body.session_id,
                 question=body.question,
                 answer=kb_answer,
                 sources=None,
@@ -285,6 +303,7 @@ async def ask_stream(
             return
 
         await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
+        history = await _load_session_context(db, user.id, body.session_id)
         # 流式收集完整模型输出
         buf = ""
         try:
@@ -292,6 +311,7 @@ async def ask_stream(
                 model=settings.DEEPSEEK_MODEL,
                 system=qa_agent.QA_SYSTEM,
                 user=body.question,
+                history=history,
                 enable_search=settings.AI_ENABLE_SEARCH,
                 search_options={"forced_search": True},
             ):
@@ -308,6 +328,7 @@ async def ask_stream(
         # 落库 + AI 生成结果入库
         record = QA_Record(
             user_id=user.id,
+            session_id=body.session_id,
             question=body.question,
             answer=data,
             sources=data.get("sources"),
@@ -333,6 +354,22 @@ async def ask_stream(
         yield f"data: {json.dumps({'type': 'done', 'data': out}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.get("/session/{session_id}")
+async def session_messages(
+    session_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """返回某会话的全部消息（按时间升序，仅限本人），供对话页恢复历史。"""
+    result = await db.execute(
+        select(QA_Record)
+        .where(QA_Record.user_id == user.id, QA_Record.session_id == session_id)
+        .order_by(QA_Record.created_at.asc())
+    )
+    records = result.scalars().all()
+    return ok([_qa_record_out(r) for r in records])
 
 
 @router.get("/history")

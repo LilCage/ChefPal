@@ -62,10 +62,14 @@ export interface QARecord {
     avoid_pitfalls: string[]
     sources?: string[]
     recommendations?: QARecommendation[]
+    /** 链接/文档解析标记（前端渲染来源横幅用） */
+    parse_type?: 'web' | 'video' | 'doc'
+    parse_source?: string
   }
   sources: string[] | null
   kb_hit?: boolean
   kb_id?: string | null
+  session_id?: string | null
   created_at: string | null
 }
 
@@ -99,8 +103,8 @@ export const fetchKBEntry = (id: string) => http.get<KBEntry>(`/kb/${id}`)
 export const generateKBRecipe = (title: string) =>
   http.post<KBEntry & { from_kb: boolean }>('/kb/generate', { title })
 
-export const askQA = (question: string) =>
-  http.post<QARecord>('/qa/ask', { question })
+export const askQA = (question: string, session_id?: string | null) =>
+  http.post<QARecord>('/qa/ask', { question, session_id })
 
 /* 流式问答：SSE 打字机。onDelta 逐字回调，onDone 收到完整结构化数据，onError 出错。 */
 export function askQAStream(
@@ -110,12 +114,13 @@ export function askQAStream(
     onDone: (data: QARecord) => void
     onError: (msg: string) => void
   },
+  session_id?: string | null,
 ): () => void {
   const token = useAuthStore.getState().token
   const requestTask = Taro.request({
     url: `${API_BASE_URL}/qa/stream`,
     method: 'POST',
-    data: { question },
+    data: { question, session_id },
     header: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -176,6 +181,35 @@ export function askQAStream(
 }
 export const fetchQAHistory = () => http.get<QARecord[]>('/qa/history')
 export const deleteQARecord = (id: string) => http.del(`/qa/${id}`)
+/** 对话会话：按时间升序返回该会话全部消息（对话页恢复历史用） */
+export const fetchQASession = (sessionId: string) => http.get<QARecord[]>(`/qa/session/${sessionId}`)
+
+/* ---------- 链接/文档解析（对话内：粘贴链接自动解析 / 📎 上传文档） ---------- */
+export const parseUrl = (url: string, session_id?: string | null) =>
+  http.post<QARecord>('/parse/url', { url, session_id })
+
+/** 上传 PDF/Word 文档 → 解析成结构化菜谱 */
+export const parseDocument = (filePath: string, session_id?: string | null) =>
+  new Promise<QARecord>((resolve, reject) => {
+    const token = useAuthStore.getState().token
+    Taro.uploadFile({
+      url: `${API_BASE_URL}/parse/document`,
+      filePath,
+      name: 'file',
+      formData: session_id ? { session_id } : {},
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success: (res) => {
+        try {
+          const body = JSON.parse(res.data)
+          if (body.code === 0) resolve(body.data)
+          else reject(new Error(body.message || '解析失败'))
+        } catch {
+          reject(new Error('解析结果解析失败'))
+        }
+      },
+      fail: (err) => reject(new Error(err.errMsg || '文档上传失败')),
+    })
+  })
 
 /* ---------- 菜谱 ---------- */
 export interface RecipeStep {

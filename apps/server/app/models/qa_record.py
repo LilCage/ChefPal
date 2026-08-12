@@ -20,6 +20,8 @@ class QA_Record(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    # 对话会话 id（多轮对话：同一次会话的多条问答共享；可空=旧数据/单轮）
+    session_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True, index=True)
     question: Mapped[str] = mapped_column(Text, nullable=False)
     # 结构化: { core_secret, ingredients[], steps[], avoid_pitfalls[], sources[] }
     answer: Mapped[dict] = mapped_column(JSONType, nullable=False)

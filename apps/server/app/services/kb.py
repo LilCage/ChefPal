@@ -202,6 +202,47 @@ async def increment_hit(db: AsyncSession, entry: RecipeKB) -> None:
     await db.flush()
 
 
+async def store_generated_answer_to_kb(
+    db: AsyncSession, answer: dict, record_id: uuid.UUID
+) -> None:
+    """把 AI/解析生成的单菜或多菜结果按菜名入库（best-effort，embedding 失败静默）。
+
+    qa 问答、parse 链接/文档解析共用：生成结果沉淀为知识库条目，
+    HowToCook 权威条目不被覆盖（upsert 内已判 source_type）。
+    """
+    try:
+        if answer.get("dish_name"):
+            await upsert_kb_entry(
+                db,
+                kind="recipe",
+                title=answer["dish_name"],
+                summary=answer.get("core_secret", ""),
+                ingredients=answer.get("ingredients", []),
+                steps=answer.get("steps", []),
+                prep_steps=answer.get("prep_steps", []),
+                cook_steps=answer.get("cook_steps", []),
+                tips=answer.get("avoid_pitfalls", []),
+                source_type=SOURCE_QA_ANSWER,
+                source_id=str(record_id),
+            )
+        for r in (answer.get("recommendations") or []):
+            name = (r or {}).get("name")
+            if not name:
+                continue
+            await upsert_kb_entry(
+                db,
+                kind="recipe",
+                title=name,
+                summary=r.get("core_secret", ""),
+                ingredients=r.get("ingredients", []),
+                source_type=SOURCE_QA_ANSWER,
+                source_id=str(record_id),
+            )
+        await db.flush()
+    except EmbeddingError:
+        pass  # 知识库不可用不影响主流程
+
+
 def to_kb_out(entry: RecipeKB, *, similarity: float | None = None) -> dict:
     """序列化为 API 输出（对齐前端渲染字段）。"""
     return {

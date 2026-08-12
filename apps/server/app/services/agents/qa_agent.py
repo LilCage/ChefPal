@@ -32,6 +32,7 @@ QA_SYSTEM = """你是资深中餐大厨。用结构化 JSON 回答用户的厨�
 
 class QAState(TypedDict, total=False):
     question: str
+    history: list[dict] | None  # 多轮上下文 [{role, content}, ...]
     retries: int
     result: dict | None
     error: str | None
@@ -43,12 +44,13 @@ def _route(state: QAState) -> dict:
 
 
 async def _generate(state: QAState) -> dict:
-    """生成节点：调 DeepSeek（enable_search 联网）+ JSON。"""
+    """生成节点：调 DeepSeek（enable_search 联网）+ JSON。多轮时注入历史上下文。"""
     try:
         data = await ainvoke_json(
             model=settings.DEEPSEEK_MODEL,
             system=QA_SYSTEM,
             user=state["question"],
+            history=state.get("history"),
             enable_search=settings.AI_ENABLE_SEARCH,
             search_options={"forced_search": True},
         )
@@ -108,7 +110,7 @@ def _build_graph():
 _qa_graph = _build_graph()
 
 
-async def run_qa(question: str) -> dict:
+async def run_qa(question: str, history: list[dict] | None = None) -> dict:
     """运行问答 Agent。返回 {"result": QASchema字典|None, "error": str|None}。"""
-    state = await _qa_graph.ainvoke({"question": question})
+    state = await _qa_graph.ainvoke({"question": question, "history": history})
     return {"result": state.get("result"), "error": state.get("error")}

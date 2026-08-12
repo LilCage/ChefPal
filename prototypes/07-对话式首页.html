@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefPal 原型 07 · 对话式首页</title>
+<style>
+/* ============================================================
+   ChefPal · 漫画插画风设计系统（《美食的俘虏》热血意境 · 明亮暖色）
+   07 · 对话式首页 干净版：去卡片框 / 新对话悬浮钮 / 上传发送同侧 / 大输入框
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#E8482A;--red-dark:#C7361F;--gold:#F0A73E;--gold-dark:#D18A2C;
+  --green:#2FA37E;--green-dark:#1F7F60;--cream:#FFF7EC;--white:#fff;
+  --ink:#241A12;--brown:#4A2E1D;--soft:#F6E3C3;--gray:#8A6F5C;
+  --line:2.5px solid var(--ink);--shadow:4px 4px 0 var(--ink);
+}
+body{font-family:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+.pop{font-family:'ZCOOL KuaiLe','Comic Sans MS',cursive}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.filled{fill:currentColor;stroke:currentColor}
+
+/* ---- 文档页头 ---- */
+.doc-header{max-width:1280px;margin:0 auto;padding:34px 22px 10px}
+.doc-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.doc-nav a{text-decoration:none;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 14px;box-shadow:2px 2px 0 var(--ink)}
+.doc-nav a.on{background:var(--red);color:#fff}
+.doc-header h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+.doc-header h1 .pop{color:var(--red);font-size:34px;margin-right:6px}
+.doc-sub{color:var(--brown);font-size:14px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:12px 14px}
+.lg-title{font-weight:900;font-size:13px;border-right:2px dashed var(--soft);padding-right:12px;margin-right:4px}
+.swatch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.swatch i{width:18px;height:18px;border-radius:6px;border:2px solid var(--ink);background:var(--c)}
+.swatch b{color:var(--gray);font-weight:500;font-size:11px}
+.lg-demo{display:inline-flex;align-items:center;gap:8px}
+
+/* ---- 网格 ---- */
+.page{max-width:1280px;margin:0 auto;padding:20px 22px 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(372px,1fr));gap:44px 30px;justify-items:center}
+.screen-card{width:100%;display:flex;flex-direction:column;align-items:center}
+.screen-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:14px}
+.screen-label .num{background:var(--red);color:#fff;width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:2px 2px 0 var(--ink)}
+.screen-label em{font-style:normal;color:var(--gray);font-weight:500;font-size:12px}
+
+/* ---- 手机框 ---- */
+.phone{width:375px;height:812px;border-radius:42px;padding:12px;background:#151009;box-shadow:8px 14px 0 rgba(36,26,18,.18),0 40px 70px rgba(0,0,0,.28);position:relative;flex:none}
+.phone .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:22px;background:#151009;border-radius:0 0 14px 14px;z-index:60}
+.screen{width:100%;height:100%;border-radius:32px;background:var(--cream);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.statusbar{height:30px;flex:none;background:#fff;position:relative;z-index:5}
+.statusbar.ghost{background:transparent}
+.content{flex:1;overflow-y:auto;scrollbar-width:none;position:relative}
+.content::-webkit-scrollbar{display:none}
+.tabbar{flex:none;display:flex;background:#fff;border-top:2.5px solid var(--ink);padding:8px 4px 10px;position:relative;z-index:5}
+.tabitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--gray);cursor:pointer}
+.tabitem svg{width:24px;height:24px}
+.tabitem.on{color:var(--red)}
+
+/* ---- 顶部导航 ---- */
+.nav{display:flex;align-items:center;gap:8px;padding:8px 14px 10px;background:#fff;border-bottom:2.5px solid var(--ink);flex:none;z-index:5;position:relative;min-height:52px}
+.nav h2{position:absolute;left:60px;right:60px;top:50%;transform:translateY(-50%);text-align:center;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+
+/* ---- 按钮 / 标签 ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2.5px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);font-weight:900;font-size:15px;padding:13px 22px;cursor:pointer;transition:transform .12s,box-shadow .12s;text-decoration:none}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn-red{background:var(--red);color:#fff}
+.btn-white{background:#fff;color:var(--ink)}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:11px;box-shadow:3px 3px 0 var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.chip.hot{background:var(--gold);color:var(--ink);font-weight:800}
+
+/* ---- 对话区 ---- */
+.chat-area{flex:1;overflow-y:auto;scrollbar-width:none;padding:12px 14px 8px;display:flex;flex-direction:column;gap:14px}
+.chat-area::-webkit-scrollbar{display:none}
+.chat-slot{display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:9px;align-items:flex-start;max-width:86%;min-width:0}
+.msg .avatar{width:32px;height:32px;border-radius:11px;background:var(--gold);border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;box-shadow:2px 2px 0 var(--ink)}
+.msg .av-ic{background:var(--red);color:#fff}
+.msg .av-ic svg{width:18px;height:18px}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg .mbox{position:relative;background:#fff;border:2.5px solid var(--ink);border-radius:14px;padding:11px 13px;box-shadow:3px 3px 0 var(--ink);min-width:0;overflow-wrap:anywhere}
+.msg.user .mbox{background:var(--gold);border-color:var(--ink)}
+.msg .mbox::after{content:"";position:absolute;width:13px;height:13px;background:#fff;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:rotate(45deg)}
+.msg.assistant .mbox::after{left:-8px;top:11px;transform:rotate(225deg)}
+.msg.user .mbox::after{right:-8px;top:11px;transform:rotate(45deg);background:var(--gold)}
+.msg .mbox p{font-size:14px;font-weight:700;line-height:1.5;word-break:break-all;overflow-wrap:anywhere}
+.msg .mbox .meta{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.msg .mbox .mini-chip{display:inline-flex;align-items:center;gap:3px;background:var(--soft);border:2px solid var(--ink);border-radius:7px;font-size:10.5px;font-weight:800;padding:1px 6px}
+.msg .mbox .mini-chip.green{background:#DDF0E8;color:var(--green-dark)}
+.msg .mbox .mini-chip.red{background:#FFD9D0;color:var(--red-dark)}
+.msg .mbox time{margin-left:auto;font-size:10.5px;color:var(--gray);font-weight:600}
+
+/* 消息内结构化卡片 */
+.m-card{background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);overflow:hidden;width:100%;margin-top:2px}
+.m-card .hero{display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:2.5px solid var(--ink);height:70px;background:linear-gradient(135deg,#FFD9B0,#FF9D6B)}
+.m-card .m-body{padding:10px 12px}
+.m-card .m-title{font-size:15px;font-weight:900;display:flex;align-items:center;gap:8px}
+.m-card .seg{display:flex;border:2.5px solid var(--ink);border-radius:11px;overflow:hidden;background:var(--soft);margin:10px 0}
+.m-card .seg span{flex:1;text-align:center;padding:7px 1px;font-weight:800;font-size:11.5px;color:var(--gray);cursor:pointer}
+.m-card .seg span.on{background:var(--red);color:#fff}
+.m-card .ing-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:2px dashed var(--soft);font-size:12.5px}
+.m-card .ing-item:last-child{border-bottom:none}
+.m-card .ing-item .ok{color:var(--green)}
+.m-card .ing-item .ic{width:15px;height:15px}
+.m-card .m-actions{display:flex;gap:8px;margin-top:10px}
+.m-card .m-actions .btn-sm{font-size:11.5px;padding:6px 11px}
+.src-banner{display:flex;align-items:center;gap:8px;background:#FFE9D9;border:2.5px solid var(--ink);border-radius:12px;padding:8px 10px;margin-bottom:9px}
+.src-banner .sb-ic{width:28px;height:28px;border-radius:8px;background:var(--soft);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+.src-banner b{font-size:12px;display:block}
+.src-banner span{font-size:10.5px;color:var(--brown);font-weight:600}
+.src-banner div{min-width:0;word-break:break-all}
+
+/* ---- 输入坞（大输入框 · 上传/发送在右） ---- */
+.input-dock{flex:none;background:#fff;border-top:2.5px solid var(--ink);padding:10px 12px 12px;position:relative;z-index:8}
+.id-input{background:#FFF7EC;border:2.5px solid var(--ink);border-radius:16px;padding:11px 13px;min-height:68px;font-size:14px;font-weight:600;color:var(--ink);box-shadow:2px 2px 0 var(--ink);text-align:left;line-height:1.6;word-break:break-all}
+.id-input .ph{font-size:14px;font-weight:600;color:var(--gray);line-height:1.6}
+.id-input .hint{font-size:11px;font-weight:500;color:#B8A08C;margin-top:9px;line-height:1.4}
+.id-attach{width:40px;height:40px;border-radius:13px;border:2.5px solid var(--ink);background:var(--cream);display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--ink);color:var(--ink);cursor:pointer;flex:none}
+.id-attach.on{background:var(--soft);color:var(--red-dark)}
+.id-attach svg{width:20px;height:20px}
+.id-act{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.id-act.mic{background:#fff;color:var(--red)}
+.id-act.mic.on{background:var(--soft);color:var(--red-dark)}
+.id-act.send{background:var(--red);color:#fff}
+.id-act svg{width:19px;height:19px}
+
+/* 输入坞按钮行：新对话左靠 · 上传/发送靠右 */
+.id-actions{display:flex;align-items:center;gap:9px;margin-top:10px}
+.id-actions .sp{flex:1}
+.btn-newchat{display:inline-flex;align-items:center;gap:5px;background:var(--gold);border:2.5px solid var(--ink);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:900;color:var(--ink);box-shadow:2px 2px 0 var(--ink);cursor:pointer}
+.btn-newchat svg{width:14px;height:14px}
+
+/* 附件面板 */
+.attach-sheet{background:#FFF7EC;border-top:2.5px solid var(--ink);padding:12px 14px 14px;display:flex;gap:10px}
+.attach-sheet .at-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;background:#fff;border:2.5px solid var(--ink);border-radius:14px;box-shadow:2px 2px 0 var(--ink);padding:12px 4px 9px;cursor:pointer}
+.attach-sheet .at-item .at-ic{width:40px;height:40px;border-radius:12px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;background:var(--gold)}
+.attach-sheet .at-item:nth-child(2) .at-ic{background:var(--soft)}
+.attach-sheet .at-item:nth-child(3) .at-ic{background:var(--red);color:#fff}
+.attach-sheet .at-item .at-ic svg{width:21px;height:21px}
+.attach-sheet .at-item b{font-size:12px}
+.attach-sheet .at-item span{font-size:10px;color:var(--gray);font-weight:600}
+
+/* 链接识别条 */
+.link-detect{display:flex;align-items:center;gap:9px;background:#fff;border:2.5px solid var(--ink);border-radius:13px;box-shadow:2px 2px 0 var(--ink);margin:0 12px 10px;padding:9px 11px}
+.link-detect .ld-ic{width:30px;height:30px;border-radius:9px;background:var(--gold);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.link-detect .ld-ic svg{width:16px;height:16px}
+.link-detect b{font-size:12.5px;display:block}
+.link-detect span{font-size:10.5px;color:var(--gray);font-weight:600}
+.link-detect div{min-width:0;word-break:break-all}
+.link-detect .ld-x{margin-left:auto;width:24px;height:24px;border-radius:8px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--gray);flex:none}
+.link-detect .ld-x svg{width:12px;height:12px}
+
+/* 语音态：长按输入框说话（微信式） */
+.id-input.voice-hold{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--gray);font-weight:800;background:var(--soft);cursor:pointer}
+.id-input.voice-hold .vh-main{display:flex;align-items:center;gap:8px;font-size:15px}
+.id-input.voice-hold .vh-main svg{width:18px;height:18px}
+.id-input.voice-hold .vh-sub{font-size:10.5px;font-weight:600;color:var(--brown)}
+.id-input.voice-hold.recording{background:var(--red);color:#fff;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.01)}}
+
+/* 输入光标 */
+.caret{display:inline-block;width:8px;height:18px;background:var(--red);vertical-align:middle;animation:blink 1s steps(1) infinite;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+
+/* ---- 响应式 ---- */
+@media (max-width:900px){.grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:40px 16px}}
+@media (max-width:640px){.page{padding:14px 10px 50px}.doc-header{padding:22px 14px 6px}.doc-header h1{font-size:22px}.doc-header h1 .pop{font-size:25px}.legend{display:none}}
+</style>
+</head>
+<body>
+
+<!-- SVG 图标集 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-kitchen" viewBox="0 0 24 24"><path d="M4 11h16a1 1 0 0 1 1 1v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-5a1 1 0 0 1 1-1z"/><path d="M8 11V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><path d="M9.5 5.5 8.5 3M14.5 5.5l1-2.5"/></symbol>
+  <symbol id="i-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h2l2-3h8l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="4"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 19 5-5 3 3 4-4 4 4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-5 16-4-6z"/><path d="M11 14 20 4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.5 1.5"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.5-1.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6 .9-4.3 4.2 1 6L12 17l-5.4 2.6 1-6L3.3 9.4l6-.9z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1.2 3-4 5-4 9a4 4 0 0 0 8 0c0-2-.8-3-.8-3s1.4 1 2.3 2.6A5.5 5.5 0 0 1 12 21c-4.4 0-7.5-3-7.5-7 0-5.5 7.5-11 7.5-11z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-11"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4l1.6 4.9L18.5 10 13.6 11.6 12 16.5l-1.6-4.9L5.5 10l4.9-1.1z"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#E8482A" stroke="#241A12" stroke-width="3.5"/><path d="M19 34h26v8a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8z" fill="#fff" stroke="#241A12" stroke-width="3"/><path d="M25 34v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></symbol>
+</svg>
+
+<header class="doc-header">
+  <nav class="doc-nav">
+    <a href="01-核心业务闭环.html">01 核心闭环</a>
+    <a href="02-我的收藏与设置.html">02 收藏设置</a>
+    <a href="03-社区互动.html">03 社区互动</a>
+    <a href="04-膳食规划与智能输入.html">04 规划与输入</a>
+    <a href="05-趣味探索功能.html">05 趣味探索</a>
+    <a href="06-链接与文档解析.html">06 链接与文档解析</a>
+    <a class="on" href="07-对话式首页.html">07 对话式首页</a>
+  </nav>
+  <h1><span class="pop">ChefPal</span> 原型 07 · 对话式首页（干净版）</h1>
+  <p class="doc-sub">去卡片框 · 新对话悬浮钮 · 上传/发送同侧 · 3行大输入框 · 链接自动解析融入对话</p>
+  <div class="legend">
+    <span class="lg-title">设计系统</span>
+    <span class="swatch" style="--c:#E8482A"><i></i>焰火红<b>#E8482A</b></span>
+    <span class="swatch" style="--c:#F0A73E"><i></i>熟金黄<b>#F0A73E</b></span>
+    <span class="swatch" style="--c:#2FA37E"><i></i>食材绿<b>#2FA37E</b></span>
+    <span class="swatch" style="--c:#FFF7EC"><i></i>奶油暖白<b>#FFF7EC</b></span>
+    <span class="swatch" style="--c:#241A12"><i></i>墨褐描边<b>#241A12</b></span>
+    <span class="lg-demo">
+      <span class="btn-newchat" style="box-shadow:none;transform:none;margin-right:10px">＋ 新对话</span>
+      <span class="id-input" style="min-height:0;padding:7px 11px;font-size:12px"><span class="ph">轮播文字</span><span class="hint" style="display:block">双击快捷提问提示</span></span>
+    </span>
+  </div>
+</header>
+
+<main class="page">
+<div class="grid">
+
+  <!-- ══════════ 屏幕1 · 对话首页·新对话（干净空态） ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">1</span>对话首页 · 新对话 <em>干净空态</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2></div>
+        <div class="content">
+          <div class="chat-area">
+            <div class="chat-slot">
+              <div class="msg assistant">
+                <span class="avatar">🍳</span>
+                <div class="mbox">
+                  <p>嗨！我是小伴，你的口袋厨师 🥢<br>想做菜直接问我，或粘贴菜谱链接 / 上传文档，我帮你解析成步骤。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="input-dock">
+          <div class="id-input">
+            <p class="ph">问小伴：红烧肉怎么做不腻？</p>
+            <p class="hint">双击输入框，提问当前问题</p>
+          </div>
+          <div class="id-actions">
+            <span class="btn-newchat"><svg class="ic"><use href="#i-plus"/></svg>新对话</span>
+            <span class="sp"></span>
+            <span class="id-attach"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="id-act mic"><svg class="ic"><use href="#i-mic"/></svg></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕2 · 对话首页·问答进行中（文字态→发送） ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">2</span>对话首页 · 问答进行中 <em>输入即切发送</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2></div>
+        <div class="content">
+          <div class="chat-area">
+            <div class="chat-slot">
+              <div class="msg user">
+                <span class="avatar av-ic"><svg class="ic"><use href="#i-mine"/></svg></span>
+                <div class="mbox"><p>红烧肉怎么做不腻？</p></div>
+              </div>
+              <div class="msg assistant">
+                <span class="avatar">🍳</span>
+                <div class="mbox" style="width:100%;max-width:100%">
+                  <div class="meta">
+                    <span class="mini-chip green">📚 知识库命中</span>
+                    <time>刚刚</time>
+                  </div>
+                  <p style="font-size:13.5px">五花肉冷水下锅焯透，先煸出猪油再上糖色，是"肥而不腻"的关键。</p>
+                  <div class="m-card">
+                    <div class="hero">🥩</div>
+                    <div class="m-body">
+                      <div class="m-title">红烧肉 <span class="mini-chip red">约 90 分钟</span></div>
+                      <div class="seg"><span>食材清单</span><span>食材处理</span><span class="on">烹饪步骤</span><span>避坑指南</span></div>
+                      <div style="font-size:12.5px;font-weight:700;line-height:1.6;padding:2px 2px">
+                        ① 五花肉切块冷水下锅，加姜片料酒焯透<br>
+                        ② 捞出冲净，干锅小火煸出猪油<br>
+                        ③ 冰糖小火炒至琥珀色下肉上色<br>
+                        ④ 加热水没过肉面，小火焖 40 分钟收汁
+                      </div>
+                      <div class="m-actions">
+                        <span class="btn btn-white btn-sm"><svg class="ic" style="width:14px;height:14px;color:var(--gold)"><use href="#i-star"/></svg>收藏</span>
+                        <span class="btn btn-red btn-sm">查看完整菜谱</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="msg assistant">
+                <span class="avatar">🍳</span>
+                <div class="mbox"><p>那糖色炒苦了怎么办？可以这样救…<span class="caret"></span></p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="input-dock">
+          <div class="id-input typing">那糖色怎么炒才不会苦？</div>
+          <div class="id-actions">
+            <span class="btn-newchat"><svg class="ic"><use href="#i-plus"/></svg>新对话</span>
+            <span class="sp"></span>
+            <span class="id-attach"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="id-act send"><svg class="ic"><use href="#i-send"/></svg></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕3 · 对话首页·📎附件面板 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">3</span>对话首页 · 附件面板 <em>拍照 / 相册 / 上传文件</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2></div>
+        <div class="content">
+          <div class="chat-area">
+            <div class="chat-slot">
+              <div class="msg user">
+                <span class="avatar av-ic"><svg class="ic"><use href="#i-mine"/></svg></span>
+                <div class="mbox"><p>帮我看看冰箱里有什么</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="attach-sheet">
+          <div class="at-item"><span class="at-ic"><svg class="ic"><use href="#i-camera"/></svg></span><b>拍照识食材</b><span>对准冰箱拍</span></div>
+          <div class="at-item"><span class="at-ic"><svg class="ic"><use href="#i-image"/></svg></span><b>从相册选择</b><span>选照片识别</span></div>
+          <div class="at-item"><span class="at-ic"><svg class="ic"><use href="#i-doc"/></svg></span><b>上传文档</b><span>PDF / Word</span></div>
+        </div>
+        <div class="input-dock">
+          <div class="id-input">
+            <p class="ph">问小伴：红烧肉怎么做不腻？</p>
+            <p class="hint">双击输入框，提问当前问题</p>
+          </div>
+          <div class="id-actions">
+            <span class="btn-newchat"><svg class="ic"><use href="#i-plus"/></svg>新对话</span>
+            <span class="sp"></span>
+            <span class="id-attach on"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="id-act mic"><svg class="ic"><use href="#i-mic"/></svg></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕4 · 对话首页·链接自动识别 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">4</span>对话首页 · 链接自动识别 <em>粘贴即解析</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2></div>
+        <div class="content">
+          <div class="chat-area">
+            <div class="chat-slot"></div>
+          </div>
+          <div class="link-detect">
+            <span class="ld-ic"><svg class="ic"><use href="#i-link"/></svg></span>
+            <div><b>🔗 已识别链接 · 将自动解析</b><span>发送后小伴提取内容 → 生成结构化菜谱</span></div>
+            <span class="ld-x"><svg class="ic"><use href="#i-plus"/></svg></span>
+          </div>
+        </div>
+        <div class="input-dock">
+          <div class="id-input typing">https://www.xiachufang.com/recipe/1005…</div>
+          <div class="id-actions">
+            <span class="btn-newchat"><svg class="ic"><use href="#i-plus"/></svg>新对话</span>
+            <span class="sp"></span>
+            <span class="id-attach"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="id-act send"><svg class="ic"><use href="#i-send"/></svg></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕5 · 对话首页·语音输入态 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">5</span>对话首页 · 语音输入 <em>🎤 ⇄ ➤ 自动切换</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2></div>
+        <div class="content">
+          <div class="chat-area">
+            <div class="chat-slot"></div>
+          </div>
+        </div>
+        <div class="input-dock">
+          <div class="id-input voice-hold">
+            <span class="vh-main"><svg class="ic"><use href="#i-mic"/></svg>按住说话</span>
+            <span class="vh-sub">长按说话 · 松开发送 · 上滑取消</span>
+          </div>
+          <div class="id-actions">
+            <span class="btn-newchat"><svg class="ic"><use href="#i-plus"/></svg>新对话</span>
+            <span class="sp"></span>
+            <span class="id-attach"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="id-act mic on"><svg class="ic"><use href="#i-mic"/></svg></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 屏幕6 · 对话首页·解析结果消息 ══════════ -->
+  <div class="screen-card">
+    <div class="screen-label"><span class="num">6</span>对话首页 · 解析结果 <em>解析融入对话流</em></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+          <div class="statusbar"></div>
+        <div class="nav"><h2><span class="pop" style="color:var(--red)">ChefPal</span> 美食百科</h2></div>
+        <div class="content">
+          <div class="chat-area">
+            <div class="chat-slot">
+              <div class="msg user">
+                <span class="avatar av-ic"><svg class="ic"><use href="#i-mine"/></svg></span>
+                <div class="mbox"><p>🔗 https://www.xiachufang.com/recipe/1005…</p></div>
+              </div>
+              <div class="msg assistant">
+                <span class="avatar">🍳</span>
+                <div class="mbox" style="width:100%;max-width:100%">
+                  <div class="src-banner">
+                    <span class="sb-ic">🌐</span>
+                    <div><b>网页解析 · 下厨房</b><span>已解析为 4 步菜谱</span></div>
+                    <span class="mini-chip green" style="margin-left:auto;flex:none">已收录知识库</span>
+                  </div>
+                  <p style="font-size:13.5px">红烧肉 · 五花肉先焯透再煸油上糖色，肥而不腻。</p>
+                  <div class="m-card">
+                    <div class="hero">🥩</div>
+                    <div class="m-body">
+                      <div class="m-title">红烧肉 <span class="mini-chip red">约 90 分钟</span></div>
+                      <div class="seg"><span class="on">食材清单</span><span>食材处理</span><span>烹饪步骤</span><span>避坑指南</span></div>
+                      <div class="ing-item"><svg class="ic ok"><use href="#i-check"/></svg>带皮五花肉 500g</div>
+                      <div class="ing-item"><svg class="ic ok"><use href="#i-check"/></svg>冰糖 20g · 生抽老抽</div>
+                      <div class="ing-item"><svg class="ic ok"><use href="#i-check"/></svg>姜葱八角桂皮</div>
+                      <div class="m-actions">
+                        <span class="btn btn-white btn-sm"><svg class="ic" style="width:14px;height:14px;color:var(--gold)"><use href="#i-star"/></svg>收藏</span>
+                        <span class="btn btn-red btn-sm">查看完整菜谱</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="msg user">
+                <span class="avatar av-ic"><svg class="ic"><use href="#i-mine"/></svg></span>
+                <div class="mbox"><p>那糖色怎么炒才不会苦？</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="input-dock">
+          <div class="id-input">
+            <p class="ph">问小伴：红烧肉怎么做不腻？</p>
+            <p class="hint">双击输入框，提问当前问题</p>
+          </div>
+          <div class="id-actions">
+            <span class="btn-newchat"><svg class="ic"><use href="#i-plus"/></svg>新对话</span>
+            <span class="sp"></span>
+            <span class="id-attach"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="id-act mic"><svg class="ic"><use href="#i-mic"/></svg></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tabitem on"><svg class="ic"><use href="#i-home"/></svg>百科</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-kitchen"/></svg>厨房</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-discover"/></svg>发现</div>
+          <div class="tabitem"><svg class="ic"><use href="#i-mine"/></svg>我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

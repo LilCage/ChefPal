@@ -1,277 +1,131 @@
-/* 首页右上角已无功能按钮，无需额外导航调整 */
+/* 对话式首页（原型 07）
+ * 布局：顶部 nav → 消息区(chat-scroll 可滚动) → 链接识别条 → 📎附件面板 → 输入坞
+ * 注意：自定义 tabbar 是 position:fixed 悬浮底部，需在页面底部预留其高度；
+ *       scroll-view 在 flex 容器内必须 height:0 + flex:1 才撑满（否则塌缩成内容高度）。
+ */
 
-/* 搜索栏（主对话框：加大加高容纳多行 placeholder；按钮固定右下角） */
-.searchbar {
-  position: relative;
-  background: #fff;
-  border: 2.5px solid var(--ink);
-  border-radius: 48px;
-  box-shadow: 5px 5px 0 var(--ink);
-  padding: 40px 32px 150px; /* 底部留出按钮空间 */
-  margin: 28px 28px 8px;
+/* ============ 消息区 ============ */
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  /* 预留自定义 tabbar 高度（16上边距 + 48图标 + 6间距 + 标签 + 20下边距 + 安全区）；
+     底部预留区设为白色，与白色输入坞 / 白色 tabbar 无缝衔接，高度略有出入也不露底 */
+  padding-bottom: calc(122px + env(safe-area-inset-bottom));
+  background: var(--white);
+}
 
-  .search-input {
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 120px;
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1.5;
-    /* placeholder 换行生效：配合 \n 断行符 */
-    white-space: pre-line;
-    word-wrap: break-word;
-  }
+.chat-scroll {
+  flex: 1;
+  height: 0; /* 关键：scroll-view 显式 0 高，由 flex 撑满，避免按内容高度塌缩 */
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 20px 24px 12px;
+  background: var(--cream); /* 消息区保持奶油底，与白色输入坞区分 */
+}
 
-  .search-ph { color: #cbb8a3; font-weight: 600; }
+.chat-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
 
-  .sbtn {
-    position: absolute;
-    right: 32px;
-    bottom: 32px;
-    background: var(--red);
-    color: #fff;
-    border: 2px solid var(--ink);
-    border-radius: 30px;
-    width: 100px;
-    height: 100px;
+.welcome {
+  padding-bottom: 8px;
+}
+
+/* ---------- 消息气泡 ---------- */
+.msg {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  max-width: 88%;
+  min-width: 0;
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: var(--gold);
+    border: 2.5px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 3px 3px 0 var(--ink);
-
-    .ic {
-      width: 44px;
-      height: 44px;
-      color: #fff;
-    }
-
-    /* 无输入时：置灰 */
-    &.sbtn--idle {
-      background: #d9cdbf;
-      border-color: #b8a898;
-      box-shadow: 3px 3px 0 #b8a898;
-    }
+    font-size: 32px;
+    flex: none;
   }
 
-}
+  .av-ic {
+    background: var(--red);
+    color: #fff;
 
-/* 双击提示行：小字灰色、与轮播文字区分、独立一行带间距 */
-.search-tip {
-  text-align: center;
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--gray);
-  margin: 8px 28px 0;
-  letter-spacing: 1px;
-}
-
-/* 今日 AI 秘技 */
-.qa-answer {
-  margin: 32px 28px 24px; /* 上方留出空间给朝上的气泡尾巴 */
-
-  /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与历史展开框一致）。
-     用 .qa-answer.bubble 双 class 提升特异性，确保不被 theme.scss 的 .bubble::after 覆盖 */
-  &.bubble::after {
-    top: -11px;
-    bottom: auto;
-    left: 44px;
-    transform: rotate(-135deg);
+    .ic { width: 32px; height: 32px; }
   }
 
-  .qa-ans-head {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  /* 用户消息靠右 */
+  &.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
 
-    .qa-ans-q { font-size: 30px; font-weight: 900; flex: 1; }
-
-    /* 折叠/展开指示箭头：ic-chev-r 朝右 → 展开时朝上(-90°)，折叠时朝下(90°) */
-    .ans-fold {
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--gray);
-      flex: none;
-
-      .ic {
-        width: 32px;
-        height: 32px;
-        transition: transform 0.2s;
-        transform: rotate(90deg); /* 折叠状态朝下 */
-      }
-
-      &.up .ic { transform: rotate(-90deg); } /* 展开状态朝上 */
-    }
-  }
-
-  .qa-ans-secret {
-    font-size: 26px;
-    font-weight: 700;
-    margin-top: 20px;
-    display: block;
-    line-height: 1.6;
-  }
-
-  /* 知识库命中标识 */
-  .kb-badge {
-    display: inline-flex;
-    align-items: center;
-    background: #DFF3EA;
-    border: 2px solid var(--ink);
-    border-radius: 999px;
-    color: var(--green-dark);
-    font-size: 20px;
-    font-weight: 800;
-    padding: 4px 14px;
-    margin-top: 12px;
-  }
-
-  .qa-ans-ings {
-    font-size: 25px;
-    color: var(--brown);
-    font-weight: 600;
-    margin-top: 8px;
-    display: block;
-    line-height: 1.6;
-  }
-
-  /* 多菜推荐卡片 */
-  .qa-recs { margin-top: 16px; }
-
-  .rec-card {
-    background: var(--soft);
-    border: 2.5px solid var(--ink);
-    border-radius: 20px;
-    box-shadow: 3px 3px 0 var(--ink);
-    padding: 20px;
-    margin-bottom: 16px;
-
-    .rec-head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .rec-no {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--red);
-        border: 2px solid var(--ink);
-        color: #fff;
-        font-size: 22px;
-        font-weight: 900;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-      }
-
-      .rec-name {
-        font-size: 28px;
-        font-weight: 900;
-        flex: 1;
-        color: var(--red);
-        text-decoration: underline;
-        text-decoration-color: rgba(232, 72, 42, 0.4);
-        text-underline-offset: 4px;
-      }
-    }
-
-    /* 菜名点详情的"做法"入口 chip */
-    .mini-chip.kb {
-      background: #FFF1C9;
-      color: #A9741B;
-      border-color: var(--ink);
-      flex: none;
-    }
-
-    .rec-secret {
-      display: block;
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--brown);
-      margin-top: 12px;
-      line-height: 1.6;
-    }
-
-    .rec-ings {
-      display: block;
-      font-size: 22px;
-      color: var(--gray);
-      font-weight: 600;
-      margin-top: 8px;
-      line-height: 1.5;
-    }
-  }
-
-  .qa-ans-label {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--gray);
-    margin-top: 20px;
-    display: block;
-  }
-
-  .qa-ans-steps { margin-top: 8px; }
-
-  .qa-step {
-    display: flex;
-    gap: 16px;
-    font-size: 25px;
-    color: var(--brown);
-    line-height: 1.6;
-    margin-top: 8px;
-
-    .qa-step-no {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
+    .mbox--user {
       background: var(--gold);
-      border: 2px solid var(--ink);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: 900;
-      flex: none;
+      border-color: var(--ink);
       color: var(--ink);
+
+      &::after {
+        right: -9px;
+        left: auto;
+        transform: rotate(45deg);
+        background: var(--gold);
+      }
     }
   }
 
-  .qa-pit {
-    background: #ffe9d9;
-    border: 2px solid var(--ink);
-    border-radius: 16px;
-    padding: 12px 16px;
-    margin-top: 10px;
-    font-size: 23px;
-    font-weight: 600;
-    line-height: 1.5;
+  .mbox {
+    position: relative;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 24px;
+    padding: 20px 24px;
+    box-shadow: 3px 3px 0 var(--ink);
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    /* 气泡尾巴（assistant 左上角朝上；user 覆盖为右上角） */
+    &::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: var(--white);
+      border-right: 2.5px solid var(--ink);
+      border-bottom: 2.5px solid var(--ink);
+      transform: rotate(225deg);
+      left: -11px;
+      top: 18px;
+    }
   }
 
-  .qa-ans-actions {
-    display: flex;
-    gap: 16px;
-    margin-top: 24px;
+  .mbox--error { border-color: var(--red-dark); background: #ffe9d9; }
+
+  .mbox-text {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.55;
+    word-break: break-all;
   }
 }
 
-.typing-wrap {
-  .qa-ans-q {
-    font-size: 30px;
-    font-weight: 900;
-    line-height: 1.6;
-  }
-}
-
-.typing-caret {
+/* 打字光标 */
+.caret {
+  display: inline-block;
   width: 8px;
-  height: 36px;
+  height: 30px;
   background: var(--red);
-  flex: none;
+  vertical-align: middle;
+  margin-left: 4px;
   animation: caret-blink 0.8s infinite;
 }
 
@@ -280,105 +134,423 @@
   50% { opacity: 0; }
 }
 
-.tip-empty {
-  font-size: 25px;
-  color: var(--brown);
-  line-height: 1.7;
-  margin: 32px 28px 24px; /* 上方留出空间给朝上的气泡尾巴 */
+/* ---------- 助理结构化卡片 ---------- */
+.mbox--card { width: 100%; max-width: 100%; }
 
-  /* 覆盖 .bubble 自带尾巴：右下角 → 顶部朝上（与其他回答框统一） */
-  &.bubble::after {
-    top: -11px;
-    bottom: auto;
-    left: 44px;
-    transform: rotate(-135deg);
+.src-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffe9d9;
+  border: 2.5px solid var(--ink);
+  border-radius: 20px;
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+
+  .sb-ic {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--soft);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex: none;
+  }
+
+  .sb-body {
+    flex: 1;
+    min-width: 0;
+
+    .sb-title { display: block; font-size: 26px; font-weight: 900; word-break: break-all; }
+    .sb-sub { display: block; font-size: 20px; color: var(--brown); font-weight: 600; margin-top: 2px; }
+  }
+
+  .mini-chip { flex: none; }
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+
+  .dish-name { font-size: 34px; font-weight: 900; flex: 1; min-width: 0; }
+}
+
+.mbox-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* 知识库命中标识 */
+.kb-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #DFF3EA;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  color: var(--green-dark);
+  font-size: 20px;
+  font-weight: 800;
+  padding: 4px 14px;
+  margin: 12px 0;
+}
+
+/* ---------- 结构化答案正文（单菜/多菜） ---------- */
+.qa-ans-secret {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 14px;
+  display: block;
+  line-height: 1.6;
+}
+
+.qa-ans-label {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--gray);
+  margin-top: 18px;
+  display: block;
+}
+
+.qa-ans-ings {
+  font-size: 24px;
+  color: var(--brown);
+  font-weight: 600;
+  margin-top: 8px;
+  display: block;
+  line-height: 1.6;
+}
+
+.qa-ans-steps { margin-top: 8px; }
+
+.qa-step {
+  display: flex;
+  gap: 14px;
+  font-size: 24px;
+  color: var(--brown);
+  line-height: 1.6;
+  margin-top: 8px;
+
+  .qa-step-no {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 900;
+    flex: none;
+    color: var(--ink);
   }
 }
 
-.thinking {
-  text-align: center;
-  font-weight: 700;
-  margin: 0 28px 24px;
-}
-
-.note--center {
-  display: block;
-  text-align: center;
-  padding: 24px 0 40px;
-}
-
-/* 问答历史：最近 3 条 + 删除按钮 */
-.sec-note {
+.qa-pit {
+  background: #ffe9d9;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-top: 10px;
   font-size: 22px;
-  color: var(--gray);
   font-weight: 600;
+  line-height: 1.5;
 }
 
-.hist-block {
-  margin: 0 28px 20px;
+/* 多菜推荐卡片 */
+.qa-recs { margin-top: 14px; }
 
-  /* 问题框：右上角展开箭头 + 右下角删除键 */
-  .hist-q {
-    position: relative;
-    background: #fff;
-    border: 2.5px solid var(--ink);
-    border-radius: 32px;
-    box-shadow: 3px 3px 0 var(--ink);
-    padding: 28px;
-    cursor: pointer;
+.rec-card {
+  background: var(--soft);
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 18px;
+  margin-bottom: 14px;
 
-    .hist-q-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding-right: 64px; /* 让位右下角删除键 */
+  .rec-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 
-      .q-badge {
-        background: var(--gold);
-        border: 2px solid var(--ink);
-        border-radius: 16px;
-        font-size: 22px;
-        padding: 2px 14px;
-        flex: none;
-      }
-
-      .hist-q-text {
-        flex: 1;
-        min-width: 0;
-        font-size: 30px;
-        font-weight: 900;
-        line-height: 1.4;
-      }
-    }
-
-    /* 右下角删除键（框内） */
-    .hist-del {
-      position: absolute;
-      right: 16px;
-      bottom: 16px;
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      background: #fff;
+    .rec-no {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--red);
       border: 2px solid var(--ink);
-      box-shadow: 2px 2px 0 var(--ink);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex: none;
+    }
 
-      .ic { color: var(--red-dark); }
+    .rec-name {
+      font-size: 26px;
+      font-weight: 900;
+      flex: 1;
+      min-width: 0;
+      color: var(--red);
+      text-decoration: underline;
+      text-decoration-color: rgba(232, 72, 42, 0.4);
+      text-underline-offset: 4px;
+    }
+
+    .mini-chip.kb {
+      background: #FFF1C9;
+      color: #A9741B;
+      border-color: var(--ink);
+      flex: none;
     }
   }
 
-  /* 展开的完整问答详情：覆盖 .bubble 自带的气泡尾巴，从右下角移到顶部朝上指向问题框 */
-  .hist-detail {
-    margin: 20px 0 0;
+  .rec-secret {
+    display: block;
+    font-size: 23px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-top: 10px;
+    line-height: 1.6;
+  }
 
-    &::after {
-      top: -11px;       /* 原 bottom → 移到顶部 */
-      bottom: auto;
-      left: 44px;
-      transform: rotate(-135deg); /* 原右下角朝下 → 旋转朝上指向问题 */
+  .rec-ings {
+    display: block;
+    font-size: 21px;
+    color: var(--gray);
+    font-weight: 600;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+}
+
+/* ============ 链接识别条 ============ */
+.link-detect {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 3px 3px 0 var(--ink);
+  margin: 0 24px 10px;
+  padding: 14px 18px;
+
+  .ld-ic {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: var(--gold);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex: none;
+  }
+
+  .ld-body {
+    flex: 1;
+    min-width: 0;
+
+    .ld-title { display: block; font-size: 24px; font-weight: 900; }
+    .ld-sub { display: block; font-size: 20px; color: var(--gray); font-weight: 600; margin-top: 2px; }
+  }
+
+  .ld-x {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray);
+    font-size: 24px;
+    flex: none;
+  }
+}
+
+/* ============ 📎 附件面板 ============ */
+.attach-sheet {
+  flex: none;
+  background: var(--cream);
+  border-top: 2.5px solid var(--ink);
+  padding: 16px 24px 18px;
+  display: flex;
+  gap: 16px;
+
+  .at-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 2.5px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 2px 2px 0 var(--ink);
+    padding: 18px 6px 14px;
+    font-size: 22px;
+    font-weight: 800;
+
+    .at-ic {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gold);
+
+      .ic { width: 32px; height: 32px; }
     }
+
+    &:nth-child(2) .at-ic { background: var(--soft); }
+    &:nth-child(3) .at-ic { background: var(--red); }
+
+    .at-emoji { font-size: 32px; }
+
+    .at-sub { font-size: 18px; color: var(--gray); font-weight: 600; }
+  }
+}
+
+/* ============ 输入坞 ============ */
+.input-dock {
+  flex: none;
+  background: var(--white);
+  border-top: 2.5px solid var(--ink);
+  padding: 14px 24px 16px;
+}
+
+.id-input-wrap {
+  background: var(--cream);
+  border: 2.5px solid var(--ink);
+  border-radius: 24px;
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 14px 18px;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+
+  .id-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.6;
+    background: transparent;
+  }
+
+  .id-ph { color: var(--gray); font-weight: 600; }
+
+  .id-hint {
+    font-size: 20px;
+    font-weight: 500;
+    color: #B8A08C;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+}
+
+/* 语音态：长按输入框说话 */
+.id-input.voice-hold {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--gray);
+  font-weight: 800;
+  background: var(--soft);
+  cursor: pointer;
+
+  .vh-main { font-size: 30px; display: flex; align-items: center; gap: 10px; }
+  .vh-sub { font-size: 20px; font-weight: 600; color: var(--brown); }
+
+  &.recording {
+    background: var(--red);
+    color: #fff;
+
+    .vh-sub { color: #FFE9D9; }
+  }
+}
+
+/* 按钮行：新对话靠左 · 上传/发送靠右 */
+.id-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+
+  .sp { flex: 1; }
+
+  .btn-newchat {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+
+    .ic { width: 24px; height: 24px; }
+  }
+
+  .id-attach {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    border: 2.5px solid var(--ink);
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 2px 0 var(--ink);
+    color: var(--ink);
+    flex: none;
+
+    .ic { width: 32px; height: 32px; }
+
+    &.on { background: var(--soft); color: var(--red-dark); }
+  }
+
+  .id-act {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2.5px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    box-shadow: 2px 2px 0 var(--ink);
+
+    .ic { width: 32px; height: 32px; }
+
+    &.mic { background: var(--white); color: var(--red); }
+    &.mic.on { background: var(--soft); color: var(--red-dark); }
+    &.send { background: var(--red); color: #fff; }
+
+    .send-glyph { font-size: 30px; font-weight: 900; line-height: 1; }
   }
 }

@@ -45,10 +45,14 @@ async def ainvoke_json(
     model: str,
     system: str,
     user: str,
+    history: list[dict] | None = None,
     enable_search: bool = False,
     search_options: dict[str, Any] | None = None,
 ) -> dict:
     """调用 DeepSeek 并解析为 JSON dict。
+
+    history: 多轮对话上下文，[{"role": "user"/"assistant", "content": str}, ...]，
+    插在 system 与当前问题之间（旧一轮在前、近一轮在后）。
 
     未配置 DASHSCOPE_API_KEY 时抛 LLMError（提示先填 .env），便于本地 mock 测试与集成测试区分。
     """
@@ -62,10 +66,10 @@ async def ainvoke_json(
         if search_options:
             extra_body["search_options"] = search_options
 
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": user},
-    ]
+    messages = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": user})
 
     try:
         resp = await client.chat.completions.create(
@@ -89,10 +93,13 @@ async def astream_text(
     model: str,
     system: str,
     user: str,
+    history: list[dict] | None = None,
     enable_search: bool = False,
     search_options: dict[str, Any] | None = None,
 ) -> AsyncIterator[str]:
     """流式调用 DeepSeek，逐个 yield 文本增量（供 SSE 打字机）。
+
+    history: 多轮对话上下文（同 ainvoke_json）。
 
     未配置 DASHSCOPE_API_KEY 时抛 LLMError。调用方负责累积完整文本。
     """
@@ -106,10 +113,10 @@ async def astream_text(
         if search_options:
             extra_body["search_options"] = search_options
 
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": user},
-    ]
+    messages = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": user})
 
     try:
         stream = await client.chat.completions.create(
