@@ -25,7 +25,7 @@ from app.models.user import User
 from app.schemas.ai import QASchema
 from app.services import kb as kb_service
 from app.services.agents import qa_agent
-from app.services.llm.client import LLMError, astream_text
+from app.services.llm.client import LLMError, ainvoke_text, astream_text
 from app.services.llm.embedding import EmbeddingError
 from app.services.rate_limit import ensure_within_limit, record_ai_call
 
@@ -34,6 +34,118 @@ settings = get_settings()
 
 # 多菜推荐意图的关键词：命中则优先返回多道菜，否则返回单道最佳命中
 MULTI_HINT_KEYWORDS = ("推荐", "哪几道", "换换口味", "有什么好做", "来几道", "几道菜", "想吃")
+
+# 开场白生成的上限秒数：纯装饰性内容，宁可放弃也不能拖慢回答
+OPENING_TIMEOUT = 4.0
+
+# 「怎么做某菜」类问题的做法动词模式（长优先，避免"怎么做"吞掉"怎么做好吃/怎么做才"）
+HOWTO_PATTERNS = (
+    "怎么做好吃", "怎么做才", "怎么做", "如何做", "怎样做",
+    "怎么弄", "怎么烧", "怎么炖", "怎么炒", "怎么蒸", "怎么煮",
+    "的做法", "做法",
+)
+
+# 非菜名前缀/后缀，用于剔除"怎么做才不粘锅"这类被误提取的非菜名词
+_NON_DISH_PREFIXES = ("不", "别", "想", "可以", "应该", "要不要", "怎么")
+_DISH_CLEAN_SUFFIXES = ("更好吃", "才好吃", "最好吃", "比较好吃", "好吃", "最正宗", "简单")
+
+
+def _clean_dish(dish: str) -> str:
+    """去掉菜名里常见的语气后缀，如'红烧肉更好吃' → '红烧肉'。"""
+    for suf in _DISH_CLEAN_SUFFIXES:
+        if dish.endswith(suf):
+            return dish[: -len(suf)]
+    return dish
+
+
+def _extract_dish_for_multi(question: str) -> str | None:
+    """从'怎么做/做法'类问题中提取菜名（供多种做法列表与提示词优化用）。
+
+    例：'红烧肉怎么做' → 红烧肉；'怎么做红烧肉更好吃' → 红烧肉；'蒸蛋怎么蒸才嫩' → 蒸蛋；
+    '炖肉怎么去腥' → None（技巧问题，不强行提取）；'怎么做才不粘锅' → None（非菜名）。
+    """
+    q = question.strip().rstrip("？?。！!~～ ")
+    # 1) "X怎么做…" / "X的做法"：取做法动词之前的内容作为菜名
+    for pat in HOWTO_PATTERNS:
+        idx = q.find(pat)
+        if 0 < idx <= 12:
+            dish = q[:idx].strip("，,、。：: ")
+            if 1 <= len(dish) <= 12 and not dish.startswith(_NON_DISH_PREFIXES):
+                return dish
+    # 2) "怎么做X" / "如何做X"：动词后接菜名
+    m = re.match(r"^(?:怎么做|如何做|怎样做)([一-龥]{2,10})", q)
+    if m:
+        dish = _clean_dish(m.group(1))
+        if not dish.startswith(_NON_DISH_PREFIXES):
+            return dish
+    # 3) 兜底：X怎么Y，且 Y 以口感/质量词开头（如"蒸蛋怎么嫩""红烧肉怎么不腻"）→ X 为菜名。
+    #    技巧操作类（"炖肉怎么去腥增香"）Y 以动词开头，不误判。
+    idx = q.find("怎么")
+    if 0 < idx <= 12:
+        rest = re.sub(r"^(不|才|更|才能|才更|又|比较|特别)", "", q[idx + 2:])
+        if rest and rest[0] in "嫩滑软脆香鲜酥韧柴硬腻腥老爽糯Q绵烂弹爽口":
+            dish = q[:idx].strip("，,、。：: ")
+            if 1 <= len(dish) <= 12 and not dish.startswith(_NON_DISH_PREFIXES):
+                return dish
+    return None
+
+
+def _extract_howto_dish(question: str) -> str | None:
+    """提取"做法类"问题的菜名（怎么做X / X的做法），不处理"X怎么嫩"这类口感/技巧问题。"""
+    q = question.strip().rstrip("？?。！!~～ ")
+    for pat in HOWTO_PATTERNS:
+        idx = q.find(pat)
+        if 0 < idx <= 12:
+            dish = q[:idx].strip("，,、。：: ")
+            if 1 <= len(dish) <= 12 and not dish.startswith(_NON_DISH_PREFIXES):
+                return dish
+    m = re.match(r"^(?:怎么做|如何做|怎样做)([一-龥]{2,10})", q)
+    if m:
+        dish = _clean_dish(m.group(1))
+        if not dish.startswith(_NON_DISH_PREFIXES):
+            return dish
+    return None
+
+
+def _optimize_prompt(question: str) -> str:
+    """自动优化提示词：仅"怎么做X"做法类问题 → 提示模型列多种做法并简要介绍。
+
+    "X怎么嫩/怎么不腻"这类技巧问题不在这里优化（走 QA_SYSTEM 的秘诀分类），
+    避免被强行要求列多种做法。
+    """
+    dish = _extract_howto_dish(question)
+    if not dish:
+        return question
+    return (
+        f"{question}\n"
+        f"（自动优化提示：请先给一句友好的口语开场白，再列出「{dish}」的 2~4 种不同做法/流派，"
+        f"每种做法用 1~2 句话介绍其风味特点、关键点与预估时间，不要展开完整步骤。"
+        f"仅当用户明确要求详细步骤时再输出完整做法。）"
+    )
+
+
+async def _ai_opening(question: str, titles: list[str]) -> str:
+    """让模型针对真实问题现写一句贴合的开场白（极小调用；失败/超时返回空串）。
+
+    不用固定模板——用户问题多种多样，交给模型按「原问题 + 将展示的清单」现写。
+    不计入每日 AI 限额；失败静默跳过，不影响主流程（卡片照常展示）。
+    """
+    if not titles:
+        return ""
+    try:
+        text = await ainvoke_text(
+            model=settings.DEEPSEEK_MODEL,
+            system=(
+                "你是 ChefPal 小伴，一个亲切热情的烹饪助手。根据用户的问题和即将展示的清单，"
+                "写一句口语化、贴合用户问题、自然亲切的中文开场白，引出这份清单。"
+                "要求：只输出这一句话，20~40 字；不要问候套话（如'你好'），"
+                "不要逐一罗列菜名，不要解释做法。"
+            ),
+            user=f"用户的问题：{question}\n要展示的清单：{'、'.join(titles)}",
+        )
+        return (text or "").strip().strip('"“”')[:80]
+    except Exception:  # noqa: BLE001 开场白失败不阻断主流程
+        return ""
 
 
 class QAAskRequest(BaseModel):
@@ -128,7 +240,7 @@ def _single_tip_answer(entry) -> dict:
 
 def _multi_recipe_answer(recipes: list[dict]) -> dict:
     return {
-        "core_secret": "",
+        "core_secret": "",  # 开场白由 _ai_opening 按问题现写（见 ask/ask_stream）
         "dish_name": "",
         "ingredients": [],
         "steps": [],
@@ -150,23 +262,100 @@ def _multi_recipe_answer(recipes: list[dict]) -> dict:
     }
 
 
-def _kb_to_qa_answer(question: str, hits: list[dict]) -> dict | None:
-    """知识库命中列表 → QASchema 字典。
+# 多菜推荐：类别按"待客一桌"的优先级排序（硬菜优先），避免 top-k 相似度全取同类
+_TABLE_CATEGORY_ORDER = ("肉菜", "水产", "素菜", "汤", "主食", "早餐", "甜点", "饮品", "半成品", "佐料", "")
 
-    规则：多菜推荐意图且 ≥2 道菜 → 多菜；否则返回总体最高相似度条目
-    （tip 命中回答技巧，recipe 命中回答单菜）。避免"怎么去腥"这类技巧问题
-    被菜谱条目抢占。
+
+def _pick_diverse_recipes(recipes: list[dict], k: int = 4) -> list[dict]:
+    """从相似度命中中挑 k 道类别分散、荤素搭配的菜（多菜推荐专用）。
+
+    解决 top-k 相似度截取导致"推荐一桌"返回 4 碗汤/4 碗面这类同质结果。
+    贪心：先按类别优先级轮转，每类取相似度最高的 1 道；类别不足再从剩余按相似度补足。
+    多做法（同一道菜的变体，如红烧肉的几种流派）不走这里。
     """
+    if len(recipes) <= k:
+        return recipes
+    by_cat: dict[str, list[dict]] = {}
+    for h in recipes:
+        by_cat.setdefault(h["entry"].category, []).append(h)
+    for lst in by_cat.values():
+        lst.sort(key=lambda h: h["similarity"], reverse=True)
+
+    picked: list[dict] = []
+    used: set[str] = set()
+    for cat in _TABLE_CATEGORY_ORDER:
+        if len(picked) >= k:
+            break
+        lst = by_cat.get(cat)
+        if lst and cat not in used:
+            picked.append(lst.pop(0))
+            used.add(cat)
+    leftovers = [h for lst in by_cat.values() for h in lst]
+    leftovers.sort(key=lambda h: h["similarity"], reverse=True)
+    for h in leftovers:
+        if len(picked) >= k:
+            break
+        picked.append(h)
+    return picked
+
+
+def _kb_to_qa_answer(question: str, hits: list[dict], dish_hint: str = "") -> dict | None:
+    """知识库直答（仅 recipe_lookup 意图、知识库命中时用，免 AI 秒回）。
+
+    - 同菜名变体 ≥2 → 列出多种做法；
+    - 恰好 1 个同名做法 → 单菜全量；
+    - 路由确认查这道菜但无精确同名，且 top 命中为高相似度菜谱（别名/同菜，如"蒸蛋"→"蒸水蛋"）→ 单菜；
+    - 其余 → None（交给 AI 生成）。
+    dish_hint: 路由智能体给出的标准菜名，优先于字符串提取。
+    """
+    if not hits:
+        return None
+    dish = dish_hint or _extract_dish_for_multi(question)
+    if dish:
+        variants = [h for h in hits if h["entry"].kind == "recipe" and dish in h["entry"].title]
+        if len(variants) >= 2:
+            return _multi_recipe_answer(variants[:4])
+        if len(variants) == 1:
+            return _single_recipe_answer(variants[0]["entry"])
+        top = hits[0]
+        if top["entry"].kind == "recipe" and top["similarity"] >= 0.7:
+            return _single_recipe_answer(top["entry"])
+        return None
+    if any(k in question for k in ("怎么", "如何", "怎样")):
+        top = hits[0]
+        if top["entry"].kind == "tip":
+            return _single_tip_answer(top["entry"])
+    return None
+
+
+def _kb_context_text(hits: list[dict], limit: int = 6) -> str:
+    """把检索到的知识库条目压成给 AI 的上下文参考块（组合/推荐类问题取材用）。"""
+    if not hits:
+        return ""
+    lines = []
+    for h in hits[:limit]:
+        e = h["entry"]
+        if e.kind == "tip":
+            brief = (e.summary or e.content or "")[:80]
+            lines.append(f"- 技巧「{e.title}」：{brief}")
+        else:
+            brief = (e.summary or "")[:80]
+            time_txt = f"{e.time_minutes}分钟" if e.time_minutes else ""
+            meta = e.category or "家常"
+            if time_txt:
+                meta += f"，{time_txt}"
+            lines.append(f"- 菜「{e.title}」（{meta}）：{brief}")
+    return "知识库相关菜谱/技巧（可优先参考）：\n" + "\n".join(lines)
+
+
+def _kb_multi_fallback(question: str, hits: list[dict]) -> dict | None:
+    """AI 限额用尽/不可用时的降级：'推荐几道'类问题用知识库多菜直答兜底。"""
     if not hits:
         return None
     recipes = [h for h in hits if h["entry"].kind == "recipe"]
     if any(k in question for k in MULTI_HINT_KEYWORDS) and len(recipes) >= 2:
-        return _multi_recipe_answer(recipes[:3])
-    top = hits[0]
-    entry = top["entry"]
-    if entry.kind == "tip":
-        return _single_tip_answer(entry)
-    return _single_recipe_answer(entry)
+        return _multi_recipe_answer(_pick_diverse_recipes(recipes, 4))
+    return None
 
 
 async def _store_generated_to_kb(db: AsyncSession, answer: dict, record_id: UUID) -> None:
@@ -179,17 +368,12 @@ async def _bump_hits(db: AsyncSession, hits: list[dict]) -> None:
         await kb_service.increment_hit(db, h["entry"])
 
 
-async def _search_or_generate(db: AsyncSession, question: str, user_id: UUID):
-    """先检索知识库；命中返回 (answer, is_kb_hit)，未命中返回 None。"""
+async def _retrieve_hits(db: AsyncSession, question: str) -> list[dict]:
+    """检索知识库（embedding 失败静默返回空列表）。"""
     try:
-        hits = await kb_service.search_kb(db, question)
+        return await kb_service.search_kb(db, question)
     except EmbeddingError:
-        hits = []
-    answer = _kb_to_qa_answer(question, hits) if hits else None
-    if answer is not None:
-        await _bump_hits(db, hits[:3])
-        return answer, True
-    return None, False
+        return []
 
 
 # ---------- 接口 ----------
@@ -200,27 +384,76 @@ async def ask(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """提问 → 先查知识库，命中直接返回；未命中 AI 联网生成并入库。
+    """提问：意图路由智能体先判断用户想问什么，再分发。
 
-    多轮：携带 session_id 时注入最近几轮上下文（run_qa history），并落库到该会话。
+    - recipe_lookup + 知识库命中 → KB 直答秒回（多做法/单菜，免 AI）；
+    - recipe_lookup + KB 缺菜 / technique_tips / recommend_dishes / table_menu / general → AI 生成，
+      检索结果作为「知识库参考」喂给模型（KB 覆盖到则不联网）；
+    - AI 限额用尽时降级为知识库直答/多菜兜底。
+    多轮：携带 session_id 时注入最近几轮上下文（路由与生成都用），并落库到该会话。
     """
-    answer, is_kb = await _search_or_generate(db, body.question, user.id)
-    if is_kb:
-        record = QA_Record(
-            user_id=user.id,
-            session_id=body.session_id,
-            question=body.question,
-            answer=answer,
-            sources=None,
-        )
-        db.add(record)
-        await db.commit()
-        await db.refresh(record)
-        return ok(_qa_record_out(record))
-
-    await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
+    hits = await _retrieve_hits(db, body.question)
+    if hits:
+        await _bump_hits(db, hits[:3])
     history = await _load_session_context(db, user.id, body.session_id)
-    out = await qa_agent.run_qa(body.question, history=history)
+    router = await qa_agent.route_intent(body.question, history)
+    intent = router["intent"]
+
+    # 查菜谱且知识库命中 → 免 AI 秒回
+    if intent == "recipe_lookup":
+        direct = (
+            _kb_to_qa_answer(body.question, hits, dish_hint=router.get("dish_name") or "")
+            if hits
+            else None
+        )
+        if direct is not None:
+            # 多做法/多菜：让模型按真实问题现写一句开场白（失败/超时则留空，不影响卡片）
+            if direct.get("recommendations"):
+                titles = [r["name"] for r in direct["recommendations"]]
+                try:
+                    direct["core_secret"] = await asyncio.wait_for(
+                        _ai_opening(body.question, titles), timeout=OPENING_TIMEOUT
+                    )
+                except asyncio.TimeoutError:
+                    direct["core_secret"] = ""
+            record = QA_Record(
+                user_id=user.id,
+                session_id=body.session_id,
+                question=body.question,
+                answer=direct,
+                sources=None,
+            )
+            db.add(record)
+            await db.commit()
+            await db.refresh(record)
+            return ok(_qa_record_out(record))
+
+    # AI 路径：限额用尽时降级为知识库直答/多菜兜底
+    try:
+        await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
+    except AppError as exc:
+        fallback = _kb_to_qa_answer(body.question, hits) or _kb_multi_fallback(body.question, hits)
+        if fallback is not None:
+            record = QA_Record(
+                user_id=user.id,
+                session_id=body.session_id,
+                question=body.question,
+                answer=fallback,
+                sources=None,
+            )
+            db.add(record)
+            await db.commit()
+            await db.refresh(record)
+            return ok(_qa_record_out(record))
+        raise
+
+    # 自动优化提示词（仅做法类）+ 注入知识库上下文；KB 覆盖到则不联网
+    prompt = _optimize_prompt(body.question)
+    ctx = _kb_context_text(hits)
+    if ctx:
+        prompt = f"{prompt}\n\n{ctx}"
+    use_web = settings.AI_ENABLE_SEARCH and not hits
+    out = await qa_agent.run_qa(prompt, history=history, enable_search=use_web)
     if out["error"] or out["result"] is None:
         raise AppError(out["error"] or "生成失败，请稍后重试", code=502, status_code=502)
 
@@ -272,19 +505,26 @@ async def ask_stream(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """流式问答：知识库命中直接 done；未命中模型逐字输出 → SSE。
+    """流式问答：意图路由智能体判断 → 查菜谱且知识库命中则直接 done（免 AI 秒回）；其余模型逐字输出 → SSE。
 
     SSE 事件：
       {"type":"delta","text":"核心秘诀的逐字片段"}
       {"type":"done","data":{...结构化回答...}}
       {"type":"error","message":"..."}
     """
-    # 先查知识库（命中不占每日 AI 限额）
+    # 先查知识库 + 意图路由（KB 覆盖到则不联网）
     try:
         kb_hits = await kb_service.search_kb(db, body.question)
     except EmbeddingError:
         kb_hits = []
-    kb_answer = _kb_to_qa_answer(body.question, kb_hits) if kb_hits else None
+    history = await _load_session_context(db, user.id, body.session_id)
+    router = await qa_agent.route_intent(body.question, history)
+    intent = router["intent"]
+    kb_answer = (
+        _kb_to_qa_answer(body.question, kb_hits, dish_hint=router.get("dish_name") or "")
+        if intent == "recipe_lookup" and kb_hits
+        else None
+    )
 
     async def event_stream():
         if kb_answer is not None:
@@ -299,21 +539,63 @@ async def ask_stream(
             db.add(record)
             await db.commit()
             await db.refresh(record)
+            # 先发 done：卡片立即渲染（免 AI 秒回）
             yield f"data: {json.dumps({'type': 'done', 'data': _qa_record_out(record)}, ensure_ascii=False)}\n\n"
+            # 开场白：AI 按真实问题现写一句（不固定模板），成功后补发 opening 事件并回写记录
+            if kb_answer.get("recommendations"):
+                titles = [r["name"] for r in kb_answer["recommendations"]]
+                try:
+                    opening = await asyncio.wait_for(
+                        _ai_opening(body.question, titles), timeout=OPENING_TIMEOUT
+                    )
+                except asyncio.TimeoutError:
+                    opening = ""
+                if opening:
+                    updated = dict(record.answer)
+                    updated["core_secret"] = opening
+                    record.answer = updated
+                    await db.commit()
+                    yield f"data: {json.dumps({'type': 'opening', 'text': opening}, ensure_ascii=False)}\n\n"
             return
 
-        await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
-        history = await _load_session_context(db, user.id, body.session_id)
-        # 流式收集完整模型输出
+        if kb_hits:
+            await _bump_hits(db, kb_hits[:3])
+        # AI 路径：限额用尽时降级为知识库多菜直答（免费兜底）
+        try:
+            await ensure_within_limit(db, user.id, settings.DAILY_AI_LIMIT)
+        except AppError as exc:
+            fallback = _kb_multi_fallback(body.question, kb_hits)
+            if fallback is not None:
+                record = QA_Record(
+                    user_id=user.id,
+                    session_id=body.session_id,
+                    question=body.question,
+                    answer=fallback,
+                    sources=None,
+                )
+                db.add(record)
+                await db.commit()
+                await db.refresh(record)
+                yield f"data: {json.dumps({'type': 'done', 'data': _qa_record_out(record)}, ensure_ascii=False)}\n\n"
+                return
+            yield f"data: {json.dumps({'type': 'error', 'message': exc.message}, ensure_ascii=False)}\n\n"
+            return
+
+        # 自动优化提示词 + 注入知识库上下文（AI 在真实菜谱基础上编排）；KB 覆盖到则不联网
+        prompt = _optimize_prompt(body.question)
+        ctx = _kb_context_text(kb_hits)
+        if ctx:
+            prompt = f"{prompt}\n\n{ctx}"
+        use_web = settings.AI_ENABLE_SEARCH and not kb_hits
         buf = ""
         try:
             async for delta in astream_text(
                 model=settings.DEEPSEEK_MODEL,
                 system=qa_agent.QA_SYSTEM,
-                user=body.question,
+                user=prompt,
                 history=history,
-                enable_search=settings.AI_ENABLE_SEARCH,
-                search_options={"forced_search": True},
+                enable_search=use_web,
+                search_options={"forced_search": True} if use_web else None,
             ):
                 buf += delta
         except LLMError as exc:
@@ -342,9 +624,11 @@ async def ask_stream(
 
         out = _qa_record_out(record)
 
-        # 打字机：逐字下发核心秘诀（单菜型）或推荐菜名（多菜型）
+        # 打字机：逐字下发核心秘诀（单菜型）或开场白+菜名（多菜/多做法型）
         if data.get("recommendations"):
-            typing_text = "小伴为你推荐：" + "、".join(r["name"] for r in data["recommendations"])
+            names = "、".join(r["name"] for r in data["recommendations"])
+            opening = data.get("core_secret") or ""
+            typing_text = f"{opening} {names}" if opening else f"小伴为你推荐：{names}"
         else:
             typing_text = data.get("dish_name", "") + "，" + (data.get("core_secret") or "")
         for ch in typing_text:

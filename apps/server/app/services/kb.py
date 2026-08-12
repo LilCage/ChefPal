@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.models.recipe_kb import RecipeKB
-from app.services.llm.embedding import aembed_texts
+from app.services.llm.embedding import EmbeddingError, aembed_texts
 
 settings = get_settings()
 
@@ -209,10 +209,12 @@ async def store_generated_answer_to_kb(
 
     qa 问答、parse 链接/文档解析共用：生成结果沉淀为知识库条目，
     HowToCook 权威条目不被覆盖（upsert 内已判 source_type）。
+    入库成功后把生成的 entry id 回填到 answer（dish_name → answer["kb_id"]，
+    recommendations → 每项 r["kb_id"]），供前端"查看完整菜谱/收藏"跳转与收藏。
     """
     try:
         if answer.get("dish_name"):
-            await upsert_kb_entry(
+            entry = await upsert_kb_entry(
                 db,
                 kind="recipe",
                 title=answer["dish_name"],
@@ -225,11 +227,13 @@ async def store_generated_answer_to_kb(
                 source_type=SOURCE_QA_ANSWER,
                 source_id=str(record_id),
             )
+            if entry is not None:
+                answer["kb_id"] = str(entry.id)
         for r in (answer.get("recommendations") or []):
             name = (r or {}).get("name")
             if not name:
                 continue
-            await upsert_kb_entry(
+            entry = await upsert_kb_entry(
                 db,
                 kind="recipe",
                 title=name,
@@ -238,6 +242,8 @@ async def store_generated_answer_to_kb(
                 source_type=SOURCE_QA_ANSWER,
                 source_id=str(record_id),
             )
+            if entry is not None:
+                r["kb_id"] = str(entry.id)
         await db.flush()
     except EmbeddingError:
         pass  # 知识库不可用不影响主流程

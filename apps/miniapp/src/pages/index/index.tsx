@@ -5,7 +5,7 @@
  * 输入坞：2 行大输入框（左上对齐·自适应增高） + 按钮行「＋新对话 | 📎上传 | 🎤⇄➤发送」。
  * 粘贴链接自动识别（输入框上方提示条）→ 发送走解析；上传文档（PDF/Word）→ 解析入对话。
  */
-import { ScrollView, Text, Textarea, View } from '@tarojs/components'
+import { Image, ScrollView, Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow, useUnload } from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -72,6 +72,7 @@ interface ChatMsg {
 
 export default function Index() {
   const setTab = useTabStore((s) => s.setIndex)
+  const user = useAuthStore((s) => s.user)
   const [messages, setMessages] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -228,6 +229,15 @@ export default function Index() {
           streamAbortRef.current = null
           scrollToBottom()
         },
+        onOpening: (t) =>
+          // 卡片已渲染后，把 AI 现写的开场白补进卡内 intro（多做法/多菜回答）
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aid && m.record
+                ? { ...m, record: { ...m.record, answer: { ...m.record.answer, core_secret: t } } }
+                : m,
+            ),
+          ),
         onError: (msg) => {
           patchMsg(aid, { text: msg || '提问失败，请稍后重试', pending: false })
           setSending(false)
@@ -335,9 +345,29 @@ export default function Index() {
     }
   }
 
+  /* 收藏某道推荐/做法：知识库菜谱（kb_id 由后端入库后回填） */
+  const saveKBRecipe = async (r: QARecommendation) => {
+    if (!r.kb_id) {
+      Taro.showToast({ title: '该做法暂未收录，无法单独收藏', icon: 'none' })
+      return
+    }
+    try {
+      await addFavorite('kb', r.kb_id)
+      Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '收藏失败', icon: 'none' })
+    }
+  }
+
   const openDish = (r: QARecommendation) => {
     const q = r.kb_id ? `id=${r.kb_id}` : `title=${encodeURIComponent(r.name)}`
     Taro.navigateTo({ url: `/pages/kb-detail/index?${q}` })
+  }
+
+  /* 秘诀类回答后的追问：点"需要帮你查菜谱吗" → 发起一次查菜谱 */
+  const askFollowup = (dish: string) => {
+    if (!dish || sending) return
+    sendQA(`帮我查一下「${dish}」的完整菜谱`)
   }
 
   /* ---------- 渲染：结构化答案正文 ---------- */
@@ -346,6 +376,7 @@ export default function Index() {
     if (ans.recommendations) {
       return (
         <View className='qa-recs'>
+          {ans.core_secret && <Text className='qa-recs-intro' userSelect>{ans.core_secret}</Text>}
           {ans.recommendations.map((r, i) => (
             <View key={i} className='rec-card'>
               <View className='rec-head'>
@@ -356,6 +387,15 @@ export default function Index() {
               </View>
               <Text className='rec-secret' userSelect>{r.core_secret}</Text>
               {r.ingredients.length > 0 && <Text className='rec-ings' userSelect>食材：{r.ingredients.join('、')}</Text>}
+              <View className='rec-actions'>
+                <View className='btn btn--red btn--xs' onClick={() => openDish(r)}>
+                  <Text userSelect>查看完整菜谱 ›</Text>
+                </View>
+                <View className='btn btn--white btn--xs' onClick={() => saveKBRecipe(r)}>
+                  <View className='ic ic-star ic-sm' />
+                  <Text userSelect>收藏</Text>
+                </View>
+              </View>
             </View>
           ))}
         </View>
@@ -453,17 +493,30 @@ export default function Index() {
             </View>
           )}
           {renderAnswerBody(rec)}
-          <View className='mbox-actions'>
-            {rec.kb_id && !ans.recommendations && (
-              <View className='btn btn--red btn--xs' onClick={() => Taro.navigateTo({ url: `/pages/kb-detail/index?id=${rec.kb_id}` })}>
-                <Text userSelect>查看完整菜谱 ›</Text>
-              </View>
-            )}
-            <View className='btn btn--white btn--xs' onClick={() => saveFavorite(rec)}>
-              <View className='ic ic-star ic-sm' />
-              <Text userSelect>收藏</Text>
+          {/* 秘诀/技巧类回答后的追问提示：点它发起查菜谱 */}
+          {ans.followup && (
+            <View
+              className={`qa-followup ${ans.dish_name ? 'go' : ''}`}
+              onClick={() => ans.dish_name && askFollowup(ans.dish_name)}
+            >
+              <Text userSelect>{ans.followup}</Text>
+              {ans.dish_name && <Text userSelect className='qf-go'>›</Text>}
             </View>
-          </View>
+          )}
+          {/* 多做法/多菜列表：每张做法卡自带「查看完整菜谱/收藏」，底部不再重复 */}
+          {!ans.recommendations && (
+            <View className='mbox-actions'>
+              {rec.kb_id && (
+                <View className='btn btn--red btn--xs' onClick={() => Taro.navigateTo({ url: `/pages/kb-detail/index?id=${rec.kb_id}` })}>
+                  <Text userSelect>查看完整菜谱 ›</Text>
+                </View>
+              )}
+              <View className='btn btn--white btn--xs' onClick={() => saveFavorite(rec)}>
+                <View className='ic ic-star ic-sm' />
+                <Text userSelect>收藏</Text>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     )
@@ -471,7 +524,13 @@ export default function Index() {
 
   const renderUser = (m: ChatMsg) => (
     <View className='msg user'>
-      <View className='avatar av-ic'><View className='ic ic-mine ic-sm' /></View>
+      <View className='avatar av-ic'>
+        {user?.avatar_url?.startsWith('data:') ? (
+          <Image className='avatar-img' src={user.avatar_url} mode='aspectFill' />
+        ) : (
+          <View className='ic ic-mine ic-sm' />
+        )}
+      </View>
       <View className='mbox mbox--user'><Text className='mbox-text' userSelect>{m.text}</Text></View>
     </View>
   )

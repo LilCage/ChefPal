@@ -15,6 +15,7 @@ export default function Favorites() {
   const [tab, setTab] = useState<0 | 1>(0)
   const [qaFavs, setQaFavs] = useState<FavoriteItem[]>([])
   const [recipeFavs, setRecipeFavs] = useState<FavoriteItem[]>([])
+  const [kbFavs, setKbFavs] = useState<FavoriteItem[]>([])
   const [loaded, setLoaded] = useState(false)
 
   useDidShow(() => {
@@ -23,9 +24,10 @@ export default function Favorites() {
 
   const loadAll = async () => {
     try {
-      const [qa, recipe] = await Promise.all([fetchFavorites('qa'), fetchFavorites('recipe')])
+      const [qa, recipe, kb] = await Promise.all([fetchFavorites('qa'), fetchFavorites('recipe'), fetchFavorites('kb')])
       setQaFavs(qa)
       setRecipeFavs(recipe)
+      setKbFavs(kb)
     } catch (e: any) {
       Taro.showToast({ title: e.message || '加载失败', icon: 'none' })
     } finally {
@@ -33,7 +35,8 @@ export default function Favorites() {
     }
   }
 
-  const list = tab === 0 ? qaFavs : recipeFavs
+  // 菜谱 Tab = 自建菜谱 + 知识库菜谱收藏
+  const list = tab === 0 ? qaFavs : [...recipeFavs, ...kbFavs]
 
   return (
     <View className='page-content fav'>
@@ -68,17 +71,29 @@ export default function Favorites() {
               />
             ))}
           {tab === 1 &&
-            recipeFavs.map((f) => (
-              <View className='fav-recipe' key={f.favorite_id}>
-                <RecipeCard
-                  name={f.content?.title || '菜谱'}
-                  matchScore={f.content?.match_score || 0}
-                  timeMinutes={f.content?.time_minutes || 0}
-                  difficulty={f.content?.difficulty || '简单'}
-                  onClick={() => Taro.navigateTo({ url: `/pages/recipe-detail/index?id=${f.content_id}` })}
-                />
-              </View>
-            ))}
+            list.map((f) => {
+              // 知识库菜谱无 match_score，用 hit_count（热度）近似；点开进 kb-detail
+              const isKb = f.content_type === 'kb'
+              const matchScore = f.content?.match_score ?? Math.min(100, 30 + (f.content?.hit_count || 0))
+              return (
+                <View className='fav-recipe' key={f.favorite_id}>
+                  <RecipeCard
+                    name={f.content?.title || '菜谱'}
+                    matchScore={matchScore}
+                    timeMinutes={f.content?.time_minutes || 0}
+                    difficulty={f.content?.difficulty || '简单'}
+                    style={f.content?.style || ''}
+                    onClick={() =>
+                      Taro.navigateTo({
+                        url: isKb
+                          ? `/pages/kb-detail/index?id=${f.content_id}`
+                          : `/pages/recipe-detail/index?id=${f.content_id}`,
+                      })
+                    }
+                  />
+                </View>
+              )
+            })}
         </View>
       )}
     </View>

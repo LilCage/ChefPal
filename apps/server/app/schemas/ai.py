@@ -1,4 +1,6 @@
 """AI 结构化输出 Schema：落库与前端渲染的依据（对齐方案文档 §8.2）。"""
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -15,12 +17,14 @@ class QARecommendation(BaseModel):
 class QASchema(BaseModel):
     """问答结构化回答。
 
-    两类问题共用一套结构（方案C 通用升级）：
-    - 单菜做法型（"红烧肉怎么不腻"）：填 dish_name + core_secret + ingredients + steps + avoid_pitfalls
-    - 多菜推荐型（"推荐几道凉拌菜"）：填 recommendations 清单，steps 可为空
+    各类问题共用一套结构：
+    - 秘诀/技巧型（"蒸蛋怎么蒸才嫩滑"）：core_secret 给诀窍 + followup 提示"需要查菜谱吗"
+    - 多做法型（"红烧肉怎么做"）：recommendations 列 2~4 种做法
+    - 单菜全量型（"给我红烧肉的完整菜谱"）：dish_name + steps 全量
+    - 多菜推荐型（"推荐几道凉拌菜"）：recommendations 清单，steps 可为空
     """
 
-    core_secret: str = ""                          # 核心秘诀（一句话；推荐型可为空串）
+    core_secret: str = ""                          # 核心秘诀 / 开场白（不同类型含义不同）
     dish_name: str = ""                            # 菜名（单菜做法型必填）
     ingredients: list[str] = Field(default_factory=list)   # 食材清单
     steps: list[str] = Field(default_factory=list)         # 步骤（序号化，含火候/时长；无切分时全量）
@@ -29,8 +33,24 @@ class QASchema(BaseModel):
     avoid_pitfalls: list[str] = Field(default_factory=list)  # 避坑指南
     sources: list[str] | None = None               # 联网搜索来源 URL
     recommendations: list[QARecommendation] | None = None   # 多菜推荐清单（推荐型用）
+    followup: str = ""                             # 追问提示（秘诀/技巧型：如"需要我帮你查找「蒸蛋」的菜谱吗？"）
     kb_hit: bool = False                           # 是否直接命中菜谱知识库（免 AI）
     kb_id: str | None = None                       # 命中的知识库条目 id（单菜命中时）
+
+
+class QARouterOut(BaseModel):
+    """烹饪知识百科·意图路由 Agent 输出：判断用户到底想问什么。"""
+
+    intent: Literal[
+        "recipe_lookup",    # 要某道菜的做法/菜谱（红烧肉怎么做、给我糖醋排骨的方子）
+        "technique_tips",   # 问做菜秘诀/技巧（蒸蛋怎么蒸才嫩滑、怎么去腥、红烧肉怎么不腻）
+        "recommend_dishes", # 推荐几道菜/有什么好吃的（推荐几道下饭菜、有什么快手菜）
+        "table_menu",       # 要一桌/一顿完整搭配（推荐一桌有面子、周末招待朋友、一周晚餐安排）
+        "general",          # 其他厨艺问题
+    ]
+    dish_name: str = ""            # 问题涉及的菜名（标准叫法；无关则为空）
+    needs_full_recipe: bool = False  # 用户是否明确要完整步骤/详细菜谱
+    confidence: Literal["high", "medium", "low"] = "high"  # 低置信 → 兜底走 AI
 
 
 class RecipeStep(BaseModel):

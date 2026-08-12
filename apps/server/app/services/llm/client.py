@@ -88,6 +88,39 @@ async def ainvoke_json(
         return json.loads(_extract_json(content))
 
 
+async def ainvoke_text(
+    *,
+    model: str,
+    system: str,
+    user: str,
+    history: list[dict] | None = None,
+    enable_search: bool = False,
+) -> str:
+    """调用 DeepSeek 返回纯文本（非 JSON、非流式），供轻量任务（如写开场白）。"""
+    if not settings.DASHSCOPE_API_KEY:
+        raise LLMError("未配置 DASHSCOPE_API_KEY，请先在 apps/server/.env 中填入")
+
+    client = _client()
+    extra_body: dict[str, Any] = {}
+    if enable_search:
+        extra_body["enable_search"] = True
+
+    messages = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": user})
+
+    try:
+        resp = await client.chat.completions.create(
+            model=model,
+            messages=messages,
+            extra_body=extra_body if extra_body else None,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise LLMError(f"LLM 调用失败: {exc}") from exc
+    return resp.choices[0].message.content or ""
+
+
 async def astream_text(
     *,
     model: str,

@@ -51,8 +51,12 @@ def _kb_off(monkeypatch):
     async def _no_store(db, **kw):
         return None
 
+    async def _router(question, history=None):
+        return {"intent": "general", "dish_name": "", "needs_full_recipe": False, "confidence": "high"}
+
     monkeypatch.setattr(kb_service, "search_kb", _miss)
     monkeypatch.setattr(kb_service, "upsert_kb_entry", _no_store)
+    monkeypatch.setattr(qa_agent, "route_intent", _router)
 
 
 def test_ask_success_saves_and_lists(client, auth_headers, monkeypatch):

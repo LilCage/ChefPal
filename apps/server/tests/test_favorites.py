@@ -107,3 +107,83 @@ def test_favorite_invalid_type_422(client, auth_headers):
 def test_favorite_requires_auth_401(client):
     res = client.get("/api/favorites")
     assert res.status_code == 401
+
+
+# ---------- 知识库菜谱收藏（多做法列表"收藏"落点） ----------
+
+
+async def test_add_and_list_kb_favorite(client, auth_headers, db):
+    from app.models.recipe_kb import RecipeKB
+
+    e = RecipeKB(
+        kind="recipe",
+        title="南派红烧肉",
+        summary="咸甜口，熬糖色慢炖 1.5 小时",
+        content="",
+        ingredients=["五花肉"],
+        steps=["炖"],
+        prep_steps=[],
+        cook_steps=[],
+        tips=[],
+        time_minutes=90,
+        difficulty="中等",
+        style="甜口绵绵",
+        category="肉菜",
+        source_type="howtocook",
+        source_id="dishes/meat_dish/南派红烧肉.md",
+        hit_count=5,
+        embedding=[0.0] * 1024,
+    )
+    db.add(e)
+    await db.commit()
+
+    res = client.post(
+        "/api/favorites", json={"content_type": "kb", "content_id": str(e.id)}, headers=auth_headers
+    )
+    assert res.status_code == 200
+
+    listed = client.get("/api/favorites?type=kb", headers=auth_headers).json()["data"]
+    assert len(listed) == 1
+    assert listed[0]["content_type"] == "kb"
+    assert listed[0]["content"]["title"] == "南派红烧肉"
+    assert listed[0]["content"]["style"] == "甜口绵绵"
+    assert listed[0]["content"]["hit_count"] == 5
+    assert listed[0]["content_id"] == str(e.id)
+
+
+async def test_add_kb_favorite_idempotent_and_missing_404(client, auth_headers, db):
+    from app.models.recipe_kb import RecipeKB
+
+    e = RecipeKB(
+        kind="recipe",
+        title="简易红烧肉",
+        summary="电饭煲一锅出",
+        content="",
+        ingredients=[],
+        steps=["焖"],
+        prep_steps=[],
+        cook_steps=[],
+        tips=[],
+        time_minutes=60,
+        difficulty="简单",
+        style="",
+        category="肉菜",
+        source_type="howtocook",
+        source_id="dishes/meat_dish/简易红烧肉.md",
+        hit_count=0,
+        embedding=[0.0] * 1024,
+    )
+    db.add(e)
+    await db.commit()
+
+    r1 = client.post("/api/favorites", json={"content_type": "kb", "content_id": str(e.id)}, headers=auth_headers)
+    r2 = client.post("/api/favorites", json={"content_type": "kb", "content_id": str(e.id)}, headers=auth_headers)
+    assert r1.status_code == 200 and r2.status_code == 200
+    assert len(client.get("/api/favorites?type=kb", headers=auth_headers).json()["data"]) == 1
+
+    missing = client.post(
+        "/api/favorites",
+        json={"content_type": "kb", "content_id": "00000000-0000-0000-0000-000000000000"},
+        headers=auth_headers,
+    )
+    assert missing.status_code == 404

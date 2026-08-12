@@ -62,6 +62,8 @@ export interface QARecord {
     avoid_pitfalls: string[]
     sources?: string[]
     recommendations?: QARecommendation[]
+    /** 追问提示（秘诀/技巧类：如"需要我帮你查找「蒸蛋」的菜谱吗？"） */
+    followup?: string
     /** 链接/文档解析标记（前端渲染来源横幅用） */
     parse_type?: 'web' | 'video' | 'doc'
     parse_source?: string
@@ -106,13 +108,15 @@ export const generateKBRecipe = (title: string) =>
 export const askQA = (question: string, session_id?: string | null) =>
   http.post<QARecord>('/qa/ask', { question, session_id })
 
-/* 流式问答：SSE 打字机。onDelta 逐字回调，onDone 收到完整结构化数据，onError 出错。 */
+/* 流式问答：SSE 打字机。onDelta 逐字回调，onDone 收到完整结构化数据，onError 出错。
+ * onOpening 可选：知识库多做法命中后，AI 现写的友好开场白在卡片之后补发。 */
 export function askQAStream(
   question: string,
   handlers: {
     onDelta: (text: string) => void
     onDone: (data: QARecord) => void
     onError: (msg: string) => void
+    onOpening?: (text: string) => void
   },
   session_id?: string | null,
 ): () => void {
@@ -166,9 +170,13 @@ export function askQAStream(
           continue
         }
         if (ev.type === 'delta') handlers.onDelta(ev.text || '')
-        else if (ev.type === 'done') {
-          handlers.onDone(ev.data)
+        else if (ev.type === 'opening') {
+          // 卡片已渲染，开场白随后补发 → 回调后终止
+          handlers.onOpening?.(ev.text || '')
           requestTask.abort()
+        } else if (ev.type === 'done') {
+          // 不在此终止：知识库多做法命中后还有可能跟一个 opening 事件
+          handlers.onDone(ev.data)
         } else if (ev.type === 'error') {
           handlers.onError(ev.message || '生成失败')
           requestTask.abort()
@@ -305,20 +313,20 @@ export const fetchRecipeTree = (ref: string) => http.get<RecipeTreeData>(`/recip
 export const forkRecipe = (ref: string, changes: string) =>
   http.post<RecipeVersion>(`/recipes/${ref}/fork`, { changes })
 
-/* ---------- 收藏 ---------- */
+/* ---------- 收藏（qa=问答 / recipe=自建菜谱 / kb=知识库菜谱） ---------- */
 export interface FavoriteItem {
   favorite_id: string
-  content_type: 'qa' | 'recipe'
+  content_type: 'qa' | 'recipe' | 'kb'
   content_id: string
   content: any
   created_at: string | null
 }
 
-export const addFavorite = (content_type: 'qa' | 'recipe', content_id: string) =>
+export const addFavorite = (content_type: 'qa' | 'recipe' | 'kb', content_id: string) =>
   http.post<FavoriteItem>('/favorites', { content_type, content_id })
-export const removeFavorite = (content_type: 'qa' | 'recipe', content_id: string) =>
+export const removeFavorite = (content_type: 'qa' | 'recipe' | 'kb', content_id: string) =>
   http.del<FavoriteItem>(`/favorites?content_type=${content_type}&content_id=${content_id}`)
-export const fetchFavorites = (type?: 'qa' | 'recipe') =>
+export const fetchFavorites = (type?: 'qa' | 'recipe' | 'kb') =>
   http.get<FavoriteItem[]>(`/favorites${type ? `?type=${type}` : ''}`)
 
 /* ---------- 时令食材日历 ---------- */

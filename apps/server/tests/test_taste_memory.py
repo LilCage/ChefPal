@@ -168,7 +168,7 @@ def test_favorite_recipe_records_style_signal(client, auth_headers, monkeypatch)
 def test_favorite_qa_records_signal(client, auth_headers, monkeypatch):
     from app.routers import qa as qa_router
 
-    async def _fake_qa(question, history=None):
+    async def _fake_qa(question, history=None, enable_search=True):
         return {
             "result": {
                 "core_secret": "小火慢炖",
@@ -180,7 +180,11 @@ def test_favorite_qa_records_signal(client, auth_headers, monkeypatch):
             "error": None,
         }
 
+    async def _fake_router(question, history=None):
+        return {"intent": "general", "dish_name": "", "needs_full_recipe": False, "confidence": "high"}
+
     monkeypatch.setattr(qa_router.qa_agent, "run_qa", _fake_qa)
+    monkeypatch.setattr(qa_router.qa_agent, "route_intent", _fake_router)
     res = client.post("/api/qa/ask", json={"question": "红烧肉怎么不腻"}, headers=auth_headers)
     assert res.status_code == 200, res.text
     qid = res.json()["data"]["id"]

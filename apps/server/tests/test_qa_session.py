@@ -30,13 +30,17 @@ def _env(monkeypatch):
     async def _no_store(db, answer, record_id):
         return None
 
+    async def _router(question, history=None):
+        return {"intent": "general", "dish_name": "", "needs_full_recipe": False, "confidence": "high"}
+
     monkeypatch.setattr(kb_service, "search_kb", _miss)
     monkeypatch.setattr(kb_service, "store_generated_answer_to_kb", _no_store)
+    monkeypatch.setattr(qa_agent, "route_intent", _router)
 
 
 def _install_run_qa(monkeypatch, calls):
-    async def _fake_run_qa(question, history=None):
-        calls.append((question, history))
+    async def _fake_run_qa(question, history=None, enable_search=True):
+        calls.append((question, history, enable_search))
         return {"result": dict(VALID_QA), "error": None}
 
     monkeypatch.setattr(qa_agent, "run_qa", _fake_run_qa)
@@ -68,6 +72,45 @@ def test_new_session_no_history(client, auth_headers, monkeypatch):
     client.post("/api/qa/ask", json={"question": "Q1", "session_id": SID}, headers=auth_headers)
     client.post("/api/qa/ask", json={"question": "Q2", "session_id": SID2}, headers=auth_headers)
     assert calls[-1][1] == []  # 新会话不带上一个会话的上下文 → 空列表
+
+
+# ---------- 自动优化提示词（'怎么做X' → 要求列多种做法简要介绍） ----------
+
+
+def test_howto_question_prompt_is_optimized(client, auth_headers, monkeypatch):
+    calls = []
+    _install_run_qa(monkeypatch, calls)
+    client.post("/api/qa/ask", json={"question": "红烧肉怎么做", "session_id": SID}, headers=auth_headers)
+    q, _, _ = calls[-1]
+    assert "自动优化提示" in q
+    assert "红烧肉" in q
+    assert "2~4 种不同做法" in q
+
+
+def test_howto_prefix_question_prompt_is_optimized(client, auth_headers, monkeypatch):
+    calls = []
+    _install_run_qa(monkeypatch, calls)
+    client.post("/api/qa/ask", json={"question": "怎么做红烧肉更好吃", "session_id": SID}, headers=auth_headers)
+    q, _, _ = calls[-1]
+    assert "自动优化提示" in q
+    assert "红烧肉" in q
+
+
+def test_non_howto_question_prompt_unchanged(client, auth_headers, monkeypatch):
+    calls = []
+    _install_run_qa(monkeypatch, calls)
+    client.post("/api/qa/ask", json={"question": "推荐几道凉拌菜", "session_id": SID}, headers=auth_headers)
+    q, _, _ = calls[-1]
+    assert "自动优化提示" not in q
+
+
+def test_technique_question_prompt_not_optimized(client, auth_headers, monkeypatch):
+    """技巧类问题（'怎么去腥'）不做多做法优化，避免误提取非菜名。"""
+    calls = []
+    _install_run_qa(monkeypatch, calls)
+    client.post("/api/qa/ask", json={"question": "炖肉怎么去腥增香，肉质更软烂", "session_id": SID}, headers=auth_headers)
+    q, _, _ = calls[-1]
+    assert "自动优化提示" not in q
 
 
 def test_no_session_id_still_works(client, auth_headers, monkeypatch):
