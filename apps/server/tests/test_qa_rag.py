@@ -168,7 +168,7 @@ async def test_ask_multi_dish_routes_to_ai_with_kb_context(client, auth_headers,
     assert [r["name"] for r in recs] == ["凉拌黄瓜", "凉拌木耳"]
     # 检索到的知识库菜被作为上下文喂给了模型
     assert "凉拌黄瓜" in seen["question"]
-    assert "知识库" in seen["question"]
+    assert "美食库" in seen["question"]
     # KB 覆盖到 → 不联网（enable_search=False）
     assert seen["enable_search"] is False
     # AI 结果已入库（按菜名）
@@ -253,11 +253,6 @@ async def test_ask_howto_multi_variant_hit_returns_recs(client, auth_headers, db
     _mock_hits(monkeypatch, [{"entry": e, "similarity": 0.80 - i * 0.01} for i, e in enumerate([e1, e2, e3])])
     _mock_router(monkeypatch, "recipe_lookup", "红烧肉")
 
-    async def _fake_opening(question, titles):
-        return f"好嘞！「{question[:3]}」我帮你整理了 {len(titles)} 种做法，风味各有不同～"
-
-    monkeypatch.setattr(qa_router, "_ai_opening", _fake_opening)
-
     res = client.post("/api/qa/ask", json={"question": "红烧肉怎么做"}, headers=auth_headers)
     assert res.status_code == 200
     data = res.json()["data"]
@@ -270,8 +265,9 @@ async def test_ask_howto_multi_variant_hit_returns_recs(client, auth_headers, db
     # 不展开单菜全量步骤（各做法只需简要介绍）
     assert ans["steps"] == []
     assert ans["dish_name"] == ""
-    # 开场白由 AI 按真实问题现写（点名菜名+做法数）
-    assert ans["core_secret"] == "好嘞！「红烧肉」我帮你整理了 3 种做法，风味各有不同～"
+    # 卡片 intro 用确定性模板（点名菜名+做法数）
+    assert "红烧肉" in ans["core_secret"]
+    assert "3" in ans["core_secret"]
     # 多做法命中也不占限额
     assert (await db.execute(select(func.count()).select_from(AICall))).scalar() == 0
 
@@ -435,34 +431,31 @@ async def test_stream_kb_hit_returns_done_only(client, auth_headers, db, monkeyp
     assert done["data"]["answer"]["dish_name"] == "蒸蛋"
 
 
-# ---------- 流式：KB 多做法命中 → 先 done 卡片，后 opening 开场白 ----------
+# ---------- 流式：KB 多做法命中 → 先 delta 过渡语（打字机），再 done 卡片 ----------
 
 
-async def test_stream_kb_multi_hit_done_then_opening(client, auth_headers, db, monkeypatch):
-    """知识库多做法命中：先发 done（卡片秒出），再发 opening（AI 现写开场白，回写记录）。"""
+async def test_stream_kb_multi_hit_transition_then_done(client, auth_headers, db, monkeypatch):
+    """知识库多做法命中：先发 delta 过渡语（打字机即时反馈），再发 done 卡片（无 opening）。"""
     e1 = await _make_entry(db, title="南派红烧肉", summary="咸甜口慢炖", steps=["炖"], category="肉菜")
     e2 = await _make_entry(db, title="简易红烧肉", summary="电饭煲一锅出", steps=["焖"], category="肉菜")
     await db.commit()
     _mock_hits(monkeypatch, [{"entry": e, "similarity": 0.8 - i * 0.01} for i, e in enumerate([e1, e2])])
     _mock_router(monkeypatch, "recipe_lookup", "红烧肉")
 
-    async def _fake_opening(question, titles):
-        return f"好嘞！「{question[:3]}」我帮你整理了 {len(titles)} 种做法～"
-
-    monkeypatch.setattr(qa_router, "_ai_opening", _fake_opening)
-
     res = client.post("/api/qa/stream", json={"question": "红烧肉怎么做"}, headers=auth_headers)
     assert res.status_code == 200
     events = _parse_sse(res.text)
     types = [e["type"] for e in events]
-    assert types[0] == "done"  # 卡片先出
-    assert "opening" in types  # 开场白随后补发
-    opening = next(e for e in events if e["type"] == "opening")
-    assert "好嘞" in opening["text"]
-    assert "红烧肉" in opening["text"]
-    # 开场白已回写记录（历史里能读到）
+    assert types[0] == "delta"  # 过渡语先出（打字机）
+    assert types[-1] == "done"  # 卡片随后
+    assert "opening" not in types
+    transition_text = "".join(e["text"] for e in events if e["type"] == "delta")
+    assert "红烧肉" in transition_text  # 过渡语点名菜名
+    # 卡片 intro 用确定性模板（完成时）
+    assert "红烧肉" in events[-1]["data"]["answer"]["core_secret"]
+    # intro 已回写记录（历史里能读到）
     hist = client.get("/api/qa/history", headers=auth_headers).json()["data"]
-    assert hist and "好嘞" in hist[0]["answer"]["core_secret"]
+    assert hist and "红烧肉" in hist[0]["answer"]["core_secret"]
 
 
 # ---------- 流式：限额用尽 → 降级为知识库多菜直答 ----------

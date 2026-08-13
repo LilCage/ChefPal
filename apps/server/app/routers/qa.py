@@ -13,7 +13,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -25,7 +25,7 @@ from app.models.user import User
 from app.schemas.ai import QASchema
 from app.services import kb as kb_service
 from app.services.agents import qa_agent
-from app.services.llm.client import LLMError, ainvoke_text, astream_text
+from app.services.llm.client import LLMError, astream_text
 from app.services.llm.embedding import EmbeddingError
 from app.services.rate_limit import ensure_within_limit, record_ai_call
 
@@ -34,9 +34,6 @@ settings = get_settings()
 
 # 多菜推荐意图的关键词：命中则优先返回多道菜，否则返回单道最佳命中
 MULTI_HINT_KEYWORDS = ("推荐", "哪几道", "换换口味", "有什么好做", "来几道", "几道菜", "想吃")
-
-# 开场白生成的上限秒数：纯装饰性内容，宁可放弃也不能拖慢回答
-OPENING_TIMEOUT = 4.0
 
 # 「怎么做某菜」类问题的做法动词模式（长优先，避免"怎么做"吞掉"怎么做好吃/怎么做才"）
 HOWTO_PATTERNS = (
@@ -124,28 +121,27 @@ def _optimize_prompt(question: str) -> str:
     )
 
 
-async def _ai_opening(question: str, titles: list[str]) -> str:
-    """让模型针对真实问题现写一句贴合的开场白（极小调用；失败/超时返回空串）。
+def _transition_text(intent: str, dish: str) -> str:
+    """流式开头打字机过渡语（进行时，即时反馈；确定性文案，不依赖 AI）。"""
+    if intent == "recipe_lookup" and dish:
+        return f"小伴这就为你去寻找「{dish}」的做法…"
+    if intent == "table_menu":
+        return "小伴这就为你搭配一桌好菜…"
+    if intent == "recommend_dishes":
+        return "小伴这就为你挑几道好吃的…"
+    if intent == "technique_tips" and dish:
+        return f"小伴这就把「{dish}」的秘诀分享给你…"
+    return "小伴这就来帮你…"
 
-    不用固定模板——用户问题多种多样，交给模型按「原问题 + 将展示的清单」现写。
-    不计入每日 AI 限额；失败静默跳过，不影响主流程（卡片照常展示）。
-    """
-    if not titles:
-        return ""
-    try:
-        text = await ainvoke_text(
-            model=settings.DEEPSEEK_MODEL,
-            system=(
-                "你是 ChefPal 小伴，一个亲切热情的烹饪助手。根据用户的问题和即将展示的清单，"
-                "写一句口语化、贴合用户问题、自然亲切的中文开场白，引出这份清单。"
-                "要求：只输出这一句话，20~40 字；不要问候套话（如'你好'），"
-                "不要逐一罗列菜名，不要解释做法。"
-            ),
-            user=f"用户的问题：{question}\n要展示的清单：{'、'.join(titles)}",
-        )
-        return (text or "").strip().strip('"“”')[:80]
-    except Exception:  # noqa: BLE001 开场白失败不阻断主流程
-        return ""
+
+def _card_intro(question: str, answer: dict, dish: str) -> str:
+    """多做法/多菜卡片 intro（完成时，写入 core_secret；确定性模板，快速稳定）。"""
+    recs = answer.get("recommendations") or []
+    if dish:
+        return f"「{dish}」有 {len(recs)} 种经典做法，风味各不相同，小伴都帮你整理好啦"
+    if recs:
+        return "小伴从美食库里帮你挑了这几道，看看合不合胃口"
+    return ""
 
 
 class QAAskRequest(BaseModel):
@@ -240,7 +236,7 @@ def _single_tip_answer(entry) -> dict:
 
 def _multi_recipe_answer(recipes: list[dict]) -> dict:
     return {
-        "core_secret": "",  # 开场白由 _ai_opening 按问题现写（见 ask/ask_stream）
+        "core_secret": "",  # 卡片 intro 由 _card_intro 确定性模板填写（见 ask/ask_stream）
         "dish_name": "",
         "ingredients": [],
         "steps": [],
@@ -345,7 +341,7 @@ def _kb_context_text(hits: list[dict], limit: int = 6) -> str:
             if time_txt:
                 meta += f"，{time_txt}"
             lines.append(f"- 菜「{e.title}」（{meta}）：{brief}")
-    return "知识库相关菜谱/技巧（可优先参考）：\n" + "\n".join(lines)
+    return "美食库菜谱/技巧（可优先参考）：\n" + "\n".join(lines)
 
 
 def _kb_multi_fallback(question: str, hits: list[dict]) -> dict | None:
@@ -407,15 +403,9 @@ async def ask(
             else None
         )
         if direct is not None:
-            # 多做法/多菜：让模型按真实问题现写一句开场白（失败/超时则留空，不影响卡片）
-            if direct.get("recommendations"):
-                titles = [r["name"] for r in direct["recommendations"]]
-                try:
-                    direct["core_secret"] = await asyncio.wait_for(
-                        _ai_opening(body.question, titles), timeout=OPENING_TIMEOUT
-                    )
-                except asyncio.TimeoutError:
-                    direct["core_secret"] = ""
+            # 多做法/多菜：卡片 intro 用确定性模板（快速稳定，不依赖 AI）
+            dish = router.get("dish_name") or _extract_dish_for_multi(body.question) or ""
+            direct["core_secret"] = _card_intro(body.question, direct, dish)
             record = QA_Record(
                 user_id=user.id,
                 session_id=body.session_id,
@@ -529,6 +519,15 @@ async def ask_stream(
     async def event_stream():
         if kb_answer is not None:
             await _bump_hits(db, kb_hits[:3])
+            dish = router.get("dish_name") or _extract_dish_for_multi(body.question) or ""
+            # 多做法/多菜：先打字机过渡语（进行时即时反馈），卡片 intro 用确定性模板
+            if kb_answer.get("recommendations"):
+                transition = _transition_text("recipe_lookup", dish)
+                for ch in transition:
+                    yield f"data: {json.dumps({'type': 'delta', 'text': ch})}\n\n"
+                    await asyncio.sleep(0.03)
+                kb_answer["core_secret"] = _card_intro(body.question, kb_answer, dish)
+            # 单菜命中：免 AI 秒出，保持一个 done（无过渡语，核心秘诀即 entry.summary）
             record = QA_Record(
                 user_id=user.id,
                 session_id=body.session_id,
@@ -539,23 +538,7 @@ async def ask_stream(
             db.add(record)
             await db.commit()
             await db.refresh(record)
-            # 先发 done：卡片立即渲染（免 AI 秒回）
             yield f"data: {json.dumps({'type': 'done', 'data': _qa_record_out(record)}, ensure_ascii=False)}\n\n"
-            # 开场白：AI 按真实问题现写一句（不固定模板），成功后补发 opening 事件并回写记录
-            if kb_answer.get("recommendations"):
-                titles = [r["name"] for r in kb_answer["recommendations"]]
-                try:
-                    opening = await asyncio.wait_for(
-                        _ai_opening(body.question, titles), timeout=OPENING_TIMEOUT
-                    )
-                except asyncio.TimeoutError:
-                    opening = ""
-                if opening:
-                    updated = dict(record.answer)
-                    updated["core_secret"] = opening
-                    record.answer = updated
-                    await db.commit()
-                    yield f"data: {json.dumps({'type': 'opening', 'text': opening}, ensure_ascii=False)}\n\n"
             return
 
         if kb_hits:
@@ -580,6 +563,13 @@ async def ask_stream(
                 return
             yield f"data: {json.dumps({'type': 'error', 'message': exc.message}, ensure_ascii=False)}\n\n"
             return
+
+        # 过渡语先发：打字机即时反馈（进行时），AI 生成等待期不干等
+        dish = router.get("dish_name") or _extract_dish_for_multi(body.question) or ""
+        transition = _transition_text(intent, dish)
+        for ch in transition:
+            yield f"data: {json.dumps({'type': 'delta', 'text': ch})}\n\n"
+            await asyncio.sleep(0.03)
 
         # 自动优化提示词 + 注入知识库上下文（AI 在真实菜谱基础上编排）；KB 覆盖到则不联网
         prompt = _optimize_prompt(body.question)
@@ -624,17 +614,7 @@ async def ask_stream(
 
         out = _qa_record_out(record)
 
-        # 打字机：逐字下发核心秘诀（单菜型）或开场白+菜名（多菜/多做法型）
-        if data.get("recommendations"):
-            names = "、".join(r["name"] for r in data["recommendations"])
-            opening = data.get("core_secret") or ""
-            typing_text = f"{opening} {names}" if opening else f"小伴为你推荐：{names}"
-        else:
-            typing_text = data.get("dish_name", "") + "，" + (data.get("core_secret") or "")
-        for ch in typing_text:
-            yield f"data: {json.dumps({'type': 'delta', 'text': ch})}\n\n"
-            await asyncio.sleep(0.03)
-
+        # 过渡语已先行，这里直接出卡片（卡片 intro 即 AI 生成的完成时开场白）
         yield f"data: {json.dumps({'type': 'done', 'data': out}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
@@ -654,6 +634,69 @@ async def session_messages(
     )
     records = result.scalars().all()
     return ok([_qa_record_out(r) for r in records])
+
+
+@router.get("/sessions")
+async def sessions(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    limit: int = 20,
+) -> dict:
+    """最近 N 个会话（按最后活动时间降序）：标题=首条问题，含消息数/最后问题/最后时间。
+
+    会话量小（≤20），每个会话单独取首尾问题可接受。
+    """
+    agg = await db.execute(
+        select(
+            QA_Record.session_id,
+            func.count(QA_Record.id).label("msg_count"),
+            func.max(QA_Record.created_at).label("last_at"),
+        )
+        .where(QA_Record.user_id == user.id, QA_Record.session_id.isnot(None))
+        .group_by(QA_Record.session_id)
+        .order_by(func.max(QA_Record.created_at).desc())
+        .limit(limit)
+    )
+    rows = agg.all()
+    out = []
+    for row in rows:
+        sid = row.session_id
+        first = await db.scalar(
+            select(QA_Record.question)
+            .where(QA_Record.user_id == user.id, QA_Record.session_id == sid)
+            .order_by(QA_Record.created_at.asc())
+            .limit(1)
+        )
+        last = await db.scalar(
+            select(QA_Record.question)
+            .where(QA_Record.user_id == user.id, QA_Record.session_id == sid)
+            .order_by(QA_Record.created_at.desc())
+            .limit(1)
+        )
+        out.append(
+            {
+                "session_id": str(sid),
+                "title": first or "",
+                "last_question": last or "",
+                "msg_count": int(row.msg_count),
+                "last_at": row.last_at.isoformat() if row.last_at else None,
+            }
+        )
+    return ok(out)
+
+
+@router.delete("/session/{session_id}")
+async def delete_session(
+    session_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """删除整个会话（仅限本人）。"""
+    await db.execute(
+        delete(QA_Record).where(QA_Record.user_id == user.id, QA_Record.session_id == session_id)
+    )
+    await db.commit()
+    return ok(message="会话已删除")
 
 
 @router.get("/history")

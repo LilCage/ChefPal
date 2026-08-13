@@ -163,11 +163,11 @@ def test_ask_stream_single_type(client, auth_headers, monkeypatch):
     done = json.loads(events[-1])
     assert done["type"] == "done"
     assert done["data"]["answer"]["dish_name"] == "红烧肉"
-    # 前面有 delta 打字机事件
+    # 前面有 delta 过渡语打字机事件（确定性文案，intent=general）
     deltas = [e for e in events[:-1] if json.loads(e)["type"] == "delta"]
     assert len(deltas) > 0
     typing_text = "".join(json.loads(d)["text"] for d in deltas)
-    assert "红烧肉" in typing_text
+    assert "小伴这就来帮你" in typing_text
 
     # 已落库
     hist = client.get("/api/qa/history", headers=auth_headers).json()["data"]
@@ -186,8 +186,7 @@ def test_ask_stream_recommendation_type(client, auth_headers, monkeypatch):
     assert len(recs) == 2
     deltas = [json.loads(e)["text"] for e in events[:-1]]
     typing_text = "".join(deltas)
-    assert "凉拌黄瓜" in typing_text
-    assert "小伴为你推荐" in typing_text
+    assert "小伴这就来帮你" in typing_text  # 过渡语先行（intent=general）
 
 
 def test_ask_stream_empty_shell_error(client, auth_headers, monkeypatch):

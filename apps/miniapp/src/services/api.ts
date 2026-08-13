@@ -108,15 +108,13 @@ export const generateKBRecipe = (title: string) =>
 export const askQA = (question: string, session_id?: string | null) =>
   http.post<QARecord>('/qa/ask', { question, session_id })
 
-/* 流式问答：SSE 打字机。onDelta 逐字回调，onDone 收到完整结构化数据，onError 出错。
- * onOpening 可选：知识库多做法命中后，AI 现写的友好开场白在卡片之后补发。 */
+/* 流式问答：SSE 打字机。onDelta 逐字回调（过渡语先行），onDone 收到完整结构化数据，onError 出错。 */
 export function askQAStream(
   question: string,
   handlers: {
     onDelta: (text: string) => void
     onDone: (data: QARecord) => void
     onError: (msg: string) => void
-    onOpening?: (text: string) => void
   },
   session_id?: string | null,
 ): () => void {
@@ -170,12 +168,7 @@ export function askQAStream(
           continue
         }
         if (ev.type === 'delta') handlers.onDelta(ev.text || '')
-        else if (ev.type === 'opening') {
-          // 卡片已渲染，开场白随后补发 → 回调后终止
-          handlers.onOpening?.(ev.text || '')
-          requestTask.abort()
-        } else if (ev.type === 'done') {
-          // 不在此终止：知识库多做法命中后还有可能跟一个 opening 事件
+        else if (ev.type === 'done') {
           handlers.onDone(ev.data)
         } else if (ev.type === 'error') {
           handlers.onError(ev.message || '生成失败')
@@ -191,6 +184,19 @@ export const fetchQAHistory = () => http.get<QARecord[]>('/qa/history')
 export const deleteQARecord = (id: string) => http.del(`/qa/${id}`)
 /** 对话会话：按时间升序返回该会话全部消息（对话页恢复历史用） */
 export const fetchQASession = (sessionId: string) => http.get<QARecord[]>(`/qa/session/${sessionId}`)
+
+/** 历史会话摘要（按最后活动时间降序，最多 limit 个） */
+export interface QASessionSummary {
+  session_id: string
+  title: string
+  last_question: string
+  msg_count: number
+  last_at: string | null
+}
+export const fetchQASessions = (limit = 20) =>
+  http.get<QASessionSummary[]>(`/qa/sessions?limit=${limit}`)
+/** 删除整个会话（仅限本人） */
+export const deleteQASession = (sessionId: string) => http.del(`/qa/session/${sessionId}`)
 
 /* ---------- 链接/文档解析（对话内：粘贴链接自动解析 / 📎 上传文档） ---------- */
 export const parseUrl = (url: string, session_id?: string | null) =>

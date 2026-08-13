@@ -55,7 +55,7 @@ async def recipe_by_title(
     """按菜名查知识库菜谱（多菜推荐点详情用）。未收录返回 404 引导现生成。"""
     entry = await kb_service.get_kb_entry_by_title(db, q, kind="recipe")
     if entry is None:
-        raise AppError("菜谱暂未收录，可尝试让知识库生成", code=404, status_code=404)
+        raise AppError("菜谱暂未收录，可尝试让美食库生成", code=404, status_code=404)
     await kb_service.increment_hit(db, entry)
     await db.commit()
     return ok(_out(entry))

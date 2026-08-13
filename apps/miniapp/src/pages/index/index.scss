@@ -23,6 +23,26 @@
   box-sizing: border-box;
   padding: 20px 24px 12px;
   background: var(--cream); /* 消息区保持奶油底，与白色输入坞区分 */
+  position: relative; /* 作为"回到底部"悬浮按钮的定位基准 */
+}
+
+/* 回到底部悬浮按钮：用户上滑暂停跟随后浮出，点它滚回最新内容 */
+.back-bottom-btn {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 22px;
+  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.7);
 }
 
 .chat-slot {
@@ -194,7 +214,17 @@
   margin-top: 20px;
 }
 
-/* 知识库命中标识 */
+/* 过渡语：卡片上方保留的流式文字行（进行时，如"小伴这就为你去寻找…"） */
+.mbox-transition {
+  display: block;
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* 美食库命中标识 */
 .kb-badge {
   display: inline-flex;
   align-items: center;
@@ -553,6 +583,22 @@
     align-items: center;
     gap: 8px;
     background: var(--gold);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+
+    .ic { width: 24px; height: 24px; }
+  }
+
+  .btn-history {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
     border: 2.5px solid var(--ink);
     border-radius: 999px;
     padding: 10px 20px;

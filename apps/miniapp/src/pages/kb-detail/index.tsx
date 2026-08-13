@@ -93,7 +93,7 @@ export default function KbDetail() {
     try {
       setEntry(await generateKBRecipe(title))
       setNotFound(false)
-      Taro.showToast({ title: '知识库已收录，做法如下', icon: 'none' })
+      Taro.showToast({ title: '美食库已收录，做法如下', icon: 'none' })
     } catch (e: any) {
       Taro.showToast({ title: e.message || '生成失败', icon: 'none' })
     } finally {
@@ -110,9 +110,9 @@ export default function KbDetail() {
         <View className='kb-empty'>
           <Text userSelect className='kb-empty-emoji'>📚</Text>
           <Text userSelect className='kb-empty-title'>「{title}」暂未收录</Text>
-          <Text userSelect className='kb-empty-desc'>知识库里还没有这道菜，可以让小伴现生成完整做法并加入知识库</Text>
+          <Text userSelect className='kb-empty-desc'>美食库里还没有这道菜，可以让小伴现生成完整做法并加入美食库</Text>
           <View className='btn btn--red kb-gen-btn' onClick={generate}>
-            {generating ? <Text userSelect>正在生成…</Text> : <><View className='ic ic-flame--white ic-sm' /><Text userSelect>让知识库生成这道菜</Text></>}
+            {generating ? <Text userSelect>正在生成…</Text> : <><View className='ic ic-flame--white ic-sm' /><Text userSelect>让美食库生成这道菜</Text></>}
           </View>
         </View>
       </View>
@@ -125,7 +125,7 @@ export default function KbDetail() {
       <View className='page-content detail'>
         <NavBar title={entry.title} showBack />
         <View className='tip-content bubble'>
-          <View className='star-burst star-burst--mini'>知识库技巧</View>
+          <View className='star-burst star-burst--mini'>美食库技巧</View>
           <Text userSelect className='tip-body'>{entry.content}</Text>
         </View>
       </View>
@@ -208,7 +208,7 @@ export default function KbDetail() {
           {entry.style && <View className='mini-chip gold'><Text userSelect>{entry.style}</Text></View>}
           {entry.time_minutes > 0 && <View className='mini-chip'><Text userSelect>⏱ {entry.time_minutes}分钟</Text></View>}
           <View className='mini-chip'><Text userSelect>难度 · {entry.difficulty}</Text></View>
-          <View className='mini-chip green'><Text userSelect>📚 知识库</Text></View>
+          <View className='mini-chip green'><Text userSelect>📚 美食库</Text></View>
         </View>
         {entry.summary && (
           <View className='bubble core'>

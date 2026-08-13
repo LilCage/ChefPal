@@ -80,9 +80,16 @@ export default function Index() {
   const [attachOpen, setAttachOpen] = useState(false)
   const [voiceMode, setVoiceMode] = useState(false) // 🎤 按住说话模式
   const [recording, setRecording] = useState(false)
-  const [anchor, setAnchor] = useState('') // 滚动锚点
+  // scroll-into-view 锚点：''=不滚动（安全清空）；'chat-end'=滚到底（值变化才触发）
+  const [anchor, setAnchor] = useState('')
+  const [showBackBtn, setShowBackBtn] = useState(false) // 暂停跟随后浮出"回到底部"按钮
   const [phIndex, setPhIndex] = useState(0)
   const streamAbortRef = useRef<(() => void) | null>(null)
+  const followRef = useRef(true) // 是否自动跟随底部（流式 delta 时跟随）
+  const scrollTopRef = useRef(0) // 上一次滚动位置（方向判断：回看历史=st 减小）
+  const viewHRef = useRef(0) // 消息区可视高度（近底判断用）
+  const btnRef = useRef(false) // 按钮显示状态（滚动中避免重复 setState → 防抖动）
+  const lastScrollTimeRef = useRef(0) // scrollToBottom 节流（流式 delta 高频）
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastTapRef = useRef(0)
   const recorderRef = useRef<Taro.RecorderManager | null>(null)
@@ -134,6 +141,15 @@ export default function Index() {
       return
     }
     loadSession()
+    // 测量消息区可视高度（近底判断用）；首次渲染后 DOM 就绪再查
+    setTimeout(() => {
+      Taro.createSelectorQuery()
+        .select('.chat-scroll')
+        .boundingClientRect()
+        .exec((r: any) => {
+          if (r?.[0]?.height) viewHRef.current = r[0].height
+        })
+    }, 100)
   })
 
   useUnload(() => {
@@ -150,6 +166,8 @@ export default function Index() {
         const records = await fetchQASession(sid)
         setSessionId(sid)
         setMessages(recordsToMessages(records))
+        // 恢复会话滚到最新（渲染完成后再滚，避免 chat-end 尚未就绪）
+        setTimeout(() => scrollToBottom(), 60)
         return
       } catch {
         /* 会话失效 → 开新会话 */
@@ -186,7 +204,31 @@ export default function Index() {
     if (toast) Taro.showToast({ title: '已开启新对话', icon: 'none' })
   }
 
-  const scrollToBottom = () => setAnchor('chat-end')
+  /* 滚到底：scroll-into-view 指向 chat-end。先清空再 nextTick 设目标（值变化才触发滚动）。
+   * 不用受控 scrollTop（其同步会让滚动中高频重渲染 → 气泡抖动）。 */
+  const scrollToBottom = () => {
+    const now = Date.now()
+    if (now - lastScrollTimeRef.current < 60) return // 节流：流式每 2~3 字滚一次
+    lastScrollTimeRef.current = now
+    setAnchor('')
+    Taro.nextTick(() => setAnchor('chat-end'))
+  }
+
+  /* 滚动回调：只更新 ref + 低频切换按钮（滚动中尽量不 setState，避免 scroll-view 重渲染回顶/抖动）。
+   * 上滑看历史=st 减小 → 暂停跟随+浮按钮；滚回底部 → 恢复。 */
+  const onChatScroll = (e: any) => {
+    const { scrollTop: st, scrollHeight } = e.detail
+    const viewH = viewHRef.current || 600
+    const nearBottom = scrollHeight - st - viewH < 60
+    const scrollingUp = st < scrollTopRef.current
+    scrollTopRef.current = st
+    followRef.current = nearBottom ? true : (scrollingUp ? false : followRef.current)
+    const wantBtn = !nearBottom && scrollingUp
+    if (btnRef.current !== wantBtn) {
+      btnRef.current = wantBtn
+      setShowBackBtn(wantBtn)
+    }
+  }
 
   const patchMsg = (id: string, patch: Partial<ChatMsg>) =>
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)))
@@ -219,30 +261,25 @@ export default function Index() {
     streamAbortRef.current = askQAStream(
       q,
       {
-        onDelta: (t) =>
+        onDelta: (t) => {
           setMessages((prev) =>
             prev.map((m) => (m.id === aid ? { ...m, text: (m.text || '') + t } : m)),
-          ),
+          )
+          // 流式自动跟随到底部（用户上滑回看时 followRef=false 暂停）
+          if (followRef.current) scrollToBottom()
+        },
         onDone: (rec) => {
-          patchMsg(aid, { record: rec, pending: false, text: undefined })
+          // 保留 text（过渡语）在卡片上方展示，与卡片同存
+          patchMsg(aid, { record: rec, pending: false })
           setSending(false)
           streamAbortRef.current = null
-          scrollToBottom()
+          if (followRef.current) scrollToBottom()
         },
-        onOpening: (t) =>
-          // 卡片已渲染后，把 AI 现写的开场白补进卡内 intro（多做法/多菜回答）
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aid && m.record
-                ? { ...m, record: { ...m.record, answer: { ...m.record.answer, core_secret: t } } }
-                : m,
-            ),
-          ),
         onError: (msg) => {
           patchMsg(aid, { text: msg || '提问失败，请稍后重试', pending: false })
           setSending(false)
           streamAbortRef.current = null
-          scrollToBottom()
+          if (followRef.current) scrollToBottom()
         },
       },
       sid,
@@ -261,7 +298,7 @@ export default function Index() {
       patchMsg(aid, { text: e?.message || '解析失败，请稍后重试', pending: false })
     } finally {
       setSending(false)
-      scrollToBottom()
+      if (followRef.current) scrollToBottom()
     }
   }
 
@@ -282,7 +319,7 @@ export default function Index() {
         patchMsg(aid, { text: e?.message || '文档解析失败', pending: false })
       } finally {
         setSending(false)
-        scrollToBottom()
+        if (followRef.current) scrollToBottom()
       }
     } catch {
       /* 用户取消选择 */
@@ -474,6 +511,8 @@ export default function Index() {
       <View className='msg assistant'>
         <View className='avatar'>🍳</View>
         <View className='mbox mbox--card'>
+          {/* 过渡语（流式打字机先打出）保留在卡片上方，与卡片同存 */}
+          {m.text && <Text className='mbox-transition' userSelect>{m.text}</Text>}
           {ans.parse_type && (
             <View className='src-banner'>
               <View className='sb-ic'>{(ans.parse_type === 'video' && '▶️') || (ans.parse_type === 'doc' && '📄') || '🌐'}</View>
@@ -481,11 +520,8 @@ export default function Index() {
                 <Text className='sb-title' userSelect>{PARSE_LABEL[ans.parse_type]}解析 · {ans.parse_source}</Text>
                 <Text className='sb-sub' userSelect>小伴已整理为结构化菜谱</Text>
               </View>
-              <View className='mini-chip green'><Text userSelect>已收录知识库</Text></View>
+              <View className='mini-chip green'><Text userSelect>已收录美食库</Text></View>
             </View>
-          )}
-          {rec.kb_hit && (
-            <View className='kb-badge'><Text userSelect>📚 知识库命中 · {ans.dish_name || '已有菜谱'}</Text></View>
           )}
           {ans.dish_name && (
             <View className='card-title'><Text className='dish-name' userSelect>{ans.dish_name}</Text>
@@ -561,8 +597,9 @@ export default function Index() {
       <ScrollView
         className='chat-scroll'
         scrollY
+        scrollAnchoring
         scrollIntoView={anchor}
-        scrollWithAnimation
+        onScroll={onChatScroll}
       >
         <View className='chat-slot'>
           {messages.length === 0 && (
@@ -577,6 +614,13 @@ export default function Index() {
           <View id='chat-end' />
         </View>
       </ScrollView>
+
+      {/* 用户上滑暂停跟随后，浮出回到底部按钮 */}
+      {showBackBtn && (
+        <View className='back-bottom-btn' onClick={scrollToBottom}>
+          <Text>⬇ 回到底部</Text>
+        </View>
+      )}
 
       {/* 链接识别提示条 */}
       {isLinkInput && (
@@ -629,6 +673,9 @@ export default function Index() {
         <View className='id-actions'>
           <View className='btn-newchat' onClick={() => startNewSession(true)}>
             <View className='ic ic-plus ic-xs' /><Text>新对话</Text>
+          </View>
+          <View className='btn-history' onClick={() => Taro.navigateTo({ url: '/pages/qa-history/index' })}>
+            <View className='ic ic-comment ic-xs' /><Text>历史对话</Text>
           </View>
           <View className='sp' />
           <View className={`id-attach ${attachOpen ? 'on' : ''}`} onClick={() => setAttachOpen(!attachOpen)}>

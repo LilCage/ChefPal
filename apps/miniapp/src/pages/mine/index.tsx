@@ -16,7 +16,6 @@ const MENU = [
   { key: 'preferences', icon: 'ic-sliders', title: '口味设置', sub: '忌口 · 辣度 · 咸淡 · 技能', url: '/pages/preferences/index' },
   { key: 'meal-plan', icon: 'ic-cal', title: '膳食规划', sub: '3 天 / 7 天 · 营养分析', url: '/pages/meal-plan/index' },
   { key: 'follow', icon: 'ic-heart', title: '我的关注 · 粉丝', sub: '关注的人 · 粉丝列表' },
-  { key: 'history', icon: 'ic-comment', title: '我的问答历史', sub: '最近 20 条', url: '/pages/qa-history/index' },
   { key: 'share', icon: 'ic-share', title: '我的分享卡片', sub: '生成精美卡片' },
   { key: 'agreement', icon: 'ic-lock', title: '用户协议与隐私政策', sub: '服务条款 · 隐私说明', url: '/pages/agreement/index' },
   { key: 'disclaimer', icon: 'ic-info', title: '免责声明与帮助', sub: '小伴结果仅供参考' },

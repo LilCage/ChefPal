@@ -1,12 +1,15 @@
 /**
- * 问答历史（原型 02 屏3）：最近 20 条 · 可删除 · 点击展开详情（气泡在左上角指向问题）
+ * 历史对话（会话列表）：最近 20 个会话 · 可删除 · 点某会话 → 恢复回首页继续对话。
+ * 会话内完整多轮对话由首页加载（storage 切 session_id → 首页 useDidShow 自动恢复）。
  */
 import { Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import NavBar from '../../components/NavBar'
-import { deleteQARecord, fetchQAHistory, type QARecord } from '../../services/api'
+import { deleteQASession, fetchQASessions, type QASessionSummary } from '../../services/api'
 import './index.scss'
+
+const SESSION_KEY = 'chefpal_session_id'
 
 function formatTime(iso: string | null): string {
   if (!iso) return ''
@@ -19,92 +22,41 @@ function formatTime(iso: string | null): string {
 }
 
 export default function QAHistory() {
-  const [records, setRecords] = useState<QARecord[]>([])
-  const [expandedId, setExpandedId] = useState<string | null>(null) // 当前展开的记录 id
+  const [sessions, setSessions] = useState<QASessionSummary[]>([])
 
   useDidShow(() => load())
 
   const load = async () => {
     try {
-      setRecords(await fetchQAHistory())
+      setSessions(await fetchQASessions())
     } catch (e: any) {
       Taro.showToast({ title: e.message || '加载失败', icon: 'none' })
     }
   }
 
-  const remove = async (id: string) => {
+  /* 点某会话 → 设 storage → 回首页（首页 useDidShow 自动加载该会话完整多轮对话，可继续聊） */
+  const openSession = (s: QASessionSummary) => {
+    Taro.setStorageSync(SESSION_KEY, s.session_id)
+    Taro.switchTab({ url: '/pages/index/index' })
+  }
+
+  const remove = async (s: QASessionSummary) => {
     try {
-      await deleteQARecord(id)
-      setRecords(records.filter((r) => r.id !== id))
-      if (expandedId === id) setExpandedId(null)
+      await deleteQASession(s.session_id)
+      setSessions((prev) => prev.filter((x) => x.session_id !== s.session_id))
     } catch (e: any) {
       Taro.showToast({ title: e.message, icon: 'none' })
     }
   }
 
-  const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id))
-
-  /* 完整答案正文（多菜推荐 或 单菜秘诀/食材/步骤/避坑） */
-  const renderAnswerBody = (rec: QARecord) => {
-    const ans = rec.answer
-    if (ans.recommendations) {
-      return (
-        <View className='h-rec'>
-          {ans.recommendations.map((r, i) => (
-            <View key={i} className='h-rec-item'>
-              <View className='h-rec-head'>
-                <Text className='h-rec-no'>{i + 1}</Text>
-                <Text className='h-rec-name'>{r.name}</Text>
-                {r.time_minutes > 0 && <View className='mini-chip'><Text userSelect>⏱ {r.time_minutes}分钟</Text></View>}
-              </View>
-              <Text className='h-rec-secret' userSelect>{r.core_secret}</Text>
-              {r.ingredients.length > 0 && (
-                <Text className='h-rec-ings' userSelect>食材：{r.ingredients.join('、')}</Text>
-              )}
-            </View>
-          ))}
-        </View>
-      )
-    }
-    return (
-      <View className='h-ans'>
-        <Text className='h-secret' userSelect>{ans.core_secret}</Text>
-        {ans.ingredients.length > 0 && (
-          <>
-            <Text className='h-label'>食材清单</Text>
-            <Text className='h-ings' userSelect>{ans.ingredients.join('、')}</Text>
-          </>
-        )}
-        {ans.steps.length > 0 && (
-          <>
-            <Text className='h-label'>烹饪步骤</Text>
-            <View className='h-steps'>
-              {ans.steps.map((s, i) => (
-                <View key={i} className='h-step'><Text className='h-step-no'>{i + 1}</Text><Text userSelect>{s}</Text></View>
-              ))}
-            </View>
-          </>
-        )}
-        {ans.avoid_pitfalls.length > 0 && (
-          <>
-            <Text className='h-label'>避坑指南</Text>
-            {ans.avoid_pitfalls.map((p, i) => (
-              <View key={i} className='h-pit'>⚠ <Text userSelect>{p}</Text></View>
-            ))}
-          </>
-        )}
-      </View>
-    )
-  }
-
   const clearAll = () => {
     Taro.showModal({
       title: '清空全部历史',
-      content: '将删除最近的所有问答记录，确定吗？',
+      content: '将删除最近的所有历史对话，确定吗？',
       confirmColor: '#E8482A',
       success: async (r) => {
         if (!r.confirm) return
-        for (const rec of [...records]) await remove(rec.id)
+        for (const s of [...sessions]) await remove(s)
         Taro.showToast({ title: '已清空', icon: 'none' })
       },
     })
@@ -112,39 +64,36 @@ export default function QAHistory() {
 
   return (
     <View className='page-content qah'>
-      <NavBar title='问答历史' showBack />
+      <NavBar title='历史对话' showBack />
 
       <View className='his-list'>
-        {records.map((r) => (
-          <View key={r.id} className='his-block'>
-            <View className='his-item' onClick={() => toggle(r.id)}>
-              <View className='q-badge'><Text userSelect>Q</Text></View>
+        {sessions.map((s) => (
+          <View key={s.session_id} className='his-block'>
+            <View className='his-item' onClick={() => openSession(s)}>
+              <View className='q-badge'><Text userSelect>{s.msg_count}</Text></View>
               <View className='htext'>
-                <Text className='hq'>{r.question}</Text>
-                <Text className='htime'>{formatTime(r.created_at)}</Text>
+                <Text className='hq'>{s.title || s.last_question}</Text>
+                <Text className='htime'>
+                  {formatTime(s.last_at)}
+                  {s.msg_count > 1 ? ` · ${s.msg_count} 轮` : ''}
+                </Text>
               </View>
-              <View className='ic ic-trash ic-sm' onClick={(e) => { e.stopPropagation(); remove(r.id) }} />
+              <View className='ic ic-trash ic-sm' onClick={(e) => { e.stopPropagation(); remove(s) }} />
             </View>
-            {/* 点击问题 → 展开完整问答（气泡在左上角指向问题） */}
-            {expandedId === r.id && (
-              <View className='his-detail'>
-                {renderAnswerBody(r)}
-              </View>
-            )}
           </View>
         ))}
       </View>
 
-      {records.length === 0 && (
-        <View className='note note--center'>暂无问答记录，去首页问小伴一个问题吧</View>
+      {sessions.length === 0 && (
+        <View className='note note--center'>暂无历史对话，去首页问小伴一个问题吧</View>
       )}
 
-      {records.length > 0 && (
+      {sessions.length > 0 && (
         <View className='clear-wrap'>
           <View className='btn btn--white btn--block' onClick={clearAll}>
             <Text userSelect>清空全部历史</Text>
           </View>
-          <Text className='note note--center'>最多保留最近 20 条问答记录</Text>
+          <Text className='note note--center'>最多展示最近 20 个对话</Text>
         </View>
       )}
     </View>

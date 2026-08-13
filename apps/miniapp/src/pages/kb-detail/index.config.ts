@@ -1,3 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: '知识库菜谱',
+  navigationBarTitleText: '美食库菜谱',
 })

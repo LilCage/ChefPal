@@ -165,3 +165,53 @@ def test_stream_injects_history_and_saves_session(client, auth_headers, monkeypa
     # 流式结果已落库到该会话
     g = client.get(f"/api/qa/session/{SID}", headers=auth_headers)
     assert len(g.json()["data"]) == 2
+
+
+# ---------- 会话聚合列表 + 删除会话 ----------
+
+
+def test_sessions_aggregates_by_session(client, auth_headers, monkeypatch):
+    """GET /api/qa/sessions：按会话聚合（标题=首问、消息数、最后问题）。"""
+    _install_run_qa(monkeypatch, [])
+    client.post("/api/qa/ask", json={"question": "会话1首问", "session_id": SID}, headers=auth_headers)
+    client.post("/api/qa/ask", json={"question": "会话1追问", "session_id": SID}, headers=auth_headers)
+    client.post("/api/qa/ask", json={"question": "会话2首问", "session_id": SID2}, headers=auth_headers)
+
+    r = client.get("/api/qa/sessions", headers=auth_headers)
+    data = r.json()["data"]
+    assert len(data) == 2
+    by_sid = {d["session_id"]: d for d in data}
+    s1 = by_sid[SID]
+    assert s1["title"] == "会话1首问"
+    assert s1["last_question"] == "会话1追问"
+    assert s1["msg_count"] == 2
+    assert s1["last_at"]  # 最后活动时间非空
+    s2 = by_sid[SID2]
+    assert s2["title"] == "会话2首问"
+    assert s2["msg_count"] == 1
+
+
+def test_delete_session_removes_all(client, auth_headers, monkeypatch):
+    """DELETE /api/qa/session/{id}：删整个会话，会话与历史里都不再出现。"""
+    _install_run_qa(monkeypatch, [])
+    client.post("/api/qa/ask", json={"question": "Q1", "session_id": SID}, headers=auth_headers)
+    client.post("/api/qa/ask", json={"question": "Q2", "session_id": SID}, headers=auth_headers)
+
+    r = client.delete(f"/api/qa/session/{SID}", headers=auth_headers)
+    assert r.status_code == 200
+
+    g = client.get(f"/api/qa/session/{SID}", headers=auth_headers)
+    assert g.json()["data"] == []
+    sess = client.get("/api/qa/sessions", headers=auth_headers).json()["data"]
+    assert all(d["session_id"] != SID for d in sess)
+    hist = client.get("/api/qa/history", headers=auth_headers).json()["data"]
+    assert all(h["session_id"] != SID for h in hist)
+
+
+def test_sessions_scoped_to_user(client, auth_headers, make_headers, monkeypatch):
+    """会话列表只含当前用户，其他用户看不到。"""
+    _install_run_qa(monkeypatch, [])
+    client.post("/api/qa/ask", json={"question": "Q1", "session_id": SID}, headers=auth_headers)
+    other = make_headers("openid-other")
+    sess = client.get("/api/qa/sessions", headers=other).json()["data"]
+    assert all(d["session_id"] != SID for d in sess)
