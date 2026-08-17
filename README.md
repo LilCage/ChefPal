@@ -36,6 +36,17 @@
 
 ---
 
+## 📱 功能展示
+
+> 当前为**骨架占位图**：把微信开发者工具截图按文件名放入 [`screenshots/`](screenshots/) 即自动替换，截图规范见 [screenshots/README.md](screenshots/README.md)。
+
+| **首页 · 对话式问答**<br><img src="screenshots/home-qa.png" width="280" alt="首页·对话式问答"/> | **厨房 · 食材魔方**<br><img src="screenshots/kitchen.png" width="280" alt="厨房·食材魔方"/> |
+|:---:|:---:|
+| **菜谱知识库详情**<br><img src="screenshots/kb-detail.png" width="280" alt="菜谱知识库详情"/> | **发现 · 社区广场**<br><img src="screenshots/discover.png" width="280" alt="发现·社区广场"/> |
+| **3/7 天膳食规划**<br><img src="screenshots/meal-plan.png" width="280" alt="3/7天膳食规划"/> | **我的 · 收藏 / 作品**<br><img src="screenshots/mine.png" width="280" alt="我的·收藏/作品"/> |
+
+---
+
 ## 🛠 技术栈
 
 | 层 | 选型 |
