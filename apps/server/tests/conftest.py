@@ -4,9 +4,9 @@ import os
 
 os.environ.setdefault("APP_ENV", "test")
 
+import asyncpg
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -45,9 +45,18 @@ def _reset_test_db():
     """每个用例独立清空重建表，避免 ai_calls 等跨用例累积污染风控测试。"""
 
     async def reset():
+        # 先用裸 asyncpg 连接预建 vector 扩展：async_creator 注册 codec 时
+        # 要求 vector 类型已存在，否则报 ValueError: unknown type: public.vector。
+        # 本地由 docker init 脚本（apps/server/docker/init/01-create-test-db.sql）预建，
+        # 这里兜底，保证任意裸库（如 CI 新建的 chefpal_test）也能直接跑测试。
+        dsn = settings.TEST_DATABASE_URL.replace("+asyncpg", "")
+        raw = await asyncpg.connect(dsn)
+        try:
+            await raw.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        finally:
+            await raw.close()
+
         async with test_engine.begin() as conn:
-            # 确保 pgvector 扩展可用（recipe_kb 的 VECTOR 列依赖；幂等）
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
 

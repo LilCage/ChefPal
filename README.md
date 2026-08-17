@@ -56,7 +56,7 @@ ChefPal/
 │       ├── app/            # 路由 / 服务 / 模型 / LLM 客户端
 │       ├── alembic/        # 数据库迁移
 │       ├── scripts/        # HowToCook 导入、数据回填、冒烟脚本
-│       └── tests/          # 368 个 pytest 用例
+│       └── tests/          # 371 个 pytest 用例
 ├── docs/                   # 需求分析 + 方案设计文档
 ├── prototypes/             # HTML 高保真原型（漫画插画风，5+2 组 30+ 屏）
 └── docker-compose.yml      # 本地 PostgreSQL（含 pgvector）
@@ -115,7 +115,7 @@ npm run dev:weapp           # 用微信开发者工具打开 apps/miniapp/dist
 
 ```bash
 cd apps/server
-pytest -q          # 368 个用例，覆盖认证/问答/知识库/社区/规划/购物/挑战等全部模块
+pytest -q          # 371 个用例，覆盖认证/问答/知识库/社区/规划/购物/挑战等全部模块
 ```
 
 > 测试需要本地 PostgreSQL（`docker compose up -d postgres` 即可）。用例通过 mock 隔离大模型调用，无需真实 API Key。

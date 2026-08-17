@@ -14,7 +14,7 @@ ChefPal 首个公开版本：一个根据你手头食材实时生成菜谱的微
 
 ## 工程与质量
 
-- 后端 368 个 pytest 用例（mock 隔离 AI，无需真实密钥）
+- 后端 371 个 pytest 用例（mock 隔离 AI，无需真实密钥）
 - CI（GitHub Actions）：后端测试（pgvector 服务）+ 小程序构建双门禁
 - 全套开源配套：MIT 协议、CONTRIBUTING / SECURITY / CODE_OF_CONDUCT、Issue / PR 模板
 
