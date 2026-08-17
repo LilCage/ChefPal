@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend tests (pytest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: chefpal
+          POSTGRES_PASSWORD: chefpal_dev_password
+          POSTGRES_DB: chefpal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U chefpal"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Create test database
+        run: docker exec ${{ job.services.postgres.id }} psql -U chefpal -c 'CREATE DATABASE chefpal_test;'
+
+      - name: Install dependencies
+        working-directory: apps/server
+        run: pip install -e '.[dev]'
+
+      - name: Run tests
+        working-directory: apps/server
+        env:
+          # 测试通过 mock 隔离大模型/微信调用，无需真实密钥；此处不注入任何凭据
+          APP_ENV: test
+        run: pytest -q
