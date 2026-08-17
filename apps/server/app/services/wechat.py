@@ -67,16 +67,17 @@ async def check_text(content: str, openid: str, scene: int = 3) -> bool:
     接口调用失败（网络/未开通/超时）时**降级放行**，与小程序码降级策略一致，
     避免发布链路被外部故障阻断。
     """
-    token = await get_access_token()
-    url = f"https://api.weixin.qq.com/wxa/msg_sec_check?access_token={token}"
+    url = "https://api.weixin.qq.com/wxa/msg_sec_check"
     payload = {"content": content[:2500], "version": 2, "scene": scene, "openid": openid}
     try:
+        # token 获取与接口调用任一失败都降级放行，避免发布链路被外部故障阻断
+        token = await get_access_token()
         async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.post(url, json=payload)
+            resp = await client.post(f"{url}?access_token={token}", json=payload)
             resp.raise_for_status()
             data = resp.json()
     except Exception:  # noqa: BLE001
-        return True  # 降级放行
+        return True  # 降级放行（网络/超时/未开通/token 获取失败）
     if data.get("errcode") not in (0, None):
         return True  # 微信侧错误（如未开通）→ 降级放行
     suggest = (data.get("result") or {}).get("suggest", "pass")
