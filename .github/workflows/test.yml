@@ -44,3 +44,23 @@ jobs:
           # 测试通过 mock 隔离大模型/微信调用，无需真实密钥；此处不注入任何凭据
           APP_ENV: test
         run: pytest -q
+
+  miniapp:
+    name: Miniapp build (Taro)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/miniapp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/miniapp
+        run: npm ci
+
+      - name: Build weapp
+        working-directory: apps/miniapp
+        run: npm run build:weapp

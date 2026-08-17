@@ -2,6 +2,20 @@
 name = "chefpal-server"
 version = "0.1.0"
 description = "ChefPal FastAPI 后端（AI 烹饪伴侣）"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "LilCage", email = "LilCage@users.noreply.github.com" }]
+keywords = ["wechat-miniprogram", "fastapi", "ai", "cooking", "rag", "taro"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
@@ -25,6 +39,12 @@ dependencies = [
     "yt-dlp>=2026.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/LilCage/ChefPal"
+Repository = "https://github.com/LilCage/ChefPal"
+Documentation = "https://github.com/LilCage/ChefPal#readme"
+Issues = "https://github.com/LilCage/ChefPal/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
@@ -46,3 +66,9 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+
+[tool.ruff.lint]
+# E/F/W: pycodestyle + pyflakes；I: import 排序；UP: pyupgrade；B: bugbear
+select = ["E", "F", "W", "I", "UP", "B"]
+# E501 行宽暂不强制（历史代码有超长行），后续可收紧
+ignore = ["E501"]

@@ -129,3 +129,4 @@ pytest -q          # 368 个用例，覆盖认证/问答/知识库/社区/规划
 
 - AI 生成的菜谱与回答为通用烹饪建议，**仅供参考，不构成医疗 / 营养处方**。
 - 本项目为个人学习 / 演示项目，代码按 [MIT](LICENSE) 协议开源。
+- 想参与贡献？见 [CONTRIBUTING.md](CONTRIBUTING.md)；发现安全问题请走 [SECURITY.md](SECURITY.md) 的流程。
