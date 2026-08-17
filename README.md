@@ -2,12 +2,6 @@
 
 一个微信小程序：告诉它你手头有什么食材、想吃什么，它当场给你生成菜谱。不用翻菜谱库，也不用刷社区帖。
 
-## 定位
-
-不做菜谱大全（下厨房已做），不做社区平台（豆果已做）——做生成式：根据**你的食材 + 你的目标**，实时生成专属方案。
-
-核心差异化是**生成式而非检索式**：不是从菜谱库里搜，而是为你的冰箱实时「变」出菜。
-
 ## 功能
 
 | 模块 | 说明 |
@@ -30,8 +24,6 @@
 
 ## 功能展示
 
-截图来自微信开发者工具；补充 / 替换直接放入 [`screenshots/`](screenshots/) 同名覆盖即可，规范见 [screenshots/README.md](screenshots/README.md)。
-
 | **首页 · 对话式问答**<br>多轮会话，AI 联网搜索 + 结构化回答（核心秘诀 / 食材 / 步骤 / 避坑），SSE 流式打字机逐字展示，可收藏、可恢复历史对话<br><img src="screenshots/home-qa.png" width="280" alt="首页·对话式问答"/> | **厨房 · 食材魔方**<br>输食材（文字 / 拍照 / 语音）→ AI 生成 TOP3 菜谱，标注匹配度 / 时间 / 难度 / 缺什么调料<br><img src="screenshots/kitchen.png" width="280" alt="厨房·食材魔方"/> |
 |:---:|:---:|
 | **菜谱知识库详情**<br>RAG 向量检索，HowToCook 386 条种子 + AI 沉淀；分段展示食材清单 / 烹饪步骤 / 避坑指南，未收录菜名可现生成<br><img src="screenshots/kb-detail.png" width="280" alt="菜谱知识库详情"/> | **发现 · 社区广场**<br>作品发布、瀑布流浏览、点赞 / 评论、话题标签、关注、带小程序码分享卡片<br><img src="screenshots/discover.png" width="280" alt="发现·社区广场"/> |
@@ -44,12 +36,14 @@
 | 小程序前端 | **Taro 4 + React 18 + TypeScript + NutUI-React** |
 | 后端 | **FastAPI + SQLAlchemy(async/asyncpg) + Alembic** |
 | 数据库 | **PostgreSQL 16 + pgvector**（JSONB 结构化数据 + 向量检索） |
-| 大模型 | **阿里云百炼 DeepSeek**（v4-flash 为主 / v4-pro 兜底，联网搜索 + 结构化输出） |
+| 大模型 | **阿里云百炼 DeepSeek** |
 | 向量/语音 | **百炼 text-embedding-v3**（RAG）、**qwen3-asr-flash**（语音识别） |
 | 视觉 | **智谱 GLM-4V**（拍照识食材，可选） |
 | 认证 | 微信 code2Session + JWT |
 | 存储 | 腾讯云 COS（社区作品图片，未配置自动回落本地磁盘） |
-| 部署 | Docker Compose（本地 PG） |
+| 部署 | Docker+微信云托管 |
+| AI 编程工具 | GitHub Copilot · Claude Code · OpenSpec · MCP · Agent Skills |
+| AI 编程方法 | Harness Engineering · 规范驱动开发（SDD）· 原型赛马 · 上下文管理 |
 
 ## 目录结构
 
@@ -130,7 +124,6 @@ pytest -q          # 368 个用例，覆盖认证/问答/知识库/社区/规划
 
 - [需求分析文档](docs/需求分析文档.md) —— 产品定位、用户画像、功能点、扩展路线
 - [方案设计文档](docs/方案设计文档.md) —— 技术选型、系统架构、数据库、Prompt 工程
-- [prototypes/](prototypes/) —— 《美食的俘虏》热血漫画插画风 HTML 高保真原型，可独立双击打开
 
 ## 说明
 
