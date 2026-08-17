@@ -34,7 +34,6 @@ export default function MealPlanPage() {
   const [mode, setMode] = useState<Mode>(3)
   const [plan, setPlan] = useState<MealPlan | null>(null)
   const [activeDay, setActiveDay] = useState(0)
-  const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
 
   useDidShow(() => {

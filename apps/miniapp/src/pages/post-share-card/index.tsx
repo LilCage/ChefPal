@@ -16,7 +16,6 @@ const BROWN = '#4A2E1D'
 const CREAM = '#FFF7EC'
 const SOFT = '#F6E3C3'
 const RED = '#E8482A'
-const GOLD = '#F0A73E'
 const GRAY = '#8A6F5C'
 
 export default function PostShareCard() {

@@ -89,6 +89,7 @@ export interface KBEntry {
   prep_steps: string[]
   cook_steps: string[]
   tips: string[]
+  images: string[] // HowToCook 成品图相对路径（/kb-data/ 下）
   time_minutes: number
   difficulty: string
   style: string
