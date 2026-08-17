@@ -38,12 +38,12 @@
 
 ## 📱 功能展示
 
-> 当前为**骨架占位图**：把微信开发者工具截图按文件名放入 [`screenshots/`](screenshots/) 即自动替换，截图规范见 [screenshots/README.md](screenshots/README.md)。
+> 截图均来自微信开发者工具；补充 / 替换直接放入 [`screenshots/`](screenshots/) 同名覆盖即可，规范见 [screenshots/README.md](screenshots/README.md)。
 
-| **首页 · 对话式问答**<br><img src="screenshots/home-qa.png" width="280" alt="首页·对话式问答"/> | **厨房 · 食材魔方**<br><img src="screenshots/kitchen.png" width="280" alt="厨房·食材魔方"/> |
+| **首页 · 对话式问答**<br>多轮会话，AI 联网搜索 + 结构化回答（核心秘诀 / 食材 / 步骤 / 避坑），SSE 流式打字机逐字展示，可收藏、可恢复历史对话<br><img src="screenshots/home-qa.png" width="280" alt="首页·对话式问答"/> | **厨房 · 食材魔方**<br>输食材（文字 / 拍照 / 语音）→ AI 生成 TOP3 菜谱，标注匹配度 / 时间 / 难度 / 缺什么调料<br><img src="screenshots/kitchen.png" width="280" alt="厨房·食材魔方"/> |
 |:---:|:---:|
-| **菜谱知识库详情**<br><img src="screenshots/kb-detail.png" width="280" alt="菜谱知识库详情"/> | **发现 · 社区广场**<br><img src="screenshots/discover.png" width="280" alt="发现·社区广场"/> |
-| **3/7 天膳食规划**<br><img src="screenshots/meal-plan.png" width="280" alt="3/7天膳食规划"/> | **我的 · 收藏 / 作品**<br><img src="screenshots/mine.png" width="280" alt="我的·收藏/作品"/> |
+| **菜谱知识库详情**<br>RAG 向量检索，HowToCook 386 条种子 + AI 沉淀；分段展示食材清单 / 烹饪步骤 / 避坑指南，未收录菜名可现生成<br><img src="screenshots/kb-detail.png" width="280" alt="菜谱知识库详情"/> | **发现 · 社区广场**<br>作品发布、瀑布流浏览、点赞 / 评论、话题标签、关注、带小程序码分享卡片<br><img src="screenshots/discover.png" width="280" alt="发现·社区广场"/> |
+| **3/7 天膳食规划**<br>按口味记忆生成 3 / 7 天膳食计划 + 营养分析，购物清单一键生成<br><img src="screenshots/meal-plan.png" width="280" alt="3/7天膳食规划"/> | **我的 · 收藏 / 作品**<br>微信一键登录、口味记忆注入、菜谱 / 知识库收藏、我的作品，漫画插画风 UI<br><img src="screenshots/mine.png" width="280" alt="我的·收藏/作品"/> |
 
 ---
 
