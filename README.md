@@ -1,7 +1,40 @@
-# 🍳 ChefPal · 你的口袋 AI 厨师
+<div align="center">
 
-> **从食材到餐桌，全程智能陪伴。**
-> 让每一个不会做饭的人都能轻松下厨，让每一个会做饭的人都能吃得更好、更健康。
+<h1>🍳 ChefPal · 你的口袋 AI 厨师</h1>
+
+<p><strong>从食材到餐桌，全程智能陪伴。</strong></p>
+
+<p>让每一个不会做饭的人都能轻松下厨，让每一个会做饭的人都能吃得更好、更健康。</p>
+
+<p>⭐ <strong>15</strong> 大功能模块 &nbsp;·&nbsp; 📱 <strong>37</strong> 个页面 &nbsp;·&nbsp; 🧪 <strong>368</strong> 个测试用例 &nbsp;·&nbsp; 🍲 <strong>386</strong> 条种子菜谱</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Taro-4-ff7f00?style=flat-square" alt="Taro">
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/DeepSeek-4D6BFE?style=flat-square" alt="DeepSeek">
+  <img src="https://img.shields.io/badge/License-MIT-brightgreen?style=flat-square" alt="License">
+</p>
+
+</div>
+
+---
+
+## 📖 目录
+
+- [📌 一句话定位](#一句话定位)
+- [✨ 功能亮点](#功能亮点)
+- [📱 功能展示](#功能展示)
+- [🛠 技术栈](#技术栈)
+- [🗺 项目结构](#项目结构)
+- [🚀 快速开始](#快速开始)
+- [🧪 测试](#测试)
+- [📄 文档与原型](#文档与原型)
+- [⚠️ 说明](#说明)
 
 ---
 
@@ -85,6 +118,7 @@ ChefPal/
 ## 🚀 快速开始
 
 ### 环境要求
+
 - **后端**：Python 3.11+、Docker（跑本地 PostgreSQL）
 - **小程序**：Node 18+、pnpm/npm、[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 
@@ -155,3 +189,19 @@ pytest -q          # 368 个用例，覆盖认证/问答/知识库/社区/规划
 
 - AI 生成的菜谱与回答为通用烹饪建议，**仅供参考，不构成医疗 / 营养处方**。
 - 本项目为个人学习 / 演示项目，代码按 [MIT](LICENSE) 协议开源。
+
+---
+
+<div align="center">
+
+<p><strong>如果 ChefPal 帮到了你，欢迎 ⭐ Star 支持～</strong></p>
+
+<p>
+  <a href="https://github.com/LilCage/ChefPal">⭐ Star</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/LilCage/ChefPal/issues">🐛 反馈问题</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/LilCage/ChefPal">📖 查看源码</a>
+</p>
+
+</div>
