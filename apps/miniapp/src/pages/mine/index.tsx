@@ -35,7 +35,6 @@ export default function Mine() {
   const setTab = useTabStore((s) => s.setIndex)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const [qaCount, setQaCount] = useState(0)
   const [recipeCount, setRecipeCount] = useState(0)
   const [postCount, setPostCount] = useState(0)
   const [followerCount, setFollowerCount] = useState(0)
@@ -81,15 +80,14 @@ export default function Mine() {
 
   const loadCounts = async () => {
     try {
-      const [qa, recipe, posts, profile, taste] = await Promise.all([
-        fetchFavorites('qa'),
+      const [recipe, kb, posts, profile, taste] = await Promise.all([
         fetchFavorites('recipe'),
+        fetchFavorites('kb'),
         fetchMyPosts(),
         fetchUserProfile(user?.id || ''),
         fetchTasteMemory(),
       ])
-      setQaCount(qa.length)
-      setRecipeCount(recipe.length)
+      setRecipeCount(recipe.length + kb.length) // 菜谱收藏 = AI 菜谱 + 知识库菜谱
       setPostCount(posts.length)
       setFollowerCount(profile.follower_count)
       setFollowingCount(profile.following_count)
@@ -186,10 +184,14 @@ export default function Mine() {
         </View>
       </View>
 
+      {/* 统计即入口：收藏菜谱 / 我的作品，点击直达对应功能（问答收藏已下线） */}
       <View className='stats'>
-        <View className='stat'><Text userSelect className='stat-num'>{qaCount}</Text><Text userSelect className='stat-label'>收藏问答</Text></View>
-        <View className='stat'><Text userSelect className='stat-num'>{recipeCount}</Text><Text userSelect className='stat-label'>收藏菜谱</Text></View>
-        <View className='stat'><Text userSelect className='stat-num'>{postCount}</Text><Text userSelect className='stat-label'>我的作品</Text></View>
+        <View className='stat' onClick={() => Taro.navigateTo({ url: '/pages/favorites/index' })}>
+          <Text userSelect className='stat-num'>{recipeCount}</Text><Text userSelect className='stat-label'>收藏菜谱</Text>
+        </View>
+        <View className='stat' onClick={() => Taro.navigateTo({ url: '/pages/my-posts/index' })}>
+          <Text userSelect className='stat-num'>{postCount}</Text><Text userSelect className='stat-label'>我的作品</Text>
+        </View>
       </View>
 
       <View className='menu'>

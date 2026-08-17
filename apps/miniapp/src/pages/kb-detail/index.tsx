@@ -8,7 +8,15 @@ import Taro, { useLoad } from '@tarojs/taro'
 import { useState } from 'react'
 import NavBar from '../../components/NavBar'
 import { STATIC_BASE_URL } from '../../config/env'
-import { fetchKBEntry, fetchKBRecipeByTitle, generateKBRecipe, type KBEntry } from '../../services/api'
+import {
+  addFavorite,
+  fetchFavoriteStatus,
+  fetchKBEntry,
+  fetchKBRecipeByTitle,
+  generateKBRecipe,
+  removeFavorite,
+  type KBEntry,
+} from '../../services/api'
 import { ApiError } from '../../utils/request'
 import './index.scss'
 
@@ -32,6 +40,7 @@ export default function KbDetail() {
   const [notFound, setNotFound] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [title, setTitle] = useState('')
+  const [fav, setFav] = useState(false) // 是否已收藏（星标选中态）
 
   useLoad((params) => {
     const { id, title } = params as any
@@ -58,11 +67,22 @@ export default function KbDetail() {
     loadByTitle(t)
   })
 
+  const loadFavStatus = async (id: string) => {
+    try {
+      const { favorited } = await fetchFavoriteStatus('kb', id)
+      setFav(favorited)
+    } catch {
+      setFav(false)
+    }
+  }
+
   const loadById = async (id: string) => {
     setLoading(true)
     setNotFound(false)
     try {
-      setEntry(await fetchKBEntry(id))
+      const e = await fetchKBEntry(id)
+      setEntry(e)
+      loadFavStatus(e.id)
     } catch (e: any) {
       Taro.showToast({ title: e.message || '加载失败', icon: 'none' })
       setNotFound(true)
@@ -75,7 +95,9 @@ export default function KbDetail() {
     setLoading(true)
     setNotFound(false)
     try {
-      setEntry(await fetchKBRecipeByTitle(t))
+      const e = await fetchKBRecipeByTitle(t)
+      setEntry(e)
+      loadFavStatus(e.id)
     } catch (e: any) {
       if (e instanceof ApiError && e.code === 404) {
         setNotFound(true) // 暂未收录 → 引导生成
@@ -91,13 +113,49 @@ export default function KbDetail() {
   const generate = async () => {
     setGenerating(true)
     try {
-      setEntry(await generateKBRecipe(title))
+      const e = await generateKBRecipe(title)
+      setEntry(e)
+      loadFavStatus(e.id)
       setNotFound(false)
       Taro.showToast({ title: '美食库已收录，做法如下', icon: 'none' })
     } catch (e: any) {
       Taro.showToast({ title: e.message || '生成失败', icon: 'none' })
     } finally {
       setGenerating(false)
+    }
+  }
+
+  /* 补全完整做法：已收录但只有摘要无步骤（AI 推荐条目标签）→ force 重新生成覆盖 */
+  const fillSteps = async () => {
+    if (!entry || generating) return
+    setGenerating(true)
+    try {
+      const e = await generateKBRecipe(entry.title, true)
+      setEntry(e)
+      loadFavStatus(e.id)
+      Taro.showToast({ title: '完整做法已补全', icon: 'none' })
+    } catch (e: any) {
+      Taro.showToast({ title: e.message || '生成失败', icon: 'none' })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  /* 收藏 / 取消收藏（知识库菜谱） */
+  const toggleFavorite = async () => {
+    if (!entry) return
+    try {
+      if (fav) {
+        await removeFavorite('kb', entry.id)
+        setFav(false)
+        Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        await addFavorite('kb', entry.id)
+        setFav(true)
+        Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
+      }
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
     }
   }
 
@@ -134,11 +192,16 @@ export default function KbDetail() {
 
   const emoji = CATEGORY_EMOJI[entry.category] || '🍽'
   const hasSplit = (entry.prep_steps?.length || 0) > 0
+  /* 推荐条目只有摘要无步骤 → 引导补全完整做法 */
+  const hasSteps =
+    (entry.prep_steps?.length || 0) > 0 ||
+    (entry.cook_steps?.length || 0) > 0 ||
+    (entry.steps?.length || 0) > 0
   /* 四个分段一行：食材清单 → 食材处理 → 烹饪步骤 → 避坑指南；无切分的菜去掉食材处理 */
   const SEGS = hasSplit ? ['食材清单', '食材处理', '烹饪步骤', '避坑指南'] : ['食材清单', '烹饪步骤', '避坑指南']
   const renderSteps = (list: string[]) => (
     <View className='step-list'>
-      {list.length === 0 && <View className='note'>暂无步骤，可从下方尝试重新生成</View>}
+      {list.length === 0 && <View className='note'>暂无步骤</View>}
       {list.map((s, i) => {
         const { no, text } = stepParts(s)
         return (
@@ -228,6 +291,26 @@ export default function KbDetail() {
       </View>
 
       {renderSegContent()}
+
+      {/* 推荐条目标签（只有摘要无步骤）→ 引导补全完整做法 */}
+      {!hasSteps && (
+        <View className='kb-empty kb-full'>
+          <Text userSelect className='kb-empty-desc'>
+            这条菜谱来自推荐，目前只有一句简介，还没有完整烹饪步骤。让小伴生成完整做法补上吧。
+          </Text>
+          <View className='btn btn--red kb-gen-btn' onClick={fillSteps}>
+            {generating ? <Text userSelect>正在生成…</Text> : <><View className='ic ic-flame--white ic-sm' /><Text userSelect>生成完整做法</Text></>}
+          </View>
+        </View>
+      )}
+
+      {/* 底部操作条：收藏 / 已收藏（星标实心态） */}
+      <View className='actbar'>
+        <View className={`btn btn--white btn--sm ${fav ? 'fav-on' : ''}`} onClick={toggleFavorite}>
+          <View className={`ic ${fav ? 'ic-star--on' : 'ic-star'} ic-sm`} />
+          <Text userSelect>{fav ? '已收藏' : '收藏'}</Text>
+        </View>
+      </View>
     </View>
   )
 }

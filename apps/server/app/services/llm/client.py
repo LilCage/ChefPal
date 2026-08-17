@@ -20,16 +20,24 @@ class LLMError(Exception):
     """LLM 调用/解析失败。"""
 
 
-def _client() -> AsyncOpenAI:
+def _client(timeout_seconds: float | None = None) -> AsyncOpenAI:
     return AsyncOpenAI(
         api_key=settings.DASHSCOPE_API_KEY,
         base_url=settings.DASHSCOPE_BASE_URL,
-        timeout=settings.AI_TIMEOUT_SECONDS,
+        timeout=timeout_seconds or settings.AI_TIMEOUT_SECONDS,
     )
 
 
 def _extract_json(text: str) -> str:
-    """从模型输出中尽力提取首个 JSON 对象/数组。"""
+    """从模型输出中尽力提取首个 JSON 对象/数组。
+
+    兼容 QA 双标签格式：优先取 <data> 内的 JSON；否则剥掉 <answer> 文本后整体提取。
+    """
+    m = re.search(r"<data>\s*(\{[\s\S]*\})\s*</data>", text)
+    if m:
+        text = m.group(1)
+    else:
+        text = re.sub(r"<answer>[\s\S]*?</answer>", "", text)
     candidates = re.findall(r"\{[\s\S]*\}|\[[\s\S]*\]", text)
     for c in candidates:
         try:
@@ -48,6 +56,7 @@ async def ainvoke_json(
     history: list[dict] | None = None,
     enable_search: bool = False,
     search_options: dict[str, Any] | None = None,
+    timeout_seconds: float | None = None,
 ) -> dict:
     """调用 DeepSeek 并解析为 JSON dict。
 
@@ -59,7 +68,7 @@ async def ainvoke_json(
     if not settings.DASHSCOPE_API_KEY:
         raise LLMError("未配置 DASHSCOPE_API_KEY，请先在 apps/server/.env 中填入")
 
-    client = _client()
+    client = _client(timeout_seconds)
     extra_body: dict[str, Any] = {}
     if enable_search:
         extra_body["enable_search"] = True
@@ -95,12 +104,13 @@ async def ainvoke_text(
     user: str,
     history: list[dict] | None = None,
     enable_search: bool = False,
+    timeout_seconds: float | None = None,
 ) -> str:
     """调用 DeepSeek 返回纯文本（非 JSON、非流式），供轻量任务（如写开场白）。"""
     if not settings.DASHSCOPE_API_KEY:
         raise LLMError("未配置 DASHSCOPE_API_KEY，请先在 apps/server/.env 中填入")
 
-    client = _client()
+    client = _client(timeout_seconds)
     extra_body: dict[str, Any] = {}
     if enable_search:
         extra_body["enable_search"] = True
@@ -129,17 +139,19 @@ async def astream_text(
     history: list[dict] | None = None,
     enable_search: bool = False,
     search_options: dict[str, Any] | None = None,
+    timeout_seconds: float | None = None,
 ) -> AsyncIterator[str]:
     """流式调用 DeepSeek，逐个 yield 文本增量（供 SSE 打字机）。
 
     history: 多轮对话上下文（同 ainvoke_json）。
 
     未配置 DASHSCOPE_API_KEY 时抛 LLMError。调用方负责累积完整文本。
+    流中途任何异常（超时/网络断/API 错误）统一转成 LLMError，避免裸异常击穿上层。
     """
     if not settings.DASHSCOPE_API_KEY:
         raise LLMError("未配置 DASHSCOPE_API_KEY，请先在 apps/server/.env 中填入")
 
-    client = _client()
+    client = _client(timeout_seconds)
     extra_body: dict[str, Any] = {}
     if enable_search:
         extra_body["enable_search"] = True
@@ -161,9 +173,12 @@ async def astream_text(
     except Exception as exc:  # noqa: BLE001
         raise LLMError(f"LLM 调用失败: {exc}") from exc
 
-    async for chunk in stream:
-        if not chunk.choices:
-            continue
-        delta = chunk.choices[0].delta.content
-        if delta:
-            yield delta
+    try:
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+    except Exception as exc:  # noqa: BLE001  流中途异常（超时/断连）统一转 LLMError
+        raise LLMError(f"LLM 流式中断: {exc}") from exc

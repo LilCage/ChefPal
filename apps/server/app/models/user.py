@@ -17,9 +17,14 @@ class User(Base):
     nickname: Mapped[str | None] = mapped_column(String(64), default=None)
     # base64 头像（data:image/...），长度可变故用 Text
     avatar_url: Mapped[str | None] = mapped_column(Text, default=None)
-    # 忌口/辣度/咸淡/技能，JSONB 注入菜谱 Agent
+    # 忌口/辣度/咸淡/技能 + onboarded（新用户引导是否已看过），JSONB 注入菜谱 Agent
     preferences: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
     # 冗余关注/粉丝计数（follows 表幂等保障，对齐 like_count/comment_count 模式）
     follower_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     following_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def onboarded(self) -> bool:
+        """是否已看过新用户引导（存 preferences，随账号走，不怕本地缓存被清）。"""
+        return bool((self.preferences or {}).get("onboarded", False))

@@ -69,5 +69,11 @@
     padding: 24px 28px calc(24px + env(safe-area-inset-bottom));
 
     .btn { flex: 1; }
+
+    /* 已收藏态：实心星 + 文字变红，示意可再点取消 */
+    .fav-on {
+      color: var(--red);
+      border-color: var(--red);
+    }
   }
 }

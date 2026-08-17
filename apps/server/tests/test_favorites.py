@@ -187,3 +187,95 @@ async def test_add_kb_favorite_idempotent_and_missing_404(client, auth_headers, 
         headers=auth_headers,
     )
     assert missing.status_code == 404
+
+
+# ---------- 知识库菜谱取消收藏（此前 DELETE Literal 缺 kb 会 422，回归） ----------
+
+
+async def test_remove_kb_favorite(client, auth_headers, db):
+    from app.models.recipe_kb import RecipeKB
+
+    e = RecipeKB(
+        kind="recipe",
+        title="北派红烧肉",
+        summary="重油慢炖",
+        content="",
+        ingredients=["五花肉"],
+        steps=["炖"],
+        prep_steps=[],
+        cook_steps=[],
+        tips=[],
+        time_minutes=90,
+        difficulty="中等",
+        style="浓香下饭",
+        category="肉菜",
+        source_type="howtocook",
+        source_id="dishes/meat_dish/北派红烧肉.md",
+        hit_count=0,
+        embedding=[0.0] * 1024,
+    )
+    db.add(e)
+    await db.commit()
+
+    client.post("/api/favorites", json={"content_type": "kb", "content_id": str(e.id)}, headers=auth_headers)
+    assert len(client.get("/api/favorites?type=kb", headers=auth_headers).json()["data"]) == 1
+
+    res = client.delete(f"/api/favorites?content_type=kb&content_id={e.id}", headers=auth_headers)
+    assert res.status_code == 200, res.text
+    assert client.get("/api/favorites?type=kb", headers=auth_headers).json()["data"] == []
+
+
+async def test_kb_favorite_time_estimated_when_zero(client, auth_headers, db):
+    """KB 条目 time_minutes=0（HowToCook 多为此）→ 收藏列表按步骤数估算时长，不显示 0 分钟。"""
+    from app.models.recipe_kb import RecipeKB
+
+    e = RecipeKB(
+        kind="recipe",
+        title="凉拌莴笋",
+        summary="焯水断生、过凉水更脆",
+        content="",
+        ingredients=["莴笋"],
+        steps=["1. 去皮切丝", "2. 焯水断生", "3. 过凉水", "4. 拌料"],
+        prep_steps=[],
+        cook_steps=[],
+        tips=[],
+        time_minutes=0,
+        difficulty="简单",
+        style="清爽快手",
+        category="素菜",
+        source_type="howtocook",
+        source_id="dishes/veg/凉拌莴笋.md",
+        hit_count=0,
+        embedding=[0.0] * 1024,
+    )
+    db.add(e)
+    await db.commit()
+
+    client.post("/api/favorites", json={"content_type": "kb", "content_id": str(e.id)}, headers=auth_headers)
+    listed = client.get("/api/favorites?type=kb", headers=auth_headers).json()["data"]
+    assert len(listed) == 1
+    assert listed[0]["content"]["time_minutes"] == 32  # 4 步 × 8 分钟
+
+
+# ---------- 收藏状态查询（详情页星标选中态） ----------
+
+
+def test_favorite_status_toggle(client, auth_headers, monkeypatch):
+    qa = _create_qa(client, auth_headers, monkeypatch)
+
+    off = client.get(
+        f"/api/favorites/status?content_type=qa&content_id={qa['id']}", headers=auth_headers
+    ).json()["data"]
+    assert off == {"favorited": False}
+
+    client.post("/api/favorites", json={"content_type": "qa", "content_id": qa["id"]}, headers=auth_headers)
+    on = client.get(
+        f"/api/favorites/status?content_type=qa&content_id={qa['id']}", headers=auth_headers
+    ).json()["data"]
+    assert on == {"favorited": True}
+
+    client.delete(f"/api/favorites?content_type=qa&content_id={qa['id']}", headers=auth_headers)
+    off2 = client.get(
+        f"/api/favorites/status?content_type=qa&content_id={qa['id']}", headers=auth_headers
+    ).json()["data"]
+    assert off2 == {"favorited": False}

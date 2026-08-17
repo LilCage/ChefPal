@@ -13,6 +13,8 @@ export interface User {
   nickname?: string | null
   avatar_url?: string | null
   preferences: Record<string, any>
+  /** 是否已看过新用户引导（服务端随账号存储，避免本地缓存被清重复引导） */
+  onboarded?: boolean
   created_at?: string
 }
 

@@ -79,6 +79,13 @@
     .kb-empty-desc { font-size: 24px; color: var(--brown); line-height: 1.6; margin-top: 16px; }
 
     .kb-gen-btn { margin-top: 48px; min-width: 360px; justify-content: center; }
+
+    /* 已收录但无步骤 → 页内补全引导（比全页空状态紧凑） */
+    &.kb-full {
+      padding: 48px 48px 24px;
+
+      .kb-empty-desc { margin-top: 0; }
+    }
   }
 
   /* 技巧条目：正文全文 */
@@ -92,6 +99,28 @@
       line-height: 1.7;
       margin-top: 16px;
       white-space: pre-wrap;
+    }
+  }
+
+  /* 底部操作条：收藏 / 已收藏（对齐菜谱详情的 fixed actbar） */
+  .actbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    gap: 20px;
+    background: #fff;
+    border-top: 2.5px solid var(--ink);
+    padding: 24px 28px calc(24px + env(safe-area-inset-bottom));
+
+    .btn { flex: 1; justify-content: center; }
+
+    /* 已收藏态：实心星 + 文字变红，示意可再点取消 */
+    .fav-on {
+      color: var(--red);
+      border-color: var(--red);
     }
   }
 }

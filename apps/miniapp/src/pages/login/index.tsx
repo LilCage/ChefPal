@@ -21,7 +21,10 @@ export default function Login() {
     setLoading(true)
     try {
       await login()
-      const onboarded = Taro.getStorageSync('chefpal_onboarded')
+      // 已引导判定优先用服务端账号标记（跟随账号走，本地缓存被清也不重复引导），本地标记兜底
+      const user = useAuthStore.getState().user
+      const onboarded =
+        user?.onboarded === true || !!Taro.getStorageSync('chefpal_onboarded')
       if (!onboarded) {
         Taro.reLaunch({ url: '/pages/onboarding/index' })
       } else {

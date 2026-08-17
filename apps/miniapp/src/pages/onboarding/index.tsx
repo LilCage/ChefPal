@@ -3,6 +3,8 @@
  */
 import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { markOnboarded } from '../../services/api'
+import { useAuthStore } from '../../stores/auth'
 import { getSafeTop } from '../../utils/safeArea'
 import './index.scss'
 
@@ -16,7 +18,16 @@ const CARDS = [
 
 export default function Onboarding() {
   const finish = () => {
+    // 标记到服务端（随账号走，本地缓存被清也不重复引导）+ 本地兜底
     Taro.setStorageSync(ONBOARDED_KEY, true)
+    markOnboarded()
+      .then(({ onboarded }) => {
+        const user = useAuthStore.getState().user
+        if (user) useAuthStore.setState({ user: { ...user, onboarded } })
+      })
+      .catch(() => {
+        /* 网络失败不阻塞进主页，本地标记仍生效 */
+      })
     // 延迟跳转：避免 setStorageSync 后立即 switchTab，触发渲染层「first rendering data」竞态
     setTimeout(() => Taro.switchTab({ url: '/pages/index/index' }), 50)
   }

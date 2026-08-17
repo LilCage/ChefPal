@@ -13,6 +13,8 @@ export const login = (code: string) =>
 
 /* ---------- 用户 ---------- */
 export const fetchMe = () => http.get<User>('/users/me')
+/** 标记已看过新用户引导（服务端随账号存储） */
+export const markOnboarded = () => http.post<{ onboarded: boolean }>('/users/me/onboarded')
 export const updatePreferences = (prefs: Record<string, any>) =>
   http.put<User>('/users/me/preferences', prefs)
 export const updateProfile = (data: { nickname?: string; avatar_url?: string }) =>
@@ -101,9 +103,9 @@ export interface KBEntry {
 export const fetchKBRecipeByTitle = (title: string) =>
   http.get<KBEntry>(`/kb/recipes?q=${encodeURIComponent(title)}`)
 export const fetchKBEntry = (id: string) => http.get<KBEntry>(`/kb/${id}`)
-/** 菜名未收录时 AI 现生成完整做法并入库 */
-export const generateKBRecipe = (title: string) =>
-  http.post<KBEntry & { from_kb: boolean }>('/kb/generate', { title })
+/** 菜名未收录时 AI 现生成完整做法并入库；force=true 用于已收录但无完整步骤的条目标签补全 */
+export const generateKBRecipe = (title: string, force = false) =>
+  http.post<KBEntry & { from_kb: boolean }>('/kb/generate', { title, force })
 
 export const askQA = (question: string, session_id?: string | null) =>
   http.post<QARecord>('/qa/ask', { question, session_id })
@@ -115,10 +117,32 @@ export function askQAStream(
     onDelta: (text: string) => void
     onDone: (data: QARecord) => void
     onError: (msg: string) => void
+    /** 服务端重试前清掉已流出的半截回答（避免残字叠加） */
+    onReset?: () => void
   },
   session_id?: string | null,
 ): () => void {
   const token = useAuthStore.getState().token
+
+  // 持久 TextDecoder（stream:true）：跨网络 chunk 保留不完整 UTF-8 字节序列。
+  // 此前每次 new TextDecoder 独立解码，中文等多字节字符被分包切开时产生替换符 �，
+  // 破坏 SSE data 行导致 done/error 事件 JSON.parse 失败被丢弃 —— 首页问答偶发"不回答/卡死"的根因。
+  let utf8Decoder: any = null
+  try {
+    utf8Decoder = new (globalThis as any).TextDecoder('utf-8', { stream: true })
+  } catch {
+    utf8Decoder = null
+  }
+
+  // 终态守卫：done/error 只触发一次；流结束仍无终态（服务端崩溃/断连）→ 兜底报错，
+  // 保证上层 sending 一定复位、输入坞不冻结。
+  let finished = false
+  const finish = (fn: () => void) => {
+    if (finished) return
+    finished = true
+    fn()
+  }
+
   const requestTask = Taro.request({
     url: `${API_BASE_URL}/qa/stream`,
     method: 'POST',
@@ -129,23 +153,26 @@ export function askQAStream(
     },
     enableChunked: true,
     responseType: 'arraybuffer',
-    success: () => { /* 流式通过 onChunkReceived 处理 */ },
-    fail: (err) => handlers.onError(err.errMsg || '连接失败'),
+    // 请求完成但未收到终态事件（正常流程 done/error 已置 finished，这里是兜底）
+    success: () => finish(() => handlers.onError('连接中断，请稍后重试')),
+    fail: (err) => finish(() => handlers.onError(err.errMsg || '连接失败')),
   })
 
   let buffer = ''
   const decode = (buf: ArrayBuffer): string => {
-    // 优先 TextDecoder（基础库 2.20.2+）；不支持时用 base64 + escape/unescape 经典解码
-    try {
-      const td = new (globalThis as any).TextDecoder('utf-8')
-      return td.decode(buf)
-    } catch {
-      const b64 = Taro.arrayBufferToBase64(buf)
+    if (utf8Decoder) {
       try {
-        return decodeURIComponent(escape(atob(b64)))
+        return utf8Decoder.decode(buf)
       } catch {
-        return ''
+        /* 落到兜底 */
       }
+    }
+    // 基础库不支持 TextDecoder 时：base64 + escape/unescape 经典解码（无流状态，尽力而为）
+    const b64 = Taro.arrayBufferToBase64(buf)
+    try {
+      return decodeURIComponent(escape(atob(b64)))
+    } catch {
+      return ''
     }
   }
 
@@ -168,10 +195,11 @@ export function askQAStream(
           continue
         }
         if (ev.type === 'delta') handlers.onDelta(ev.text || '')
+        else if (ev.type === 'reset') handlers.onReset?.()
         else if (ev.type === 'done') {
-          handlers.onDone(ev.data)
+          finish(() => handlers.onDone(ev.data))
         } else if (ev.type === 'error') {
-          handlers.onError(ev.message || '生成失败')
+          finish(() => handlers.onError(ev.message || '生成失败'))
           requestTask.abort()
         }
       }
@@ -334,6 +362,11 @@ export const removeFavorite = (content_type: 'qa' | 'recipe' | 'kb', content_id:
   http.del<FavoriteItem>(`/favorites?content_type=${content_type}&content_id=${content_id}`)
 export const fetchFavorites = (type?: 'qa' | 'recipe' | 'kb') =>
   http.get<FavoriteItem[]>(`/favorites${type ? `?type=${type}` : ''}`)
+/** 查询是否已收藏（详情页星标选中态） */
+export const fetchFavoriteStatus = (content_type: 'qa' | 'recipe' | 'kb', content_id: string) =>
+  http.get<{ favorited: boolean }>(
+    `/favorites/status?content_type=${content_type}&content_id=${content_id}`,
+  )
 
 /* ---------- 时令食材日历 ---------- */
 export interface SeasonalItem {

@@ -11,9 +11,12 @@ import { useEffect, useRef, useState } from 'react'
 import {
   addFavorite,
   askQAStream,
+  fetchFavorites,
+  fetchKBRecipeByTitle,
   fetchQASession,
   parseDocument,
   parseUrl,
+  removeFavorite,
   transcribeVoice,
   type QARecord,
   type QARecommendation,
@@ -52,6 +55,14 @@ function genUUID(): string {
   })
 }
 
+/* 清理流式文本里可能泄漏的 <answer>/<data> 标签残余 */
+function cleanStream(t?: string): string {
+  return (t || '')
+    .replace(/<\/?answer>/g, '')
+    .replace(/<data[\s\S]*$/g, '')
+    .replace(/<\/?data>/g, '')
+}
+
 /* placeholder 断行：单行可显示约 14 字，长文案在逗号或 ~14 字处断成两行 */
 function wrapQuestion(q: string): string {
   if (q.length <= 14) return q
@@ -80,16 +91,18 @@ export default function Index() {
   const [attachOpen, setAttachOpen] = useState(false)
   const [voiceMode, setVoiceMode] = useState(false) // 🎤 按住说话模式
   const [recording, setRecording] = useState(false)
-  // scroll-into-view 锚点：''=不滚动（安全清空）；'chat-end'=滚到底（值变化才触发）
-  const [anchor, setAnchor] = useState('')
-  const [showBackBtn, setShowBackBtn] = useState(false) // 暂停跟随后浮出"回到底部"按钮
+  // 受控滚动位置：0=顶部；滚底用大数让微信自动钳制到最底。
+  // 关键：上滑看历史时把当前位置同步进状态，任何重渲染都按该值恢复 → 不再回顶。
+  const [scrollTop, setScrollTop] = useState<number>(0)
   const [phIndex, setPhIndex] = useState(0)
+  // 已收藏内容映射（content_id → 类型）：用于收藏星标高亮 + 再点取消
+  const [favMap, setFavMap] = useState<Map<string, 'qa' | 'recipe' | 'kb'>>(new Map())
   const streamAbortRef = useRef<(() => void) | null>(null)
   const followRef = useRef(true) // 是否自动跟随底部（流式 delta 时跟随）
   const scrollTopRef = useRef(0) // 上一次滚动位置（方向判断：回看历史=st 减小）
   const viewHRef = useRef(0) // 消息区可视高度（近底判断用）
-  const btnRef = useRef(false) // 按钮显示状态（滚动中避免重复 setState → 防抖动）
   const lastScrollTimeRef = useRef(0) // scrollToBottom 节流（流式 delta 高频）
+  const scrollBottomFlipRef = useRef(false) // 滚底值交替标志（999999 ↔ 999998，强制每次重新触发）
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastTapRef = useRef(0)
   const recorderRef = useRef<Taro.RecorderManager | null>(null)
@@ -141,6 +154,7 @@ export default function Index() {
       return
     }
     loadSession()
+    loadFavMap()
     // 测量消息区可视高度（近底判断用）；首次渲染后 DOM 就绪再查
     setTimeout(() => {
       Taro.createSelectorQuery()
@@ -176,6 +190,16 @@ export default function Index() {
     startNewSession(false)
   }
 
+  /* 加载已收藏内容 → 星标高亮初始态（问答/菜谱/知识库合集） */
+  const loadFavMap = async () => {
+    try {
+      const items = await fetchFavorites()
+      setFavMap(new Map(items.map((f) => [f.content_id, f.content_type])))
+    } catch {
+      /* 加载失败不阻塞，收藏动作仍可正常反馈 */
+    }
+  }
+
   const recordsToMessages = (records: QARecord[]): ChatMsg[] => {
     const msgs: ChatMsg[] = []
     for (const rec of records) {
@@ -204,18 +228,19 @@ export default function Index() {
     if (toast) Taro.showToast({ title: '已开启新对话', icon: 'none' })
   }
 
-  /* 滚到底：scroll-into-view 指向 chat-end。先清空再 nextTick 设目标（值变化才触发滚动）。
-   * 不用受控 scrollTop（其同步会让滚动中高频重渲染 → 气泡抖动）。 */
+  /* 滚到底：受控 scrollTop 设大数，微信自动钳制到最底。
+   * 关键：微信只在 scroll-top 值变化时才重新滚动，所以每次滚底要交替 999999/999998，
+   * 否则首次滚到底后值不变，后续流式 delta 不再跟随。 */
   const scrollToBottom = () => {
     const now = Date.now()
     if (now - lastScrollTimeRef.current < 60) return // 节流：流式每 2~3 字滚一次
     lastScrollTimeRef.current = now
-    setAnchor('')
-    Taro.nextTick(() => setAnchor('chat-end'))
+    scrollBottomFlipRef.current = !scrollBottomFlipRef.current
+    setScrollTop(scrollBottomFlipRef.current ? 999999 : 999998)
   }
 
-  /* 滚动回调：只更新 ref + 低频切换按钮（滚动中尽量不 setState，避免 scroll-view 重渲染回顶/抖动）。
-   * 上滑看历史=st 减小 → 暂停跟随+浮按钮；滚回底部 → 恢复。 */
+  /* 滚动回调：只更新方向/跟随状态，绝不在滚动中 setState（任何重渲染都会打断滚动 → 卡顿/回顶）。
+   * 上滑看历史=st 减小 → 暂停跟随；滚回底部 → 恢复。 */
   const onChatScroll = (e: any) => {
     const { scrollTop: st, scrollHeight } = e.detail
     const viewH = viewHRef.current || 600
@@ -223,11 +248,11 @@ export default function Index() {
     const scrollingUp = st < scrollTopRef.current
     scrollTopRef.current = st
     followRef.current = nearBottom ? true : (scrollingUp ? false : followRef.current)
-    const wantBtn = !nearBottom && scrollingUp
-    if (btnRef.current !== wantBtn) {
-      btnRef.current = wantBtn
-      setShowBackBtn(wantBtn)
-    }
+  }
+
+  /* 上滑看历史时若消息更新触发重渲染，按当前位置恢复，避免回顶（仅流式更新时调用，不影响手动滚动流畅度）。 */
+  const preserveScroll = () => {
+    if (!followRef.current) setScrollTop(scrollTopRef.current)
   }
 
   const patchMsg = (id: string, patch: Partial<ChatMsg>) =>
@@ -258,6 +283,7 @@ export default function Index() {
     pushUser(q)
     const aid = pushAssistantPending('')
     setSending(true)
+    scrollToBottom() // 立即跟随用户的新提问（不等流式返回）
     streamAbortRef.current = askQAStream(
       q,
       {
@@ -265,22 +291,26 @@ export default function Index() {
           setMessages((prev) =>
             prev.map((m) => (m.id === aid ? { ...m, text: (m.text || '') + t } : m)),
           )
-          // 流式自动跟随到底部（用户上滑回看时 followRef=false 暂停）
+          // 在底部 → 跟随；上滑回看 → 保位置（重渲染不回顶）
           if (followRef.current) scrollToBottom()
+          else preserveScroll()
         },
         onDone: (rec) => {
-          // 保留 text（过渡语）在卡片上方展示，与卡片同存
+          // 保留 text（过渡语+回答正文）在卡片上方展示，与卡片同存
           patchMsg(aid, { record: rec, pending: false })
           setSending(false)
           streamAbortRef.current = null
           if (followRef.current) scrollToBottom()
+          else preserveScroll()
         },
         onError: (msg) => {
           patchMsg(aid, { text: msg || '提问失败，请稍后重试', pending: false })
           setSending(false)
           streamAbortRef.current = null
           if (followRef.current) scrollToBottom()
+          else preserveScroll()
         },
+        onReset: () => patchMsg(aid, { text: '' }), // 服务端重试前清掉半截回答
       },
       sid,
     )
@@ -291,6 +321,7 @@ export default function Index() {
     pushUser(url)
     const aid = pushAssistantPending('正在解析链接…')
     setSending(true)
+    scrollToBottom() // 立即跟随用户的新链接
     try {
       const rec = await parseUrl(url, sid)
       patchMsg(aid, { record: rec, pending: false, text: undefined })
@@ -312,6 +343,7 @@ export default function Index() {
       pushUser(`📄 ${file.name}`)
       const aid = pushAssistantPending('正在解析文档…')
       setSending(true)
+      scrollToBottom() // 立即跟随用户上传的文档
       try {
         const rec = await parseDocument(file.path, sid)
         patchMsg(aid, { record: rec, pending: false, text: undefined })
@@ -373,26 +405,78 @@ export default function Index() {
   }
 
   /* ---------- 收藏 / 详情 ---------- */
-  const saveFavorite = async (rec: QARecord) => {
-    try {
-      await addFavorite('qa', rec.id)
-      Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
-    } catch (e: any) {
-      Taro.showToast({ title: e?.message || '收藏失败', icon: 'none' })
-    }
-  }
+  const favOn = (id: string) => favMap.has(id)
+  const markFav = (id: string, type: 'qa' | 'recipe' | 'kb') =>
+    setFavMap((prev) => {
+      const m = new Map(prev)
+      m.set(id, type)
+      return m
+    })
+  const unmarkFav = (id: string) =>
+    setFavMap((prev) => {
+      const m = new Map(prev)
+      m.delete(id)
+      return m
+    })
 
-  /* 收藏某道推荐/做法：知识库菜谱（kb_id 由后端入库后回填） */
-  const saveKBRecipe = async (r: QARecommendation) => {
-    if (!r.kb_id) {
-      Taro.showToast({ title: '该做法暂未收录，无法单独收藏', icon: 'none' })
+  const saveFavorite = async (rec: QARecord) => {
+    // 只收藏菜谱本体（AI 生成已入库 → kb_id 后端回填）；问答收藏已下线。
+    let kbId = rec.kb_id || null
+    if (!kbId && rec.answer.dish_name) {
+      try {
+        const entry = await fetchKBRecipeByTitle(rec.answer.dish_name)
+        kbId = entry.id
+      } catch {
+        kbId = null
+      }
+    }
+    if (!kbId) {
+      Taro.showToast({ title: '这道菜暂未收录美食库，暂时无法收藏', icon: 'none' })
       return
     }
     try {
-      await addFavorite('kb', r.kb_id)
-      Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
+      if (favMap.has(kbId)) {
+        await removeFavorite('kb', kbId)
+        unmarkFav(kbId)
+        Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        await addFavorite('kb', kbId)
+        markFav(kbId, 'kb')
+        Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
+      }
     } catch (e: any) {
-      Taro.showToast({ title: e?.message || '收藏失败', icon: 'none' })
+      Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
+    }
+  }
+
+  /* 收藏某道推荐/做法：知识库菜谱（kb_id 由后端入库后回填）；
+   * kb_id 偶发未回填（知识库写入瞬时失败）→ 按菜名查库兜底，实在没有才提示。 */
+  const saveKBRecipe = async (r: QARecommendation) => {
+    let kbId = r.kb_id || null
+    if (!kbId) {
+      try {
+        const entry = await fetchKBRecipeByTitle(r.name)
+        kbId = entry.id
+      } catch {
+        kbId = null
+      }
+    }
+    if (!kbId) {
+      Taro.showToast({ title: '这道菜暂未收录美食库，暂时无法单独收藏', icon: 'none' })
+      return
+    }
+    try {
+      if (favMap.has(kbId)) {
+        await removeFavorite('kb', kbId)
+        unmarkFav(kbId)
+        Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        await addFavorite('kb', kbId)
+        markFav(kbId, 'kb')
+        Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
+      }
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
     }
   }
 
@@ -428,9 +512,12 @@ export default function Index() {
                 <View className='btn btn--red btn--xs' onClick={() => openDish(r)}>
                   <Text userSelect>查看完整菜谱 ›</Text>
                 </View>
-                <View className='btn btn--white btn--xs' onClick={() => saveKBRecipe(r)}>
-                  <View className='ic ic-star ic-sm' />
-                  <Text userSelect>收藏</Text>
+                <View
+                  className={`btn btn--white btn--xs ${favOn(r.kb_id || '') ? 'fav-on' : ''}`}
+                  onClick={() => saveKBRecipe(r)}
+                >
+                  <View className={`ic ${favOn(r.kb_id || '') ? 'ic-star--on' : 'ic-star'} ic-sm`} />
+                  <Text userSelect>{favOn(r.kb_id || '') ? '已收藏' : '收藏'}</Text>
                 </View>
               </View>
             </View>
@@ -490,7 +577,7 @@ export default function Index() {
         <View className='msg assistant'>
           <View className='avatar'>🍳</View>
           <View className='mbox'>
-            <Text className='mbox-text' userSelect>{m.text || '小伴正在思考…'}</Text>
+            <Text className='mbox-text' userSelect>{cleanStream(m.text) || '小伴正在思考…'}</Text>
             {m.text && <View className='caret' />}
           </View>
         </View>
@@ -501,7 +588,7 @@ export default function Index() {
       return (
         <View className='msg assistant'>
           <View className='avatar'>🍳</View>
-          <View className='mbox mbox--error'><Text className='mbox-text' userSelect>{m.text}</Text></View>
+          <View className='mbox mbox--error'><Text className='mbox-text' userSelect>{cleanStream(m.text)}</Text></View>
         </View>
       )
     }
@@ -512,7 +599,7 @@ export default function Index() {
         <View className='avatar'>🍳</View>
         <View className='mbox mbox--card'>
           {/* 过渡语（流式打字机先打出）保留在卡片上方，与卡片同存 */}
-          {m.text && <Text className='mbox-transition' userSelect>{m.text}</Text>}
+          {m.text && <Text className='mbox-transition' userSelect>{cleanStream(m.text)}</Text>}
           {ans.parse_type && (
             <View className='src-banner'>
               <View className='sb-ic'>{(ans.parse_type === 'video' && '▶️') || (ans.parse_type === 'doc' && '📄') || '🌐'}</View>
@@ -547,9 +634,12 @@ export default function Index() {
                   <Text userSelect>查看完整菜谱 ›</Text>
                 </View>
               )}
-              <View className='btn btn--white btn--xs' onClick={() => saveFavorite(rec)}>
-                <View className='ic ic-star ic-sm' />
-                <Text userSelect>收藏</Text>
+              <View
+                className={`btn btn--white btn--xs ${favOn(rec.kb_id || '') ? 'fav-on' : ''}`}
+                onClick={() => saveFavorite(rec)}
+              >
+                <View className={`ic ${favOn(rec.kb_id || '') ? 'ic-star--on' : 'ic-star'} ic-sm`} />
+                <Text userSelect>{favOn(rec.kb_id || '') ? '已收藏' : '收藏'}</Text>
               </View>
             </View>
           )}
@@ -597,8 +687,7 @@ export default function Index() {
       <ScrollView
         className='chat-scroll'
         scrollY
-        scrollAnchoring
-        scrollIntoView={anchor}
+        scrollTop={scrollTop}
         onScroll={onChatScroll}
       >
         <View className='chat-slot'>
@@ -614,13 +703,6 @@ export default function Index() {
           <View id='chat-end' />
         </View>
       </ScrollView>
-
-      {/* 用户上滑暂停跟随后，浮出回到底部按钮 */}
-      {showBackBtn && (
-        <View className='back-bottom-btn' onClick={scrollToBottom}>
-          <Text>⬇ 回到底部</Text>
-        </View>
-      )}
 
       {/* 链接识别提示条 */}
       {isLinkInput && (

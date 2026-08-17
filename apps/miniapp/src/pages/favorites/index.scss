@@ -1,9 +1,33 @@
 .fav {
-  .seg { margin-top: 28px; }
-
-  .fav-list { padding-top: 8px; }
+  /* 列表与屏幕左右边缘留出边距（此前卡片贴边） */
+  .fav-list {
+    padding: 24px 28px 40px;
+  }
 
   .fav-recipe {
-    margin-bottom: 20px;
+    margin-bottom: 28px;
+  }
+
+  /* 取消收藏按钮：菜名行右侧胶囊按钮（经 RecipeCard action 注入，右对齐） */
+  .fav-remove {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--red);
+    background: #fff;
+    border: 2px solid var(--red);
+    border-radius: 20px;
+    box-shadow: 2px 2px 0 var(--ink);
+
+    .ic { color: var(--red); }
+
+    &:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
   }
 }

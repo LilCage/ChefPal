@@ -19,9 +19,12 @@ from app.services import taste_memory as taste_service
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
+# 收藏内容类型：问答 / AI 菜谱 / 知识库菜谱（增删查三端保持一致）
+FAV_CONTENT_TYPES = Literal["qa", "recipe", "kb"]
+
 
 class FavoriteCreate(BaseModel):
-    content_type: Literal["qa", "recipe", "kb"]
+    content_type: FAV_CONTENT_TYPES
     content_id: UUID
 
 
@@ -110,7 +113,7 @@ async def _record_taste_signal(
 
 @router.delete("")
 async def remove_favorite(
-    content_type: Literal["qa", "recipe"] = Query(...),
+    content_type: FAV_CONTENT_TYPES = Query(...),
     content_id: UUID = Query(...),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -128,6 +131,38 @@ async def remove_favorite(
         await db.delete(fav)
         await db.commit()
     return ok(message="已取消收藏")
+
+
+@router.get("/status")
+async def favorite_status(
+    content_type: FAV_CONTENT_TYPES = Query(...),
+    content_id: UUID = Query(...),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """查询是否已收藏（详情页星标选中态用）。"""
+    result = await db.execute(
+        select(Favorite).where(
+            Favorite.user_id == user.id,
+            Favorite.content_type == content_type,
+            Favorite.content_id == content_id,
+        )
+    )
+    return ok({"favorited": result.scalar_one_or_none() is not None})
+
+
+def _estimate_minutes(entry) -> int:
+    """无明确时长（time_minutes=0，如多数 HowToCook 条目）时按步骤数估算。
+
+    每步约 8 分钟，钳到 10~60；无步骤给 15 兜底。仅展示用，不改动原始数据。
+    """
+    steps = entry.steps or []
+    if not steps:
+        steps = (getattr(entry, "prep_steps", None) or []) + (getattr(entry, "cook_steps", None) or [])
+    n = len(steps)
+    if n >= 1:
+        return max(10, min(60, n * 8))
+    return 15
 
 
 async def _enrich(db: AsyncSession, favs: list[Favorite]) -> list[dict]:
@@ -168,7 +203,7 @@ async def _enrich(db: AsyncSession, favs: list[Favorite]) -> list[dict]:
                 {
                     "title": rec.title,
                     "style": rec.style,
-                    "time_minutes": rec.time_minutes,
+                    "time_minutes": rec.time_minutes or _estimate_minutes(rec),
                     "difficulty": rec.difficulty,
                     "hit_count": rec.hit_count,
                     "summary": rec.summary,
@@ -182,7 +217,7 @@ async def _enrich(db: AsyncSession, favs: list[Favorite]) -> list[dict]:
                 {
                     "title": rec.title,
                     "match_score": rec.match_score,
-                    "time_minutes": rec.time_minutes,
+                    "time_minutes": rec.time_minutes or _estimate_minutes(rec),
                     "difficulty": rec.difficulty,
                     "steps": rec.steps,
                     "tips": rec.tips,

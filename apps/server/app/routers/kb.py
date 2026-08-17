@@ -40,6 +40,8 @@ KB_GENERATE_SYSTEM = """你是资深中餐厨师。用户给出一道菜名，�
 
 class KBGenerateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=50)
+    # 已收录但无完整步骤（AI 推荐条目标签）时传 true：重新生成完整做法并覆盖补全
+    force: bool = False
 
 
 def _out(entry) -> dict:
@@ -79,9 +81,13 @@ async def generate(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """菜名未收录时，AI 现生成完整做法并入库。已收录则直接返回。"""
+    """菜名未收录时，AI 现生成完整做法并入库；已收录（非 HowToCook）且 force=true 时重新生成补全步骤。
+
+    force 场景：知识库里的"推荐条目"（AI 多做法/多菜推荐入库，只有一句摘要、无步骤）——
+    前端 kb-detail 检测到无步骤时传 force=true，AI 生成完整做法覆盖补全。
+    """
     existing = await kb_service.get_kb_entry_by_title(db, body.title, kind="recipe")
-    if existing is not None:
+    if existing is not None and (not body.force or existing.source_type == kb_service.SOURCE_HOWTOCOOK):
         await kb_service.increment_hit(db, existing)
         await db.commit()
         return ok({**_out(existing), "from_kb": True})
@@ -104,7 +110,8 @@ async def generate(
     if parsed is None or not parsed.dish_name.strip() or len(parsed.steps) < 1:
         raise AppError("菜谱生成失败，请稍后重试", code=502, status_code=502)
 
-    title = parsed.dish_name.strip() or body.title
+    # 覆盖补全时沿用原条目标题（AI 返回的菜名可能略有出入，避免新建一条）
+    title = (existing.title if existing else parsed.dish_name.strip()) or body.title
     try:
         entry = await kb_service.upsert_kb_entry(
             db,

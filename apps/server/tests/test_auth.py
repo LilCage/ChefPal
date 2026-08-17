@@ -35,6 +35,26 @@ def test_login_second_time_returns_same_user(client, monkeypatch):
     assert first["user"]["id"] == second["user"]["id"]
 
 
+def test_onboarded_persists_on_server(client, monkeypatch):
+    """新用户引导标记跟随账号存服务端：新号 onboarded=false，标记后 /me 与登录都返回 true。"""
+    monkeypatch.setattr(wechat_service, "code2session", _mock_code2session("openid-onboard"))
+    token = client.post("/api/auth/login", json={"code": "test-code"}).json()["data"]["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 新号默认未引导
+    me = client.get("/api/users/me", headers=headers).json()["data"]
+    assert me["onboarded"] is False
+
+    # 标记已引导
+    res = client.post("/api/users/me/onboarded", headers=headers)
+    assert res.status_code == 200
+    assert res.json()["data"]["onboarded"] is True
+
+    # 二次登录（模拟本地缓存被清）仍返回 onboarded=true → 前端不再引导
+    again = client.post("/api/auth/login", json={"code": "test-code"}).json()["data"]["user"]
+    assert again["onboarded"] is True
+
+
 def test_login_wechat_error_returns_401(client, monkeypatch):
     async def _error(code: str):
         raise wechat_service.WeChatError("invalid code")

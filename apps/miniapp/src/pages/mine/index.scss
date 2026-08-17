@@ -90,6 +90,9 @@
 
       &:last-child { border-right: none; }
 
+      /* 统计即可点击入口：按压反馈 */
+      &:active { background: var(--soft); }
+
       .stat-num { display: block; font-size: 40px; font-weight: 900; color: var(--red); }
       .stat-label { display: block; font-size: 22px; font-weight: 700; color: var(--gray); margin-top: 4px; }
     }

@@ -18,6 +18,8 @@ class UserOut(BaseModel):
     nickname: str | None = None
     avatar_url: str | None = None
     preferences: dict[str, Any] = Field(default_factory=dict)
+    # 是否已看过新用户引导（User.onboarded 属性，取自 preferences，随账号走）
+    onboarded: bool = False
     created_at: datetime
 
 

@@ -249,3 +249,81 @@ def test_daily_limit_429(client, auth_headers, monkeypatch):
     second = client.post("/api/qa/ask", json={"question": "第二次"}, headers=auth_headers)
     assert second.status_code == 429
     assert second.json()["code"] == 429
+
+
+# ---------- kb_id 入库回填必须落到存储的 answer（回归：flush 后原地 dict 修改不标记 dirty 会丢） ----------
+
+
+def test_ask_backfills_kb_id_to_stored_record(client, auth_headers, monkeypatch):
+    """AI 生成的多菜推荐入库回填 kb_id 后，接口返回与历史记录都必须带 kb_id。"""
+    _mock_ainvoke(monkeypatch, RECS_QA)
+
+    async def _fake_store(db, answer, record_id):
+        for r in (answer.get("recommendations") or []):
+            r["kb_id"] = "11111111-2222-3333-4444-555555555555"
+
+    monkeypatch.setattr(kb_service, "store_generated_answer_to_kb", _fake_store)
+
+    res = client.post("/api/qa/ask", json={"question": "推荐几道凉拌菜"}, headers=auth_headers)
+    assert res.status_code == 200
+    recs = res.json()["data"]["answer"]["recommendations"]
+    assert all(r.get("kb_id") == "11111111-2222-3333-4444-555555555555" for r in recs)
+
+    # 落库的历史记录也必须是回填后的值（此前 commit 用的是 flush 时的旧值 → kb_id=None）
+    hist = client.get("/api/qa/history", headers=auth_headers).json()["data"]
+    assert hist[0]["answer"]["recommendations"][0]["kb_id"] == "11111111-2222-3333-4444-555555555555"
+
+
+def test_extract_json_strips_answer_data_tags():
+    """新版双标签输出：<answer> 正文 + <data> JSON，两种解析入口都能剥标签取 JSON。"""
+    import json as _json
+
+    from app.routers.qa import _extract_json_obj
+    from app.services.llm.client import _extract_json
+
+    payload = _json.dumps(VALID_QA, ensure_ascii=False)
+    tagged = f"<answer>五花肉先焯透再煸油。</answer><data>{payload}</data>"
+    assert _json.loads(_extract_json(tagged))["dish_name"] == "红烧肉"
+    assert _extract_json_obj(tagged)["dish_name"] == "红烧肉"
+
+
+def test_ask_stream_tagged_format_streams_answer(client, auth_headers, monkeypatch):
+    """新版双标签格式（<answer>正文打字机 + <data>JSON卡片）：正文逐字流出、标签剥离、done 带结构化数据。"""
+    full = (
+        "<answer>五花肉先焯透再煸油，肥而不腻的关键是煸出油脂。"
+        "做法：冷水下锅焯透、小火炒糖色、加热水焖40分钟。</answer>"
+        f"<data>{json.dumps(VALID_QA, ensure_ascii=False)}</data>"
+    )
+    _mock_stream(monkeypatch, full)
+
+    res = client.post("/api/qa/stream", json={"question": "红烧肉怎么不腻"}, headers=auth_headers)
+    assert res.status_code == 200
+    events = _parse_sse(res.text)
+    # 中间有正文的 delta 打字机（标签已剥离）
+    deltas = [json.loads(e) for e in events if json.loads(e)["type"] == "delta"]
+    typing = "".join(d["text"] for d in deltas)
+    assert "五花肉先焯透" in typing
+    assert "<answer>" not in typing and "<data" not in typing
+    # 最后是 done，含结构化数据
+    done = json.loads(events[-1])
+    assert done["type"] == "done"
+    assert done["data"]["answer"]["dish_name"] == "红烧肉"
+
+
+def test_ask_stream_backfills_kb_id(client, auth_headers, monkeypatch):
+    """流式路径同款回归：done 事件里的 recommendations 必须带 kb_id。"""
+    full = json.dumps(RECS_QA, ensure_ascii=False)
+    _mock_stream(monkeypatch, full)
+
+    async def _fake_store(db, answer, record_id):
+        for r in (answer.get("recommendations") or []):
+            r["kb_id"] = "11111111-2222-3333-4444-555555555555"
+
+    monkeypatch.setattr(kb_service, "store_generated_answer_to_kb", _fake_store)
+
+    res = client.post("/api/qa/stream", json={"question": "推荐几道凉拌菜"}, headers=auth_headers)
+    events = _parse_sse(res.text)
+    done = json.loads(events[-1])
+    assert done["type"] == "done"
+    recs = done["data"]["answer"]["recommendations"]
+    assert all(r.get("kb_id") == "11111111-2222-3333-4444-555555555555" for r in recs)

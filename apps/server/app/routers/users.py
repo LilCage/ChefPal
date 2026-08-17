@@ -72,6 +72,19 @@ async def clear_taste_memory(
     return ok({"deleted": deleted, "message": "口味记忆已清空"})
 
 
+@router.post("/me/onboarded")
+async def mark_onboarded(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """标记已看过新用户引导（存 preferences，随账号走，本地缓存被清也不重复引导）。"""
+    prefs = dict(user.preferences or {})
+    prefs["onboarded"] = True
+    user.preferences = prefs
+    await db.commit()
+    return ok({"onboarded": True})
+
+
 @router.put("/me/preferences")
 async def update_preferences(
     body: PreferencesUpdate,

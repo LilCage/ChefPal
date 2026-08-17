@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     DEEPSEEK_MODEL_PRO: str = "deepseek-v4-pro"
     AI_ENABLE_SEARCH: bool = True
     AI_TIMEOUT_SECONDS: float = 60.0
-    AI_MAX_RETRIES: int = 1
+    AI_MAX_RETRIES: int = 2
 
     # ---- 百炼文本向量（菜谱知识库 RAG）----
     EMBEDDING_MODEL: str = "text-embedding-v3"

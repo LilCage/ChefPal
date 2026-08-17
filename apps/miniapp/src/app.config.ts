@@ -7,6 +7,7 @@ export default defineAppConfig({
     'pages/login/index',
     'pages/recipe-detail/index',
     'pages/favorites/index',
+    'pages/my-posts/index',
     'pages/my-recipes/index',
     'pages/my-recipe-create/index',
     'pages/preferences/index',

@@ -10,6 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import get_settings
 from app.core.deps import get_current_user
@@ -80,6 +81,7 @@ async def _do_parse(
     db.add(record)
     await db.flush()
     await kb_service.store_generated_answer_to_kb(db, answer, record.id)
+    flag_modified(record, "answer")  # kb_id 回填是原地 dict 修改，需显式标记 dirty 以便 commit 重新序列化
     await record_ai_call(db, user.id, f"parse_{kind}", settings.DEEPSEEK_MODEL)
     await db.commit()
     await db.refresh(record)

@@ -132,6 +132,12 @@ page {
   color: #fff;
 }
 
+/* 已收藏态：星标高亮 + 文字/描边变红（收藏成功的即时反馈） */
+.btn.fav-on {
+  color: var(--red);
+  border-color: var(--red);
+}
+
 /* ---------- 标签 chip ---------- */
 .chips {
   display: flex;

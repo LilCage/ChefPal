@@ -6,7 +6,13 @@ import { Text, View } from '@tarojs/components'
 import Taro, { useLoad } from '@tarojs/taro'
 import { useState } from 'react'
 import NavBar from '../../components/NavBar'
-import { addFavorite, fetchRecipe, type Recipe } from '../../services/api'
+import {
+  addFavorite,
+  fetchFavoriteStatus,
+  fetchRecipe,
+  removeFavorite,
+  type Recipe,
+} from '../../services/api'
 import './index.scss'
 
 const SEGS = ['烹饪步骤', '食材清单', '避坑指南']
@@ -15,22 +21,37 @@ export default function RecipeDetail() {
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [seg, setSeg] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [fav, setFav] = useState(false) // 是否已收藏（星标选中态）
 
   useLoad((params) => {
     const id = (params as any).id as string
     fetchRecipe(id)
-      .then(setRecipe)
+      .then((r) => {
+        setRecipe(r)
+        // 收藏选中态：查询失败静默置空，不影响详情展示
+        fetchFavoriteStatus('recipe', r.id)
+          .then(({ favorited }) => setFav(favorited))
+          .catch(() => setFav(false))
+      })
       .catch((e: any) => Taro.showToast({ title: e.message || '加载失败', icon: 'none' }))
       .finally(() => setLoading(false))
   })
 
+  /* 收藏 / 取消收藏（AI 菜谱，仅本人可见） */
   const saveFavorite = async () => {
     if (!recipe) return
     try {
-      await addFavorite('recipe', recipe.id)
-      Taro.showToast({ title: '已收藏', icon: 'none' })
+      if (fav) {
+        await removeFavorite('recipe', recipe.id)
+        setFav(false)
+        Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        await addFavorite('recipe', recipe.id)
+        setFav(true)
+        Taro.showToast({ title: '已收藏到「我的收藏」', icon: 'none' })
+      }
     } catch (e: any) {
-      Taro.showToast({ title: e.message, icon: 'none' })
+      Taro.showToast({ title: e.message || '操作失败', icon: 'none' })
     }
   }
 
@@ -114,7 +135,7 @@ export default function RecipeDetail() {
       <View className='actbar'>
         <View className='btn btn--white btn--sm' onClick={share}><View className='ic ic-share ic-sm' /><Text userSelect>分享</Text></View>
         <View className='btn btn--white btn--sm' onClick={() => Taro.navigateTo({ url: `/pages/recipe-tree/index?id=${recipe.id}` })}><View className='ic ic-edit ic-sm' /><Text userSelect>进化树</Text></View>
-        <View className='btn btn--white btn--sm' onClick={saveFavorite}><View className='ic ic-star ic-sm' /><Text userSelect>收藏</Text></View>
+        <View className={`btn btn--white btn--sm ${fav ? 'fav-on' : ''}`} onClick={saveFavorite}><View className={`ic ${fav ? 'ic-star--on' : 'ic-star'} ic-sm`} /><Text userSelect>{fav ? '已收藏' : '收藏'}</Text></View>
         <View className='btn btn--red btn--sm' onClick={() => Taro.navigateTo({ url: `/pages/cook-assistant/index?id=${recipe.id}` })}>
           <View className='ic ic-flame--white ic-sm' /><Text userSelect>开始做饭</Text>
         </View>

@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import get_settings
 from app.core.deps import get_current_user
@@ -458,6 +459,9 @@ async def ask(
     db.add(record)
     await db.flush()  # 先拿到 record.id（source_id 溯源用）
     await _store_generated_to_kb(db, answer, record.id)
+    # store_generated_answer_to_kb 原地修改 answer 回填 kb_id，但 SQLAlchemy flush 后不追踪
+    # JSONB 列的 dict 原地修改 → 不标记 dirty 的话 commit 不会重新序列化，库里仍是旧值。
+    flag_modified(record, "answer")
     await record_ai_call(db, user.id, "qa", settings.DEEPSEEK_MODEL)
     await db.commit()
     await db.refresh(record)
@@ -465,11 +469,38 @@ async def ask(
 
 
 def _extract_json_obj(text: str) -> dict:
-    """从流式累积的模型输出中提取首个 JSON 对象。"""
-    m = re.search(r"\{[\s\S]*\}", text)
-    if not m:
+    """从流式累积的模型输出中提取 JSON 对象。
+
+    兼容三种输出形态：
+    - 双标签：<answer>…</answer><data>{json}</data>（新版流式）
+    - markdown 代码围栏（```json … ```）
+    - 纯 JSON + 尾随文字
+    先剥标签/围栏整体解析；失败则从第一个 { 起，从后往前逐个 } 截断尝试（处理尾随垃圾/截断）。
+    """
+    t = text.strip()
+    t = re.sub(r"^```(?:json)?\s*", "", t)
+    t = re.sub(r"\s*```$", "", t)
+    # 优先取 <data> 后的 JSON；无则剥掉 <answer> 文本
+    m = re.search(r"<data>\s*(\{[\s\S]*\})", t)
+    if m:
+        t = m.group(1)
+    else:
+        t = re.sub(r"<answer>[\s\S]*", "", t)
+    try:
+        return json.loads(t)
+    except json.JSONDecodeError:
+        pass
+    start = t.find("{")
+    if start == -1:
         raise ValueError("模型输出中未找到 JSON")
-    return json.loads(m.group(0))
+    for i in range(len(t) - 1, start, -1):
+        if t[i] != "}":
+            continue
+        try:
+            return json.loads(t[start : i + 1])
+        except json.JSONDecodeError:
+            continue
+    raise ValueError("模型输出中未找到合法 JSON")
 
 
 async def _parse_stream_result(text: str) -> dict | None:
@@ -577,45 +608,79 @@ async def ask_stream(
         if ctx:
             prompt = f"{prompt}\n\n{ctx}"
         use_web = settings.AI_ENABLE_SEARCH and not kb_hits
-        buf = ""
+
+        # 有界重试：瞬时 LLM 错误/解析失败都重试（首次可联网但不强制——模型能答就不搜，大幅提速）；
+        # 重试前发 reset 事件，让前端清掉半截回答再重新打字；
+        # 外层兜底：任何意外异常都发 error 事件——绝不挂死连接。
+        max_attempts = settings.AI_MAX_RETRIES + 1
         try:
-            async for delta in astream_text(
-                model=settings.DEEPSEEK_MODEL,
-                system=qa_agent.QA_SYSTEM,
-                user=prompt,
-                history=history,
-                enable_search=use_web,
-                search_options={"forced_search": True} if use_web else None,
-            ):
-                buf += delta
-        except LLMError as exc:
-            yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
-            return
+            data = None
+            for attempt in range(max_attempts):
+                attempt_web = use_web and attempt == 0
+                buf = ""
+                fwd_pos = 0        # 已转发到 buf 的位置（<answer> 打字机用）
+                answer_done = False  # 已遇到 <data>，停止转发
+                try:
+                    async for delta in astream_text(
+                        model=settings.DEEPSEEK_MODEL,
+                        system=qa_agent.QA_SYSTEM,
+                        user=prompt,
+                        history=history,
+                        enable_search=attempt_web,
+                        timeout_seconds=settings.AI_TIMEOUT_SECONDS * 2,  # 流式超时放宽
+                    ):
+                        buf += delta
+                        # 实时转发 <answer> 内容作为打字机（遇到 <data> 即停，不转发 JSON）
+                        if not answer_done:
+                            di = buf.find("<data")
+                            limit = di if di != -1 else len(buf)
+                            if di != -1:
+                                answer_done = True
+                            ai = buf.find("<answer>")
+                            if ai != -1:
+                                start = max(ai + len("<answer>"), fwd_pos)
+                                if start < limit:
+                                    chunk = buf[start:limit].replace("</answer>", "")
+                                    fwd_pos = limit
+                                    if chunk:
+                                        yield f"data: {json.dumps({'type': 'delta', 'text': chunk}, ensure_ascii=False)}\n\n"
+                except LLMError as exc:
+                    if attempt < max_attempts - 1:
+                        yield f"data: {json.dumps({'type': 'reset'})}\n\n"
+                        continue
+                    yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
+                    return
+                data = await _parse_stream_result(buf)
+                if data is not None:
+                    break
+                if attempt < max_attempts - 1:
+                    yield f"data: {json.dumps({'type': 'reset'})}\n\n"
+                    continue
+                yield f"data: {json.dumps({'type': 'error', 'message': 'AI 回答生成失败，请稍后重试'})}\n\n"
+                return
 
-        data = await _parse_stream_result(buf)
-        if data is None:
-            yield f"data: {json.dumps({'type': 'error', 'message': 'AI 回答生成失败，请稍后重试'})}\n\n"
-            return
+            # 落库 + AI 生成结果入库（同步，kb_id 回填进响应）
+            record = QA_Record(
+                user_id=user.id,
+                session_id=body.session_id,
+                question=body.question,
+                answer=data,
+                sources=data.get("sources"),
+            )
+            db.add(record)
+            await db.flush()  # 先拿到 record.id
+            await _store_generated_to_kb(db, data, record.id)
+            flag_modified(record, "answer")  # kb_id 回填是原地 dict 修改，需显式标记 dirty 以便 commit 重新序列化
+            await record_ai_call(db, user.id, "qa", settings.DEEPSEEK_MODEL)
+            await db.commit()
+            await db.refresh(record)
 
-        # 落库 + AI 生成结果入库
-        record = QA_Record(
-            user_id=user.id,
-            session_id=body.session_id,
-            question=body.question,
-            answer=data,
-            sources=data.get("sources"),
-        )
-        db.add(record)
-        await db.flush()  # 先拿到 record.id
-        await _store_generated_to_kb(db, data, record.id)
-        await record_ai_call(db, user.id, "qa", settings.DEEPSEEK_MODEL)
-        await db.commit()
-        await db.refresh(record)
+            out = _qa_record_out(record)
 
-        out = _qa_record_out(record)
-
-        # 过渡语已先行，这里直接出卡片（卡片 intro 即 AI 生成的完成时开场白）
-        yield f"data: {json.dumps({'type': 'done', 'data': out}, ensure_ascii=False)}\n\n"
+            # 过渡语+回答正文已逐字先行，这里直接出卡片
+            yield f"data: {json.dumps({'type': 'done', 'data': out}, ensure_ascii=False)}\n\n"
+        except Exception:  # noqa: BLE001 兜底：任何异常都发 error 事件，不挂死 SSE 连接
+            yield f"data: {json.dumps({'type': 'error', 'message': '回答生成失败，请稍后重试'})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
